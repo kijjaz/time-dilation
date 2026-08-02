@@ -750,12 +750,12 @@ void RelativisticCanvasComponent::showMenuHelp()
                 showHelpDialog ("Keyboard Shortcuts & Hotkeys",
                     "KEYBOARD SHORTCUTS & WORKSTATION HOTKEYS\n\n"
                     "- N / Double-Click: Open Object Palette Menu\n"
-                    "- ⌘D / Cmd-D: Duplicate Selected Nodes\n"
-                    "- ⌘C / Cmd-C: Copy Selected Nodes to Clipboard\n"
-                    "- ⌘V / Cmd-V: Paste Nodes from Clipboard\n"
-                    "- ⌘Z / Cmd-Z: Undo Last Patch Action\n"
-                    "- ⌘⇧Z / Cmd-Shift-Z: Redo Last Patch Action\n"
-                    "- ⌘A / Cmd-A: Select All Nodes\n"
+                    "- Cmd+D: Duplicate Selected Nodes\n"
+                    "- Cmd+C: Copy Selected Nodes to Clipboard\n"
+                    "- Cmd+V: Paste Nodes from Clipboard\n"
+                    "- Cmd+Z: Undo Last Patch Action\n"
+                    "- Cmd+Shift+Z: Redo Last Patch Action\n"
+                    "- Cmd+A: Select All Nodes\n"
                     "- Delete / Backspace: Remove Selected Nodes or Connections\n"
                     "- Shift-Click / Shift-Drag: Multi-select Nodes");
             }

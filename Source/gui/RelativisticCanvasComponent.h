@@ -100,9 +100,9 @@ private:
     juce::TextButton btnAudioPower { "AUDIO: OFF (SAFE)" };
     juce::TextButton btnUndo       { "UNDO" };
     juce::TextButton btnRedo       { "REDO" };
-    juce::TextButton btnDuplicate  { "DUP (⌘D)" };
-    juce::TextButton btnCopy       { "COPY (⌘C)" };
-    juce::TextButton btnPaste      { "PASTE (⌘V)" };
+    juce::TextButton btnDuplicate  { "DUP (Cmd+D)" };
+    juce::TextButton btnCopy       { "COPY (Cmd+C)" };
+    juce::TextButton btnPaste      { "PASTE (Cmd+V)" };
     juce::TextButton btnSavePatch  { "SAVE" };
     juce::TextButton btnLoadPatch  { "OPEN" };
     juce::TextButton btnRemoveCable { "DEL" };

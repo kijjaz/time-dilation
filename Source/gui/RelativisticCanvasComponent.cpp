@@ -2247,12 +2247,12 @@ void RelativisticCanvasComponent::resized()
     int menuW = 55;
     int menuH = 32;
 
-    btnMenuFile.setBounds  (menuX,                         menuY, menuW, menuH);
-    btnMenuEdit.setBounds  (menuX + menuW + 4,             menuY, menuW, menuH);
-    btnMenuView.setBounds  (menuX + (menuW + 4) * 2,       menuY, menuW, menuH);
-    btnMenuPatch.setBounds (menuX + (menuW + 4) * 3,       menuY, menuW + 5, menuH);
-    btnMenuAudio.setBounds (menuX + (menuW + 4) * 4 + 5,   menuY, menuW + 5, menuH);
-    btnMenuHelp.setBounds  (menuX + (menuW + 4) * 5 + 10,  menuY, menuW + 5, menuH);
+    btnMenuFile.setBounds    (menuX,                         menuY, menuW, menuH);
+    btnMenuEdit.setBounds    (menuX + menuW + 4,             menuY, menuW, menuH);
+    btnMenuView.setBounds    (menuX + (menuW + 4) * 2,       menuY, menuW, menuH);
+    btnMenuObjects.setBounds (menuX + (menuW + 4) * 3,       menuY, menuW + 15, menuH);
+    btnMenuAudio.setBounds   (menuX + (menuW + 4) * 3 + menuW + 20, menuY, menuW + 5, menuH);
+    btnMenuHelp.setBounds    (menuX + (menuW + 4) * 3 + (menuW + 20) * 2, menuY, menuW + 5, menuH);
 
     // Right-Aligned Top Header Control Buttons
     btnAudioPower.setBounds (getWidth() - 165, 6, 150, 32);

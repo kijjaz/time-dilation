@@ -1,4 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Startup Splash Screen Controller
+    const splashOverlay = document.getElementById('splashOverlay');
+    if (splashOverlay) {
+        // Trigger smooth 3-second auto fade out
+        const fadeTimer = setTimeout(() => {
+            splashOverlay.classList.add('fade-out');
+        }, 100);
+
+        // Click anywhere to fade out instantly/quickly (200ms)
+        splashOverlay.addEventListener('click', () => {
+            clearTimeout(fadeTimer);
+            splashOverlay.classList.add('fast-fade');
+        });
+    }
+
     const engine = new TidalBeatEngine();
 
     const canvas = document.getElementById('beatCanvas');

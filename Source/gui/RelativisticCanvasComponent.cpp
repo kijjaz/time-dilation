@@ -471,6 +471,9 @@ void RelativisticCanvasComponent::showMenuPatch()
     subMath.addItem (35, "[snapshot~] Audio Snapshot", true);
     subMath.addItem (36, "[+] Signal/Control Adder", true);
     subMath.addItem (37, "[*] Signal/Control Multiplier", true);
+    subMath.addItem (38, "[mtof] MIDI Note -> Hz Frequency", true);
+    subMath.addItem (39, "[ftom] Hz Frequency -> MIDI Note", true);
+    subMath.addItem (40, "[note] Algorithmic Note Generator", true);
     m.addSubMenu ("Math & Control Nodes", subMath);
 
     m.addSeparator();
@@ -510,6 +513,9 @@ void RelativisticCanvasComponent::showMenuPatch()
                 else if (result == 35) typeName = "snapshot~";
                 else if (result == 36) typeName = "+";
                 else if (result == 37) typeName = "*";
+                else if (result == 38) typeName = "mtof";
+                else if (result == 39) typeName = "ftom";
+                else if (result == 40) typeName = "note";
 
                 if (!typeName.empty())
                 {

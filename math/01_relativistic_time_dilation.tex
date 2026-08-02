@@ -1,0 +1,57 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\geometry{margin=1in}
+\definecolor{primary}{RGB}{139, 92, 246}
+\definecolor{secondary}{RGB}{6, 182, 212}
+
+\title{\textbf{\Huge Relativistic Time Dilation \& Coordinate Phase Integration}\\
+\Large Theoretical Mathematics of the Time Dilation DAW Engine}
+\author{\textbf{Time Dilation DAW (v4.0) Engineering Group}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document details the mathematical framework governing relativistic coordinate time dilation, Lorentz velocity transforms, gravitational redshift event horizons, and digital audio phase integration in \textbf{Time Dilation DAW (v4.0)}.
+\end{abstract}
+
+\section{Introduction to Relativistic Coordinate Time ($\gamma$)}
+In standard Digital Audio Workstations (DAWs), digital time progresses linearly at a constant sample rate $f_s$:
+\begin{equation}
+t(n) = \frac{n}{f_s}
+\end{equation}
+In \textbf{Time Dilation DAW}, coordinate time is modulated by a dynamic relativistic factor $\gamma(t) \in [-16.0, 16.0]$, representing localized gravitational or velocity time dilation.
+
+\section{Velocity Time Dilation (Special Relativity)}
+Under Einstein's Special Theory of Relativity, coordinate time dilation for a system moving at relative velocity $v$ with respect to speed of light $c$ is defined by the Lorentz factor:
+\begin{equation}
+\gamma(v) = \frac{1}{\sqrt{1 - \frac{v^2}{c^2}}}
+\end{equation}
+For $v \to c$, $\gamma(v) \to \infty$, causing asymptotic time dilation. In our engine, $\gamma$ is clamped to $[-16.0, 16.0]$ for real-time digital stability.
+
+\section{Gravitational Time Dilation \& Event Horizon Redshift}
+Near a massive gravitational body of Schwarzschild radius $r_s = \frac{2GM}{c^2}$, time dilation at radius $r$ follows:
+\begin{equation}
+\gamma(r) = \frac{1}{\sqrt{1 - \frac{r_s}{r}}} = \frac{1}{\text{redshift}}
+\end{equation}
+As $r \to r_s$ (approaching the Event Horizon), $\text{redshift} \to 0$, causing time stasis ($\gamma \to 0.0$).
+
+\section{Coordinate Time Accumulation \& Phase Integration}
+The cumulative relativistic coordinate time $\tau(t)$ is obtained by integrating $\gamma(t')$ over physical timeline $t$:
+\begin{equation}
+\tau(t) = \int_0^t \gamma(t') \, dt'
+\end{equation}
+In discrete time at sample rate $f_s$, the per-sample phase increment $\Delta \phi(n)$ for an oscillator at frequency $f$ is:
+\begin{equation}
+\Delta \phi(n) = \frac{2\pi \cdot f \cdot |\gamma(n)|}{f_s}
+\end{equation}
+When $\gamma(n) < 0$, the phase steps backward ($\Delta \phi < 0$), executing authentic \textit{Retrograde Time Reversal}.
+
+\end{document}

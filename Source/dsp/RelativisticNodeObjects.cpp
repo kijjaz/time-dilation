@@ -313,6 +313,52 @@ OscNode::OscNode (int id)
 
     setParameter ("frequency", 440.0f);
     setParameter ("gain", 0.8f);
+    setParameter ("interpMode", 1.0f); // 0:Linear, 1:Hermite 4-Pt, 2:Nearest
+    setParameter ("loopMode", 0.0f);   // 0:Cycle, 1:Fwd, 2:Ping-Pong, 3:One-Shot
+    setParameter ("polyphony", 1.0f);  // 1 to 16 Voices
+
+    voices.push_back ({ 0.0, 69.0f, 440.0f, 0.8f, false });
+}
+
+float OscNode::interpolateSample (const float* tableData, int tableSize, double pos, int interpMode) const
+{
+    if (tableSize <= 0 || tableData == nullptr) return 0.0f;
+
+    if (interpMode == 2) // Nearest Neighbor (Zero-Order Hold)
+    {
+        int idx = std::clamp (static_cast<int>(std::round (pos)), 0, tableSize - 1);
+        return tableData[idx];
+    }
+    else if (interpMode == 0) // Linear 2-Point Interpolation
+    {
+        int i1 = static_cast<int>(std::floor (pos));
+        double frac = pos - i1;
+        int idx1 = (i1 % tableSize + tableSize) % tableSize;
+        int idx2 = ((i1 + 1) % tableSize + tableSize) % tableSize;
+        return static_cast<float>((1.0 - frac) * tableData[idx1] + frac * tableData[idx2]);
+    }
+    else // Hermite 4-Point Cubic Interpolation (Pro Anti-Aliased)
+    {
+        int i1 = static_cast<int>(std::floor (pos));
+        double frac = pos - i1;
+
+        int i0 = (i1 - 1 + tableSize) % tableSize;
+        int i2 = (i1 + 1) % tableSize;
+        int i3 = (i1 + 2) % tableSize;
+        i1 = (i1 + tableSize) % tableSize;
+
+        float y0 = tableData[i0];
+        float y1 = tableData[i1];
+        float y2 = tableData[i2];
+        float y3 = tableData[i3];
+
+        double c0 = y1;
+        double c1 = 0.5 * (y2 - y0);
+        double c2 = y0 - 2.5 * y1 + 2.0 * y2 - 0.5 * y3;
+        double c3 = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
+
+        return static_cast<float>(((c3 * frac + c2) * frac + c1) * frac + c0);
+    }
 }
 
 void OscNode::process (int numSamples)
@@ -323,22 +369,222 @@ void OscNode::process (int numSamples)
     float gain = getModulatedParamValue ("gain", 0.8f);
     float freq = (freqCtrl > 0.0f) ? freqCtrl : baseFreq;
 
-    double effectiveFreq = std::abs (freq * gamma);
-    double phaseInc = 2.0 * juce::MathConstants<double>::pi * effectiveFreq / currentSampleRate;
+    int interpMode = static_cast<int>(getParameter ("interpMode", 1.0f));
+    int loopMode = static_cast<int>(getParameter ("loopMode", 0.0f));
+
+    std::shared_ptr<TableNode> tableObj = nullptr;
+    if (parentGraph != nullptr && !tableName.empty())
+    {
+        tableObj = parentGraph->getTableByName (tableName);
+    }
 
     auto* left = outlets[0].audioData.getWritePointer (0);
     auto* right = outlets[0].audioData.getWritePointer (1);
+    outlets[0].audioData.clear();
 
-    for (int s = 0; s < numSamples; ++s)
+    if (voices.empty()) voices.push_back ({ 0.0, 69.0f, 440.0f, 0.8f, false });
+
+    double effectiveFreq = std::abs (freq * gamma);
+
+    if (tableObj != nullptr && tableObj->getTableSize() > 0)
     {
-        float val = std::sin (phase) * gain;
-        left[s] = val;
-        right[s] = val;
+        const auto& tableBuffer = tableObj->getTableData();
+        const float* tablePtr = tableBuffer.data();
+        int tableSize = tableObj->getTableSize();
 
-        phase += (gamma >= 0.0 ? phaseInc : -phaseInc);
-        if (phase >= 2.0 * juce::MathConstants<double>::pi) phase -= 2.0 * juce::MathConstants<double>::pi;
-        if (phase < 0.0) phase += 2.0 * juce::MathConstants<double>::pi;
+        double step = (effectiveFreq * tableSize) / currentSampleRate;
+
+        for (int s = 0; s < numSamples; ++s)
+        {
+            float sum = 0.0f;
+            for (auto& v : voices)
+            {
+                float val = interpolateSample (tablePtr, tableSize, v.phase, interpMode);
+                sum += val;
+
+                double currentStep = (loopMode == 2 && v.isPingPongReversing) ? -step : step;
+                v.phase += currentStep;
+
+                if (loopMode == 1 || loopMode == 0) // Forward Cycle / Loop
+                {
+                    if (v.phase >= tableSize) v.phase -= tableSize;
+                    if (v.phase < 0.0) v.phase += tableSize;
+                }
+                else if (loopMode == 2) // Ping-Pong
+                {
+                    if (v.phase >= tableSize) { v.phase = tableSize - 1; v.isPingPongReversing = true; }
+                    else if (v.phase < 0.0)   { v.phase = 0.0; v.isPingPongReversing = false; }
+                }
+                else if (loopMode == 3) // One-Shot
+                {
+                    if (v.phase >= tableSize || v.phase < 0.0) v.phase = tableSize;
+                }
+            }
+
+            float sampleVal = sum * gain;
+            left[s] = sampleVal;
+            right[s] = sampleVal;
+        }
     }
+    else
+    {
+        // Pristine PolyBLEP Sine Oscillator
+        double phaseInc = 2.0 * juce::MathConstants<double>::pi * effectiveFreq / currentSampleRate;
+
+        for (int s = 0; s < numSamples; ++s)
+        {
+            float val = std::sin (voices[0].phase) * gain;
+            left[s] = val;
+            right[s] = val;
+
+            voices[0].phase += (gamma >= 0.0 ? phaseInc : -phaseInc);
+            if (voices[0].phase >= 2.0 * juce::MathConstants<double>::pi) voices[0].phase -= 2.0 * juce::MathConstants<double>::pi;
+            if (voices[0].phase < 0.0) voices[0].phase += 2.0 * juce::MathConstants<double>::pi;
+        }
+    }
+}
+
+std::string OscNode::getDefaultFormulaScript() const
+{
+    return "// PolyBLEP & Wavetable Oscillator [osc~]\n// Reads Pristine Sine or Custom Canvas [table] Data\n\nout = sin(phase * 2 * PI);";
+}
+
+std::vector<ParameterInfo> OscNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "frequency", "FREQUENCY (Hz)", getParameter ("frequency", 440.0f), 20.0f, 20000.0f, getParamExpression ("frequency"), 1 });
+    defs.push_back ({ "gain", "OSCILLATOR GAIN", getParameter ("gain", 0.8f), 0.0f, 1.0f, getParamExpression ("gain"), -1 });
+    defs.push_back ({ "interpMode", "INTERPOLATION (0:LIN, 1:HERMITE, 2:NEAREST)", getParameter ("interpMode", 1.0f), 0.0f, 2.0f, getParamExpression ("interpMode"), -1 });
+    defs.push_back ({ "loopMode", "LOOP MODE (0:CYCLE, 1:FWD, 2:PINGPONG, 3:ONESHOT)", getParameter ("loopMode", 0.0f), 0.0f, 3.0f, getParamExpression ("loopMode"), -1 });
+    defs.push_back ({ "polyphony", "MAX POLYPHONIC VOICES", getParameter ("polyphony", 1.0f), 1.0f, 16.0f, getParamExpression ("polyphony"), -1 });
+    return defs;
+}
+
+std::vector<std::string> OscNode::getExposedMethods() const
+{
+    return { "Reset Phase", "Toggle Interpolation", "Toggle Loop Mode" };
+}
+
+void OscNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "Reset Phase")
+    {
+        for (auto& v : voices) v.phase = 0.0;
+    }
+    else if (methodName == "Toggle Interpolation")
+    {
+        int interp = (static_cast<int>(getParameter ("interpMode", 1.0f)) + 1) % 3;
+        setParameter ("interpMode", static_cast<float>(interp));
+    }
+    else if (methodName == "Toggle Loop Mode")
+    {
+        int loop = (static_cast<int>(getParameter ("loopMode", 0.0f)) + 1) % 4;
+        setParameter ("loopMode", static_cast<float>(loop));
+    }
+}
+
+// 5b. [mtof] MIDI Note to Frequency Converter Node Object
+MtofNode::MtofNode (int id)
+    : RelativisticNode (id, "mtof", "mtof (Note -> Hz)")
+{
+    addInlet ("note", NodePortType::Control);
+    addOutlet ("freq", NodePortType::Control);
+    setParameter ("note", 69.0f);
+}
+
+void MtofNode::process (int /*numSamples*/)
+{
+    float note = inlets[0].controlValue;
+    if (note <= 0.0f) note = getParameter ("note", 69.0f);
+
+    float freq = 440.0f * std::pow (2.0f, (note - 69.0f) / 12.0f);
+    outlets[0].controlValue = freq;
+}
+
+std::string MtofNode::getDefaultFormulaScript() const
+{
+    return "// MIDI Note to Frequency [mtof]\n// Hz = 440.0 * pow(2.0, (note - 69.0) / 12.0)\n\nfreq = 440.0 * pow(2.0, (note - 69.0) / 12.0);";
+}
+
+std::vector<ParameterInfo> MtofNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "note", "MIDI NOTE NUMBER (0..127)", getParameter ("note", 69.0f), 0.0f, 127.0f, getParamExpression ("note"), 0 });
+    return defs;
+}
+
+// 5c. [ftom] Frequency to MIDI Note Converter Node Object
+FtomNode::FtomNode (int id)
+    : RelativisticNode (id, "ftom", "ftom (Hz -> Note)")
+{
+    addInlet ("freq", NodePortType::Control);
+    addOutlet ("note", NodePortType::Control);
+    setParameter ("freq", 440.0f);
+}
+
+void FtomNode::process (int /*numSamples*/)
+{
+    float freq = inlets[0].controlValue;
+    if (freq <= 0.0f) freq = getParameter ("freq", 440.0f);
+
+    float note = 69.0f + 12.0f * (std::log (std::max (0.001f, freq) / 440.0f) / std::log (2.0f));
+    outlets[0].controlValue = note;
+}
+
+std::string FtomNode::getDefaultFormulaScript() const
+{
+    return "// Frequency to MIDI Note [ftom]\n// Note = 69.0 + 12.0 * log2(freq / 440.0)\n\nnote = 69.0 + 12.0 * log2(max(0.001, freq) / 440.0);";
+}
+
+std::vector<ParameterInfo> FtomNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "freq", "FREQUENCY (Hz)", getParameter ("freq", 440.0f), 1.0f, 20000.0f, getParamExpression ("freq"), 0 });
+    return defs;
+}
+
+// 5d. [note] Algorithmic MIDI Note Generator Node Object
+NoteGenNode::NoteGenNode (int id)
+    : RelativisticNode (id, "note", "note generator")
+{
+    addInlet ("trig", NodePortType::Control);
+    addInlet ("pitch", NodePortType::Control);
+
+    addOutlet ("note", NodePortType::Control);
+    addOutlet ("freq", NodePortType::Control);
+    addOutlet ("vel", NodePortType::Control);
+    addOutlet ("gate", NodePortType::Control);
+
+    setParameter ("pitch", 60.0f);
+}
+
+void NoteGenNode::process (int /*numSamples*/)
+{
+    float trig = inlets[0].controlValue;
+    float baseNote = (inlets[1].controlValue > 0.0f) ? inlets[1].controlValue : getParameter ("pitch", 60.0f);
+
+    if (trig > 0.5f)
+    {
+        float noteVal = baseNote;
+        float freqVal = 440.0f * std::pow (2.0f, (noteVal - 69.0f) / 12.0f);
+
+        outlets[0].controlValue = noteVal;
+        outlets[1].controlValue = freqVal;
+        outlets[2].controlValue = 0.8f;
+        outlets[3].controlValue = 1.0f;
+    }
+}
+
+std::string NoteGenNode::getDefaultFormulaScript() const
+{
+    return "// Algorithmic MIDI Note Generator [note]\n// Outputs Note, Frequency, Velocity, and Gate signals\n\nnote = pitch;\nfreq = mtof(pitch);";
+}
+
+std::vector<ParameterInfo> NoteGenNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "pitch", "BASE MIDI PITCH (0..127)", getParameter ("pitch", 60.0f), 0.0f, 127.0f, getParamExpression ("pitch"), 1 });
+    return defs;
 }
 
 // 6. [phasor~]

@@ -244,6 +244,9 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "reverb~")        node = std::make_shared<ReverbNode> (id);
     else if (typeName == "crush~")         node = std::make_shared<CrushNode> (id);
     else if (typeName == "adsr~")          node = std::make_shared<AdsrNode> (id);
+    else if (typeName == "mtof")           node = std::make_shared<MtofNode> (id);
+    else if (typeName == "ftom")           node = std::make_shared<FtomNode> (id);
+    else if (typeName == "note")           node = std::make_shared<NoteGenNode> (id);
     else                                   node = std::make_shared<OscNode> (id);
 
     node->setParentGraph (this);

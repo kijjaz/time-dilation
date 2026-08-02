@@ -1,0 +1,37 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\geometry{margin=1in}
+
+\title{\textbf{\Huge Directed Graph Feedback Loop Stability \& Memory Buffers}\\
+\Large Real-Time DSP Safety Guarantees in Dynamic Modular Graphs}
+\author{\textbf{Time Dilation DAW (v4.0) Engineering Group}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document formulates the cycle detection algorithms and 1-block delay buffer history allocation mechanism ensuring $100\%$ real-time audio thread stability in \textbf{Time Dilation DAW}.
+\end{abstract}
+
+\section{Modular Audio Directed Graph Representation}
+The modular audio processing network is modeled as a Directed Graph $G = (V, E)$, where $V$ represents processing nodes and $E \subseteq V \times V$ represents audio or control patch connections.
+
+\section{Feedback Loop Detection Algorithm}
+A feedback loop occurs when there exists a directed path $v_1 \to v_2 \to \dots \to v_k \to v_1$.
+Depth-First Search (DFS) with node visitation states $\text{State} \in \{\text{UNVISITED}, \text{VISITING}, \text{VISITED}\}$ identifies cyclic dependencies in $O(|V| + |E|)$ time complexity.
+
+\section{1-Block History Delay Buffer Solution}
+For any connection $e = (u, v) \in E$ forming a feedback loop cycle:
+\begin{equation}
+x_{\text{dest}}[n] = y_{\text{src, prevBlock}}[n], \quad \forall n \in [0, K_{\text{block}}-1]
+\end{equation}
+where $y_{\text{src, prevBlock}}$ is the audio buffer produced during block $N-1$.
+This guarantees zero buffer starvation, zero thread deadlocks, and absolute DSP stability without requiring zero-delay matrix solvers.
+
+\end{document}

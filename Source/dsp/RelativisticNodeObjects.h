@@ -85,7 +85,7 @@ private:
     bool isPlaying = false;
 };
 
-// 5. [osc~] PolyBLEP VA Synthesizer Oscillator Object
+// 5. [osc~] PolyBLEP & Wavetable Polyphonic Synthesizer Oscillator Object
 class OscNode : public RelativisticNode
 {
 public:
@@ -93,8 +93,53 @@ public:
     void process (int numSamples) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+
+    struct Voice
+    {
+        double phase = 0.0;
+        float note = 69.0f;
+        float freq = 440.0f;
+        float velocity = 0.8f;
+        bool isPingPongReversing = false;
+    };
+
+    float interpolateSample (const float* tableData, int tableSize, double pos, int interpMode) const;
+
 private:
-    double phase = 0.0;
+    std::vector<Voice> voices;
+    std::string tableName;
+};
+
+// 5b. [mtof] MIDI Note to Frequency (Hz) Converter Node Object
+class MtofNode : public RelativisticNode
+{
+public:
+    MtofNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// 5c. [ftom] Frequency (Hz) to MIDI Note Converter Node Object
+class FtomNode : public RelativisticNode
+{
+public:
+    FtomNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// 5d. [note] Algorithmic MIDI Note Generator Node Object
+class NoteGenNode : public RelativisticNode
+{
+public:
+    NoteGenNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
 };
 
 // 6. [phasor~] Dilated Sawtooth Ramp Generator Object

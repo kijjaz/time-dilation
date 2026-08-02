@@ -546,8 +546,10 @@ void RelativisticCanvasComponent::showMenuPatch()
 void RelativisticCanvasComponent::showMenuAudio()
 {
     juce::PopupMenu m;
-    m.addSectionHeader ("--- AUDIO ENGINE & DEVICE ---");
+    m.addSectionHeader ("--- AUDIO ENGINE & HARDWARE ---");
     m.addItem (1, "Audio Engine Power Switch", true, nodeGraph.isAudioEngineEnabled());
+    m.addItem (2, "Audio Interface Setup... (Inputs, Outputs & Devices)", true);
+    m.addSeparator();
 
     juce::PopupMenu subSampleRate;
     subSampleRate.addItem (10, "44.1 kHz", true);
@@ -565,6 +567,12 @@ void RelativisticCanvasComponent::showMenuAudio()
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuAudio),
         [this] (int result) {
             if (result == 1) btnAudioPower.triggerClick();
+            else if (result == 2)
+            {
+                juce::MessageManager::callAsync ([] {
+                    juce::JUCEApplication::getInstance()->anotherInstanceStarted ("--audio-setup");
+                });
+            }
         });
 }
 

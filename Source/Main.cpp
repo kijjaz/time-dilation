@@ -21,6 +21,7 @@ public:
 
     void initialise (const juce::String& /*commandLine*/) override
     {
+        audioDeviceManager.initialiseWithDefaultDevices (2, 2);
         createNewWindow ("Time Dilation DAW");
     }
 
@@ -32,6 +33,45 @@ public:
     void systemRequestedQuit() override
     {
         quit();
+    }
+
+    void anotherInstanceStarted (const juce::String& commandLine) override
+    {
+        if (commandLine.contains ("--audio-setup"))
+        {
+            showAudioDeviceSetupDialog();
+        }
+        else
+        {
+            createNewWindow ("Time Dilation DAW");
+        }
+    }
+
+    static void showAudioDeviceSetupDialog()
+    {
+        if (auto* app = getInstance())
+        {
+            auto selector = std::make_unique<juce::AudioDeviceSelectorComponent> (
+                app->audioDeviceManager,
+                0, 2,  // min/max input channels
+                2, 2,  // min/max output channels
+                true,  // show MIDI input options
+                true,  // show MIDI output options
+                true,  // show channels as stereo pairs
+                false  // hide advanced options
+            );
+            selector->setSize (520, 460);
+
+            juce::DialogWindow::LaunchOptions opt;
+            opt.dialogTitle = "AUDIO INTERFACE & HARDWARE SETUP";
+            opt.content.setOwned (selector.release());
+            opt.componentToCentreAround = nullptr;
+            opt.dialogBackgroundColour = juce::Colour (0xff0d1322);
+            opt.escapeKeyTriggersCloseButton = true;
+            opt.useNativeTitleBar = true;
+            opt.resizable = false;
+            opt.launchAsync();
+        }
     }
 
     class MainWindow : public juce::DocumentWindow
@@ -104,6 +144,7 @@ public:
     }
 
 private:
+    juce::AudioDeviceManager audioDeviceManager;
     juce::OwnedArray<MainWindow> windows;
 };
 

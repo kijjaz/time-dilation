@@ -552,6 +552,15 @@ void RelativisticCanvasComponent::showMenuAudio()
     m.addSeparator();
 
     juce::PopupMenu subSampleRate;
+    juce::PopupMenu subBuffer;
+
+    juce::AudioIODevice* currentDevice = nullptr;
+    if (auto* app = juce::JUCEApplication::getInstance())
+    {
+        // Try getting active device via message manager
+    }
+
+    // Populate Hardware / Calculation Sample Rates
     subSampleRate.addItem (10, "44.1 kHz (44100 Hz)", true);
     subSampleRate.addItem (11, "48.0 kHz (48000 Hz)", true);
     subSampleRate.addItem (12, "88.2 kHz (88200 Hz)", true);
@@ -559,10 +568,10 @@ void RelativisticCanvasComponent::showMenuAudio()
     subSampleRate.addItem (14, "176.4 kHz (176400 Hz)", true);
     subSampleRate.addItem (15, "192.0 kHz (192000 Hz)", true);
     subSampleRate.addSeparator();
-    subSampleRate.addItem (19, "Custom Sample Rate...", true);
+    subSampleRate.addItem (199, "Custom / Offline Calculation Rate...", true);
     m.addSubMenu ("Sample Rate", subSampleRate);
 
-    juce::PopupMenu subBuffer;
+    // Populate Hardware / Calculation Buffer Sizes
     subBuffer.addItem (20, "32 Samples (Extreme Low Latency)", true);
     subBuffer.addItem (21, "64 Samples (Ultra Low Latency)", true);
     subBuffer.addItem (22, "128 Samples (Low Latency)", true);
@@ -572,7 +581,7 @@ void RelativisticCanvasComponent::showMenuAudio()
     subBuffer.addItem (26, "2048 Samples (High Reliability)", true);
     subBuffer.addItem (27, "4096 Samples (Maximum Stability)", true);
     subBuffer.addSeparator();
-    subBuffer.addItem (29, "Custom Buffer Size...", true);
+    subBuffer.addItem (299, "Custom Buffer Size...", true);
     m.addSubMenu ("Buffer Size", subBuffer);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuAudio),
@@ -589,11 +598,11 @@ void RelativisticCanvasComponent::showMenuAudio()
                 double rates[6] = { 44100.0, 48000.0, 88200.0, 96000.0, 176400.0, 192000.0 };
                 double sr = rates[result - 10];
                 nodeGraph.prepare (sr, 512);
-                showHelpDialog ("Sample Rate Updated", "Audio DSP Engine configured to " + juce::String (sr) + " Hz.");
+                showHelpDialog ("Sample Rate Configured", "Audio DSP Engine configured to " + juce::String (sr) + " Hz.");
             }
-            else if (result == 19)
+            else if (result == 199)
             {
-                auto alert = std::make_unique<juce::AlertWindow> ("CUSTOM SAMPLE RATE", "Enter custom sample rate in Hz (e.g. 22050, 32000, 88200, 192000, 384000):", juce::AlertWindow::QuestionIcon);
+                auto alert = std::make_unique<juce::AlertWindow> ("CUSTOM CALCULATION SAMPLE RATE", "Enter sample rate in Hz for offline math/DSP calculation (e.g. 22050, 32000, 88200, 192000, 384000):", juce::AlertWindow::QuestionIcon);
                 alert->addTextEditor ("srInput", "44100", "Sample Rate (Hz):");
                 alert->addButton ("Apply", 1);
                 alert->addButton ("Cancel", 0);
@@ -604,7 +613,7 @@ void RelativisticCanvasComponent::showMenuAudio()
                         if (customSr > 1000.0 && customSr < 768000.0)
                         {
                             nodeGraph.prepare (customSr, 512);
-                            showHelpDialog ("Custom Sample Rate Applied", "Audio DSP Engine configured to " + juce::String (customSr) + " Hz.");
+                            showHelpDialog ("Custom Calculation Rate Applied", "DSP calculation engine set to " + juce::String (customSr) + " Hz.");
                         }
                     }
                 }), true);
@@ -615,9 +624,9 @@ void RelativisticCanvasComponent::showMenuAudio()
                 int sizes[8] = { 32, 64, 128, 256, 512, 1024, 2048, 4096 };
                 int bs = sizes[result - 20];
                 nodeGraph.prepare (44100.0, bs);
-                showHelpDialog ("Buffer Size Updated", "Audio DSP Engine configured to " + juce::String (bs) + " samples block size.");
+                showHelpDialog ("Buffer Size Configured", "Audio DSP Engine block size set to " + juce::String (bs) + " samples.");
             }
-            else if (result == 29)
+            else if (result == 299)
             {
                 auto alert = std::make_unique<juce::AlertWindow> ("CUSTOM BUFFER SIZE", "Enter custom buffer size in samples (e.g. 32, 64, 128, 256, 512, 1024, 2048):", juce::AlertWindow::QuestionIcon);
                 alert->addTextEditor ("bsInput", "256", "Buffer Size (Samples):");
@@ -630,7 +639,7 @@ void RelativisticCanvasComponent::showMenuAudio()
                         if (customBs >= 16 && customBs <= 65536)
                         {
                             nodeGraph.prepare (44100.0, customBs);
-                            showHelpDialog ("Custom Buffer Size Applied", "Audio DSP Engine configured to " + juce::String (customBs) + " samples block size.");
+                            showHelpDialog ("Custom Buffer Size Applied", "DSP engine block size set to " + juce::String (customBs) + " samples.");
                         }
                     }
                 }), true);

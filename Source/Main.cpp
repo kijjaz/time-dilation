@@ -19,6 +19,8 @@ public:
         return dynamic_cast<TimeDilationApplication*> (juce::JUCEApplication::getInstance());
     }
 
+    juce::AudioDeviceManager& getAudioDeviceManager() { return audioDeviceManager; }
+
     void initialise (const juce::String& /*commandLine*/) override
     {
         audioDeviceManager.initialiseWithDefaultDevices (2, 2);

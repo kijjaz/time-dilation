@@ -11,15 +11,22 @@ TimeWarpNode::TimeWarpNode (int id)
 {
     addInlet ("mod~", NodePortType::Control);
     addOutlet ("time", NodePortType::Time);
+
+    setParameter ("dilationGamma", 2.0f);
+    setParameter ("lfoSpeed", 0.5f);
 }
 
-void TimeWarpNode::process (int /*numSamples*/)
+void TimeWarpNode::process (int numSamples)
 {
     float mod = inlets[0].controlValue;
-    phase += 0.01;
-    double gamma = 1.0 + 1.5 * std::sin (phase) + mod;
+    float baseGamma = getParameter ("dilationGamma", 2.0f);
+    float lfoSpeed = getParameter ("lfoSpeed", 0.5f);
 
-    outlets[0].timeGamma = gamma;
+    double phaseInc = (2.0 * juce::MathConstants<double>::pi * lfoSpeed * numSamples) / currentSampleRate;
+    phase += phaseInc;
+
+    double gamma = baseGamma + (baseGamma * 0.5f) * std::sin (phase) + mod;
+    outlets[0].timeGamma = std::clamp (gamma, -16.0, 16.0);
 }
 
 // 2. [time.retro~]
@@ -28,11 +35,13 @@ TimeRetroNode::TimeRetroNode (int id)
 {
     addInlet ("timeIn", NodePortType::Time);
     addOutlet ("timeOut", NodePortType::Time);
+    setParameter ("reversalFactor", -1.0f);
 }
 
 void TimeRetroNode::process (int /*numSamples*/)
 {
-    outlets[0].timeGamma = -1.0 * std::abs (inlets[0].timeGamma);
+    float factor = getParameter ("reversalFactor", -1.0f);
+    outlets[0].timeGamma = factor * std::abs (inlets[0].timeGamma);
 }
 
 // 3. [time.quantize~]
@@ -41,13 +50,15 @@ TimeQuantizeNode::TimeQuantizeNode (int id)
 {
     addInlet ("timeIn", NodePortType::Time);
     addOutlet ("timeOut", NodePortType::Time);
+    setParameter ("stepDivision", 4.0f);
 }
 
 void TimeQuantizeNode::process (int /*numSamples*/)
 {
+    float steps = getParameter ("stepDivision", 4.0f);
     double rawGamma = inlets[0].timeGamma;
-    double quantized = std::round (rawGamma * 4.0) / 4.0;
-    outlets[0].timeGamma = (quantized == 0.0) ? 0.25 : quantized;
+    double quantized = std::round (rawGamma * steps) / steps;
+    outlets[0].timeGamma = (quantized == 0.0) ? (1.0 / steps) : quantized;
 }
 
 // 4. [time.metro~]
@@ -56,6 +67,7 @@ TimeMetroNode::TimeMetroNode (int id)
 {
     addInlet ("timeIn", NodePortType::Time);
     addOutlet ("pulse~", NodePortType::Audio);
+    setParameter ("bpm", 120.0f);
 }
 
 void TimeMetroNode::process (int numSamples)
@@ -63,7 +75,8 @@ void TimeMetroNode::process (int numSamples)
     double gamma = std::abs (inlets[0].timeGamma);
     if (gamma < 0.05) gamma = 1.0;
 
-    double bpm = 120.0 * gamma;
+    float baseBpm = getParameter ("bpm", 120.0f);
+    double bpm = baseBpm * gamma;
     double beatsPerSample = (bpm / 60.0) / currentSampleRate;
 
     auto* out = outlets[0].audioData.getWritePointer (0);
@@ -156,13 +169,18 @@ OscNode::OscNode (int id)
     addInlet ("timeIn", NodePortType::Time);
     addInlet ("freq", NodePortType::Control);
     addOutlet ("out~", NodePortType::Audio);
+
+    setParameter ("frequency", 440.0f);
+    setParameter ("gain", 0.8f);
 }
 
 void OscNode::process (int numSamples)
 {
     double gamma = inlets[0].timeGamma;
     float freqCtrl = inlets[1].controlValue;
-    float freq = (freqCtrl > 0.0f) ? freqCtrl : 440.0f;
+    float baseFreq = getParameter ("frequency", 440.0f);
+    float gain = getParameter ("gain", 0.8f);
+    float freq = (freqCtrl > 0.0f) ? freqCtrl : baseFreq;
 
     double effectiveFreq = std::abs (freq * gamma);
     double phaseInc = 2.0 * juce::MathConstants<double>::pi * effectiveFreq / currentSampleRate;
@@ -172,7 +190,7 @@ void OscNode::process (int numSamples)
 
     for (int s = 0; s < numSamples; ++s)
     {
-        float val = std::sin (phase) * 0.4f;
+        float val = std::sin (phase) * gain;
         left[s] = val;
         right[s] = val;
 
@@ -188,12 +206,15 @@ PhasorNode::PhasorNode (int id)
 {
     addInlet ("timeIn", NodePortType::Time);
     addOutlet ("out~", NodePortType::Audio);
+
+    setParameter ("frequency", 1.0f);
 }
 
 void PhasorNode::process (int numSamples)
 {
     double gamma = inlets[0].timeGamma;
-    double freq = 1.0 * gamma;
+    float baseFreq = getParameter ("frequency", 1.0f);
+    double freq = baseFreq * gamma;
     double phaseInc = freq / currentSampleRate;
 
     auto* out = outlets[0].audioData.getWritePointer (0);
@@ -417,6 +438,9 @@ FilterNode::FilterNode (int id)
 {
     addInlet ("in~", NodePortType::Audio);
     addOutlet ("out~", NodePortType::Audio);
+
+    setParameter ("cutoff", 1200.0f);
+    setParameter ("resonance", 0.7f);
 }
 
 void FilterNode::process (int numSamples)
@@ -425,9 +449,12 @@ void FilterNode::process (int numSamples)
     const auto* inR = inlets[0].audioData.getReadPointer (1);
 
     auto* outL = outlets[0].audioData.getWritePointer (0);
-    auto* rightL = outlets[0].audioData.getWritePointer (1);
+    auto* outR = outlets[0].audioData.getWritePointer (1);
 
-    const float alpha = 0.15f;
+    float cutoff = getParameter ("cutoff", 1200.0f);
+    cutoff = std::clamp (cutoff, 20.0f, 20000.0f);
+
+    float alpha = std::clamp (static_cast<float>(2.0 * juce::MathConstants<double>::pi * cutoff / currentSampleRate), 0.001f, 0.99f);
 
     for (int s = 0; s < numSamples; ++s)
     {
@@ -435,7 +462,7 @@ void FilterNode::process (int numSamples)
         filterStateR += alpha * (inR[s] - filterStateR);
 
         outL[s] = filterStateL;
-        rightL[s] = filterStateR;
+        outR[s] = filterStateR;
     }
 }
 
@@ -445,6 +472,9 @@ DelayNode::DelayNode (int id)
 {
     addInlet ("in~", NodePortType::Audio);
     addOutlet ("out~", NodePortType::Audio);
+
+    setParameter ("delayTimeMs", 250.0f);
+    setParameter ("feedback", 0.4f);
 }
 
 void DelayNode::prepare (double sampleRate, int samplesPerBlock)
@@ -456,8 +486,13 @@ void DelayNode::prepare (double sampleRate, int samplesPerBlock)
 
 void DelayNode::process (int numSamples)
 {
-    const int delayLength = static_cast<int>(currentSampleRate * 0.25);
+    float delayMs = getParameter ("delayTimeMs", 250.0f);
+    float feedback = getParameter ("feedback", 0.4f);
+
     const int totalBufferLength = delayBuffer.getNumSamples();
+    if (totalBufferLength <= 0) return;
+
+    int delayLength = std::clamp (static_cast<int>((delayMs / 1000.0f) * currentSampleRate), 1, totalBufferLength - 1);
 
     const auto* inL = inlets[0].audioData.getReadPointer (0);
     auto* outL = outlets[0].audioData.getWritePointer (0);
@@ -467,7 +502,7 @@ void DelayNode::process (int numSamples)
         int readPos = (writePosition - delayLength + totalBufferLength) % totalBufferLength;
         float delayedSample = delayBuffer.getSample (0, readPos);
 
-        delayBuffer.setSample (0, writePosition, inL[s] + delayedSample * 0.4f);
+        delayBuffer.setSample (0, writePosition, inL[s] + delayedSample * feedback);
         outL[s] = inL[s] + delayedSample;
 
         writePosition = (writePosition + 1) % totalBufferLength;

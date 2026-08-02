@@ -759,7 +759,11 @@ void RelativisticCanvasComponent::rebuildInspector()
         std::string paramKey = def.key;
         row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
             auto n = nodeGraph.getNodeById (primaryId);
-            if (n) n->setParameter (paramKey, static_cast<float>(sl->getValue()));
+            if (n)
+            {
+                n->setParameter (paramKey, static_cast<float>(sl->getValue()));
+                repaint();
+            }
         };
         addAndMakeVisible (*row.slider);
 

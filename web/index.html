@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidal 2.0 BeatMode & Carnatic Rhythms - Web Workstation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-title">
+                <span class="logo-symbol">🌀</span>
+                <div>
+                    <h1>TIDAL 2.0 BEATMODE & CARNATIC SOLKATTU</h1>
+                    <p class="subtitle">NUMERICAL RHYTHMIC PERMUTATIONS & ADI TALA 8-BEAT CYCLES WORKSTATION</p>
+                </div>
+            </div>
+            <div class="transport-controls">
+                <button id="modeBtn" class="btn btn-mode">BEAT MODE (Tidal 2.0)</button>
+                <button id="playBtn" class="btn btn-primary">START PERMUTATIONS</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Beat Grid Matrix Canvas -->
+            <div class="matrix-card">
+                <div class="card-header">
+                    <span class="badge">ADI TALA 8-BEAT MATRIX</span>
+                    <span id="cycleStatus" class="status-indicator">BEAT MODE: ABSOLUTE TIME CONTINUUM</span>
+                </div>
+                <canvas id="beatCanvas" width="1100" height="260"></canvas>
+            </div>
+
+            <!-- Controls Rack -->
+            <div class="controls-grid">
+                <!-- Tempo & Time Engine -->
+                <div class="control-card">
+                    <h3>TEMPO & TIMING ENGINE</h3>
+                    <div class="slider-group">
+                        <label for="bpmSlider">TEMPO: <span id="bpmVal">135</span> BPM</label>
+                        <input type="range" id="bpmSlider" min="60" max="240" value="135" step="1">
+                    </div>
+                    <div class="slider-group">
+                        <label for="swingSlider">SWING / SYNCOPATION: <span id="swingVal">0</span>%</label>
+                        <input type="range" id="swingSlider" min="0" max="75" value="0" step="1">
+                    </div>
+                </div>
+
+                <!-- Carnatic Motif Generator -->
+                <div class="control-card motif-card">
+                    <h3>ALGORITHMIC & YATI GEOMETRIC MOTIFS</h3>
+                    <div class="motif-buttons">
+                        <button class="btn btn-motif active" data-motif="0">123 (Ascending)</button>
+                        <button class="btn btn-motif" data-motif="1">321 (Descending)</button>
+                        <button class="btn btn-motif" data-motif="2">123 321 (Alternating)</button>
+                        <button class="btn btn-motif" data-motif="3">Var 7 (333 222 111 321)</button>
+                        <button class="btn btn-motif" data-motif="4">Gopuchha Yati (5->1)</button>
+                        <button class="btn btn-motif" data-motif="5">Srotovaha Yati (1->5)</button>
+                        <button class="btn btn-motif" data-motif="6">Mridanga Yati (1-3-5-3-1)</button>
+                        <button class="btn btn-motif" data-motif="7">Euclidean E(k, n)</button>
+                    </div>
+                </div>
+
+                <!-- Euclidean & Mutation Controls -->
+                <div class="control-card">
+                    <h3>EUCLIDEAN & MUTATION ENGINE</h3>
+                    <div class="slider-group">
+                        <label for="eucKSlider">EUCLIDEAN PULSES (k): <span id="eucKVal">5</span></label>
+                        <input type="range" id="eucKSlider" min="1" max="16" value="5" step="1">
+                    </div>
+                    <div class="slider-group">
+                        <label for="eucNSlider">STEPS (n): <span id="eucNVal">8</span></label>
+                        <input type="range" id="eucNSlider" min="2" max="16" value="8" step="1">
+                    </div>
+                    <button id="mutateBtn" class="btn btn-secondary">MUTATE ALGORITHM</button>
+                    <button id="exportBtn" class="btn btn-accent">BOUNCE CARNATIC WAV</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Inspired by Alex McLean's Tidal 2.0 <code>beatMode</code> & Somashekar Jois / B C Manjunath Carnatic Konnakol Rhythms.</p>
+        </footer>
+    </div>
+
+    <script src="tidal_beat_engine.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

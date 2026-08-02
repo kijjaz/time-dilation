@@ -759,6 +759,7 @@ void RelativisticCanvasComponent::rebuildInspector()
         row.slider->setRange (def.minValue, def.maxValue, 0.1);
         row.slider->setValue (def.value);
         std::string paramKey = def.key;
+        row.slider->onDragStart = [this] { nodeGraph.pushUndoState(); };
         row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
             auto n = nodeGraph.getNodeById (primaryId);
             if (n)

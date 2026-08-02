@@ -190,6 +190,7 @@ void RelativisticNode::loadFromValueTree (const juce::ValueTree& v)
 
 RelativisticNodeGraph::RelativisticNodeGraph()
 {
+    pushUndoState();
 }
 
 void RelativisticNodeGraph::prepare (double sr, int samplesPerBlock)
@@ -404,7 +405,7 @@ bool RelativisticNodeGraph::undo()
     if (canUndo())
     {
         undoIndex--;
-        loadFromValueTree (undoStack[undoIndex]);
+        loadFromValueTree (undoStack[undoIndex], true);
         return true;
     }
     return false;
@@ -415,7 +416,7 @@ bool RelativisticNodeGraph::redo()
     if (canRedo())
     {
         undoIndex++;
-        loadFromValueTree (undoStack[undoIndex]);
+        loadFromValueTree (undoStack[undoIndex], true);
         return true;
     }
     return false;
@@ -555,7 +556,7 @@ juce::ValueTree RelativisticNodeGraph::saveToValueTree() const
     return tree;
 }
 
-void RelativisticNodeGraph::loadFromValueTree (const juce::ValueTree& tree)
+void RelativisticNodeGraph::loadFromValueTree (const juce::ValueTree& tree, bool isRestoringUndo)
 {
     clearGraph();
     audioEngineEnabled = tree.getProperty ("audioEngineEnabled", false);
@@ -587,15 +588,18 @@ void RelativisticNodeGraph::loadFromValueTree (const juce::ValueTree& tree)
         }
     }
 
-    // Restore Persistent Undo Stack from File!
-    auto undoHistoryTree = tree.getChildWithName ("UndoHistory");
-    if (undoHistoryTree.isValid())
+    // Restore Persistent Undo Stack from File ONLY if not restoring during undo/redo!
+    if (!isRestoringUndo)
     {
-        undoStack.clear();
-        undoIndex = undoHistoryTree.getProperty ("undoIndex", -1);
-        for (int i = 0; i < undoHistoryTree.getNumChildren(); ++i)
+        auto undoHistoryTree = tree.getChildWithName ("UndoHistory");
+        if (undoHistoryTree.isValid())
         {
-            undoStack.push_back (undoHistoryTree.getChild (i).createCopy());
+            undoStack.clear();
+            undoIndex = undoHistoryTree.getProperty ("undoIndex", -1);
+            for (int i = 0; i < undoHistoryTree.getNumChildren(); ++i)
+            {
+                undoStack.push_back (undoHistoryTree.getChild (i).createCopy());
+            }
         }
     }
 }

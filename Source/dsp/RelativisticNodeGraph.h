@@ -197,7 +197,7 @@ public:
     void detectFeedbackLoops();
 
     juce::ValueTree saveToValueTree() const;
-    void loadFromValueTree (const juce::ValueTree& v);
+    void loadFromValueTree (const juce::ValueTree& v, bool isRestoringUndo = false);
 
 private:
     double sampleRate = 44100.0;

@@ -177,6 +177,7 @@ public:
     void loadTimeSingularityExamplePatch();
     void loadTimeQuantizeExamplePatch();
     void loadTimeTransportExamplePatch();
+    void loadTableExamplePatch();
 
     // Undo / Redo Persistent Stack
     void pushUndoState();

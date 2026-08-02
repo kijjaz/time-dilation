@@ -1586,10 +1586,20 @@ void TableNode::writeSample (int idx, float val)
     }
 }
 
+void TableNode::writeSampleNormalized (float normX, float normVal)
+{
+    if (buffer.empty()) return;
+    int sz = static_cast<int>(buffer.size());
+    int idx = std::clamp (static_cast<int>(normX * sz), 0, sz - 1);
+    buffer[static_cast<size_t>(idx)] = normVal;
+}
+
 void TableNode::generatePreset (int presetIndex)
 {
     int sz = getSize();
     if (sz <= 0) return;
+
+    static const float stepPitches[8] = { 60.0f, 64.0f, 67.0f, 72.0f, 74.0f, 76.0f, 79.0f, 84.0f };
 
     for (int i = 0; i < sz; ++i)
     {
@@ -1612,9 +1622,14 @@ void TableNode::generatePreset (int presetIndex)
         {
             val = (phaseFrac < 0.5f) ? 1.0f : -1.0f;
         }
-        else if (presetIndex == 4) // Random Noise
+        else if (presetIndex == 4) // Random Noise / Wave
         {
             val = (static_cast<float>(rand()) / RAND_MAX) * 2.0f - 1.0f;
+        }
+        else if (presetIndex == 5) // 8-Step Arpeggio MIDI Sequence
+        {
+            int step = static_cast<int>(phaseFrac * 8.0f) % 8;
+            val = stepPitches[step];
         }
 
         buffer[static_cast<size_t>(i)] = val;

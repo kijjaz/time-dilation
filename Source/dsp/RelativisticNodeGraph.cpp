@@ -494,6 +494,32 @@ void RelativisticNodeGraph::loadTimeTransportExamplePatch()
     detectFeedbackLoops();
 }
 
+void RelativisticNodeGraph::loadTableExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nTable  = addNode ("table",   80.0f, 100.0f);
+    int nOsc    = addNode ("osc~",    280.0f, 100.0f);
+    int nFilter = addNode ("filter~", 280.0f, 260.0f);
+    int nOut    = addNode ("out~",    280.0f, 400.0f);
+    int nDac    = addNode ("dac~",    480.0f, 400.0f);
+
+    auto nodeOsc = getNodeById (nOsc);
+    if (nodeOsc) nodeOsc->setLabel ("osc~ array1");
+
+    auto nodeFilter = getNodeById (nFilter);
+    if (nodeFilter) nodeFilter->setParameter ("cutoff", 1800.0f);
+
+    addConnection (nOsc, 0, nFilter, 0);    // osc~ -> filter~
+    addConnection (nFilter, 0, nOut, 0);   // filter~ -> out~ L
+    addConnection (nFilter, 0, nOut, 1);   // filter~ -> out~ R
+    addConnection (nFilter, 0, nDac, 0);   // filter~ -> dac~ L
+    addConnection (nFilter, 0, nDac, 1);   // filter~ -> dac~ R
+
+    detectFeedbackLoops();
+}
+
 void RelativisticNodeGraph::pushUndoState()
 {
     auto currentState = saveToValueTree();

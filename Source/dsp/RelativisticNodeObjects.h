@@ -389,12 +389,15 @@ public:
     void setTableName (const std::string& name) { tableName = name; setLabel ("table " + name); }
 
     int getSize() const { return static_cast<int>(buffer.size()); }
+    int getTableSize() const { return getSize(); }
     void resize (int newSize);
 
     float readSample (int idx) const;
     float readSampleHermite (double pos) const;
     void writeSample (int idx, float val);
+    void writeSampleNormalized (float normX, float normVal);
     const std::vector<float>& getBufferData() const { return buffer; }
+    const std::vector<float>& getTableData() const { return buffer; }
 
     void generatePreset (int presetIndex);
 

@@ -571,6 +571,16 @@ void RelativisticCanvasComponent::showMenuAudio()
 void RelativisticCanvasComponent::showMenuHelp()
 {
     juce::PopupMenu m;
+    m.addSectionHeader ("--- INTERACTIVE EXAMPLE PATCHES ---");
+    m.addItem (10, "[time.warp~] Continuous Warp Speed Oscillator", true);
+    m.addItem (11, "[time.retro~] Retrograde Reverse Playback", true);
+    m.addItem (12, "[time.stasis~] Event Horizon Stasis Freeze", true);
+    m.addItem (13, "[time.singularity~] Black Hole Gravitational Warping", true);
+    m.addItem (14, "[time.quantize~] Relativistic Stutter Grid", true);
+    m.addItem (15, "[time.transport] Multi-Clock Transport Sync", true);
+    m.addItem (16, "[table] Interactive Waveform Drawing & Wavetable Synth", true);
+
+    m.addSeparator();
     m.addSectionHeader ("--- USER HELP & WORKSTATION MANUAL ---");
     m.addItem (1, "Quick Start Guide", true);
     m.addItem (2, "Relativistic Time Dilation Architecture Manual", true);
@@ -578,22 +588,19 @@ void RelativisticCanvasComponent::showMenuHelp()
     m.addItem (4, "Pure Data Expression Scripting & C++ Math", true);
     m.addItem (5, "1-Sample Feedback Loop Protection", true);
     m.addItem (6, "Keyboard Shortcuts & Hotkeys", true);
-
-    juce::PopupMenu subExamples;
-    subExamples.addItem (10, "[time.warp~] Continuous Warp Speed Oscillator", true);
-    subExamples.addItem (11, "[time.retro~] Retrograde Reverse Playback", true);
-    subExamples.addItem (12, "[time.stasis~] Event Horizon Stasis Freeze", true);
-    subExamples.addItem (13, "[time.singularity~] Black Hole Gravitational Warping", true);
-    subExamples.addItem (14, "[time.quantize~] Relativistic Stutter Grid", true);
-    subExamples.addItem (15, "[time.transport] Multi-Clock Transport Sync", true);
-    m.addSubMenu ("Relativistic Time Example Patches", subExamples);
-
     m.addSeparator();
     m.addItem (7, "About Time Dilation DAW (v4.0)...", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuHelp),
         [this] (int result) {
-            if (result == 1)
+            if (result == 10) { nodeGraph.loadTimeWarpExamplePatch(); repaint(); }
+            else if (result == 11) { nodeGraph.loadTimeRetroExamplePatch(); repaint(); }
+            else if (result == 12) { nodeGraph.loadTimeStasisExamplePatch(); repaint(); }
+            else if (result == 13) { nodeGraph.loadTimeSingularityExamplePatch(); repaint(); }
+            else if (result == 14) { nodeGraph.loadTimeQuantizeExamplePatch(); repaint(); }
+            else if (result == 15) { nodeGraph.loadTimeTransportExamplePatch(); repaint(); }
+            else if (result == 16) { nodeGraph.loadTableExamplePatch(); repaint(); }
+            else if (result == 1)
             {
                 showHelpDialog ("Quick Start Guide",
                     "Welcome to Time Dilation DAW (v4.0)!\n\n"
@@ -712,11 +719,12 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (11, "[expr]         Control Expression ($v1, tap('node.prop'))", true);
     m.addItem (12, "[expr~]        Audio Expression ($v1, tap('node.prop'))", true);
     m.addItem (13, "[fexpr~]       Filter Recurrent Expression ($y1[-1])", true);
-    m.addItem (19, "[v]            Value Storage Control Node", true);
-    m.addItem (20, "[z~]           1-Sample Feedback Delay Node", true);
-    m.addItem (21, "[snapshot~]    Audio-to-Control Snapshot Node", true);
-    m.addItem (22, "[+]            Signal & Control Adder", true);
-    m.addItem (23, "[*]            Signal & Control Multiplier", true);
+    m.addSeparator();
+    m.addSectionHeader ("--- TABLES & ARRAY DATA NODES ---");
+    m.addItem (26, "[table]        Interactive Table / Array Buffer", true);
+    m.addItem (27, "[tabread~]     Table Sample / Pitch Reader", true);
+    m.addItem (28, "[tabwrite~]    Live Audio/Data Table Recorder", true);
+    m.addItem (29, "[tabosc4~]     4-Pt Wavetable Oscillator", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (juce::Rectangle<int> (static_cast<int>(spawnPos.x), static_cast<int>(spawnPos.y), 1, 1)),
         [this, spawnPos] (int result) {
@@ -746,6 +754,10 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
             else if (result == 23) typeName = "*";
             else if (result == 24) typeName = "time.stasis~";
             else if (result == 25) typeName = "time.singularity~";
+            else if (result == 26) typeName = "table";
+            else if (result == 27) typeName = "tabread~";
+            else if (result == 28) typeName = "tabwrite~";
+            else if (result == 29) typeName = "tabosc4~";
 
             if (!typeName.empty())
             {
@@ -1014,6 +1026,31 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
     juce::Point<float> mousePos = e.position;
     bool isShift = e.mods.isShiftDown();
 
+    // 0. Check Table Node Waveform Graph Click / Drag
+    for (const auto& node : nodeGraph.getNodes())
+    {
+        if (auto tableNode = std::dynamic_pointer_cast<TableNode> (node))
+        {
+            float graphX = tableNode->getX() + 8.0f;
+            float graphY = tableNode->getY() + 22.0f;
+            float graphW = 150.0f - 16.0f;
+            float graphH = 68.0f - 26.0f;
+
+            if (mousePos.x >= graphX && mousePos.x <= graphX + graphW &&
+                mousePos.y >= graphY && mousePos.y <= graphY + graphH)
+            {
+                float normX = std::clamp ((mousePos.x - graphX) / graphW, 0.0f, 1.0f);
+                float normY = 1.0f - 2.0f * std::clamp ((mousePos.y - graphY) / graphH, 0.0f, 1.0f);
+                tableNode->writeSampleNormalized (normX, normY);
+                selectedNodeIds.clear();
+                selectedNodeIds.insert (tableNode->getId());
+                rebuildInspector();
+                repaint();
+                return;
+            }
+        }
+    }
+
     // 1. Check Outlet Click (Cable Creation)
     for (const auto& node : nodeGraph.getNodes())
     {
@@ -1137,6 +1174,31 @@ void RelativisticCanvasComponent::mouseDoubleClick (const juce::MouseEvent& e)
 
 void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
 {
+    juce::Point<float> mousePos = e.position;
+
+    // Check Table Node Mouse Drag Graph Drawing
+    if (selectedNodeIds.size() == 1)
+    {
+        auto n = nodeGraph.getNodeById (*selectedNodeIds.begin());
+        if (auto tableNode = std::dynamic_pointer_cast<TableNode> (n))
+        {
+            float graphX = tableNode->getX() + 8.0f;
+            float graphY = tableNode->getY() + 22.0f;
+            float graphW = 150.0f - 16.0f;
+            float graphH = 68.0f - 26.0f;
+
+            if (e.mouseDownPosition.x >= graphX && e.mouseDownPosition.x <= graphX + graphW &&
+                e.mouseDownPosition.y >= graphY && e.mouseDownPosition.y <= graphY + graphH)
+            {
+                float normX = std::clamp ((mousePos.x - graphX) / graphW, 0.0f, 1.0f);
+                float normY = 1.0f - 2.0f * std::clamp ((mousePos.y - graphY) / graphH, 0.0f, 1.0f);
+                tableNode->writeSampleNormalized (normX, normY);
+                repaint();
+                return;
+            }
+        }
+    }
+
     if (isDraggingCable)
     {
         cableDragPos = e.position;
@@ -1368,7 +1430,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
     const float x = node->getX();
     const float y = node->getY();
     const float w = 150.0f;
-    const float h = 44.0f;
+    const float h = (node->getTypeName() == "table") ? 68.0f : 44.0f;
 
     bool isTimeObj = node->getTypeName().rfind ("time.", 0) == 0;
     bool isAudioObj = node->getTypeName().find ("~") != std::string::npos || node->getTypeName() == "dac~" || node->getTypeName() == "gain~" || node->getTypeName() == "out~";
@@ -1400,6 +1462,64 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
     {
         g.setColour (juce::Colour (0xff2e2e42)); // Hairline Dark Slate Border
         g.drawRoundedRectangle (x, y, w, h, 6.0f, 1.0f);
+    }
+
+    // Special Canvas Visualization for [table] Interactive Waveform / Step Sequencer Canvas
+    auto tableNode = std::dynamic_pointer_cast<TableNode> (node);
+    if (tableNode)
+    {
+        float graphX = x + 8.0f;
+        float graphY = y + 22.0f;
+        float graphW = w - 16.0f;
+        float graphH = h - 26.0f;
+
+        g.setColour (juce::Colour (0xff070a12));
+        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
+        g.setColour (juce::Colour (0xff1e293b));
+        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
+
+        const auto& data = tableNode->getTableData();
+        int dataSize = static_cast<int>(data.size());
+        if (dataSize > 0)
+        {
+            juce::Path wavePath;
+            float midY = graphY + graphH * 0.5f;
+
+            if (dataSize <= 16) // Step Bar Mode
+            {
+                float stepW = graphW / static_cast<float>(dataSize);
+                for (int i = 0; i < dataSize; ++i)
+                {
+                    float val = data[i];
+                    float normVal = (val > 1.5f) ? (val / 127.0f) : val;
+                    float barH = (normVal * 0.5f) * graphH;
+                    float bx = graphX + i * stepW;
+
+                    g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.85f));
+                    if (normVal < 0.0f)
+                        g.fillRect (bx + 1.0f, midY, stepW - 2.0f, -barH);
+                    else
+                        g.fillRect (bx + 1.0f, midY - barH, stepW - 2.0f, barH);
+                }
+            }
+            else // Continuous Waveform Mode
+            {
+                int sampleStep = std::max (1, dataSize / 64);
+                for (int i = 0; i < 64; ++i)
+                {
+                    int sampleIdx = std::min (dataSize - 1, i * sampleStep);
+                    float val = std::clamp (data[sampleIdx], -1.0f, 1.0f);
+                    float px = graphX + (static_cast<float>(i) / 63.0f) * graphW;
+                    float py = midY - val * (graphH * 0.45f);
+
+                    if (i == 0) wavePath.startNewSubPath (px, py);
+                    else        wavePath.lineTo (px, py);
+                }
+
+                g.setColour (juce::Colour (0xff06b6d4)); // Cyber Cyan
+                g.strokePath (wavePath, juce::PathStrokeType (1.5f));
+            }
+        }
     }
 
     // Special Canvas Visualization for [out~] Live VU RMS Meters

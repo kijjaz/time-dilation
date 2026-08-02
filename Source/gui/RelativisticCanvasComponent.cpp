@@ -102,6 +102,7 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
     btnMenuView.onClick = [this] { showMenuView(); };
 
     addAndMakeVisible (btnMenuObjects);
+    btnMenuObjects.setButtonText ("Objects");
     btnMenuObjects.onClick = [this] { showMenuObjects(); };
 
     addAndMakeVisible (btnMenuAudio);
@@ -443,6 +444,20 @@ void RelativisticCanvasComponent::showMenuView()
     juce::PopupMenu m;
     m.addSectionHeader ("--- CANVAS & INTERFACE VIEW ---");
 
+    juce::PopupMenu subZoom;
+    subZoom.addItem (100, "Zoom In (Cmd+=)", true);
+    subZoom.addItem (101, "Zoom Out (Cmd+-)", true);
+    subZoom.addItem (102, "Reset Zoom 100% (Cmd+0)", true);
+    subZoom.addSeparator();
+    subZoom.addItem (103, "50%", true, std::abs (zoomLevel - 0.5f) < 0.05f);
+    subZoom.addItem (104, "75%", true, std::abs (zoomLevel - 0.75f) < 0.05f);
+    subZoom.addItem (105, "100% (Normal)", true, std::abs (zoomLevel - 1.0f) < 0.05f);
+    subZoom.addItem (106, "125%", true, std::abs (zoomLevel - 1.25f) < 0.05f);
+    subZoom.addItem (107, "150%", true, std::abs (zoomLevel - 1.5f) < 0.05f);
+    subZoom.addItem (108, "200%", true, std::abs (zoomLevel - 2.0f) < 0.05f);
+    m.addSubMenu ("Canvas Zoom Level (" + juce::String (static_cast<int>(zoomLevel * 100.0f)) + "%)", subZoom);
+
+    m.addSeparator();
     m.addItem (2, "Show Canvas Grid (Dot Matrix)", true, showGrid);
     m.addItem (3, "Snap to Grid", true, snapToGrid);
 
@@ -460,16 +475,25 @@ void RelativisticCanvasComponent::showMenuView()
     m.addSubMenu ("Patch Cord Style", subCords);
 
     m.addSeparator();
-    m.addItem (1, "Recenter Canvas View", true);
+    m.addItem (1, "Recenter Canvas View & Reset Zoom", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuView),
         [this] (int result) {
-            if (result == 1) { panX = 0.0f; panY = 0.0f; }
+            if (result == 1) { panX = 0.0f; panY = 0.0f; resetZoom(); }
             else if (result == 2) { showGrid = !showGrid; }
             else if (result == 3) { snapToGrid = !snapToGrid; }
             else if (result == 20) { gridSize = 12.0f; }
             else if (result == 21) { gridSize = 24.0f; }
             else if (result == 22) { gridSize = 48.0f; }
+            else if (result == 100) { zoomIn(); }
+            else if (result == 101) { zoomOut(); }
+            else if (result == 102) { resetZoom(); }
+            else if (result == 103) { setZoomLevel (0.5f); }
+            else if (result == 104) { setZoomLevel (0.75f); }
+            else if (result == 105) { setZoomLevel (1.0f); }
+            else if (result == 106) { setZoomLevel (1.25f); }
+            else if (result == 107) { setZoomLevel (1.5f); }
+            else if (result == 108) { setZoomLevel (2.0f); }
             else if (result == 10) { cableStyle = CableStyle::Organic; btnToggleCord.setButtonText ("CORDS: ORGANIC"); }
             else if (result == 11) { cableStyle = CableStyle::SmoothS; btnToggleCord.setButtonText ("CORDS: SMOOTH S"); }
             else if (result == 12) { cableStyle = CableStyle::Straight; btnToggleCord.setButtonText ("CORDS: STRAIGHT"); }
@@ -1133,6 +1157,26 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
             return true;
         }
     }
+    // 8a. Zoom In (Cmd+= / Cmd++)
+    if (isCmdOrCtrl && (key.getKeyCode() == '=' || key.getKeyCode() == '+'))
+    {
+        zoomIn();
+        return true;
+    }
+
+    // 8b. Zoom Out (Cmd--)
+    if (isCmdOrCtrl && (key.getKeyCode() == '-' || key.getKeyCode() == '_'))
+    {
+        zoomOut();
+        return true;
+    }
+
+    // 8c. Reset Zoom 100% (Cmd-0)
+    if (isCmdOrCtrl && key.getKeyCode() == '0')
+    {
+        resetZoom();
+        return true;
+    }
 
     // 9. Add Object Hotkey (Cmd+1 or N key)
     if ((isCmdOrCtrl && key.getKeyCode() == '1') ||
@@ -1252,6 +1296,55 @@ juce::Point<float> RelativisticCanvasComponent::getOutletPos (const Relativistic
     const int count = static_cast<int>(node.getOutlets().size());
     const float spacing = nodeW / static_cast<float>(count + 1);
     return { node.getX() + panX + spacing * (idx + 1), node.getY() + panY + nodeH };
+}
+
+void RelativisticCanvasComponent::setZoomLevel (float newZoom, juce::Point<float> anchorPos)
+{
+    float clampedZoom = std::clamp (newZoom, 0.4f, 2.5f);
+    if (std::abs (clampedZoom - zoomLevel) < 0.001f) return;
+
+    if (anchorPos.x == 0.0f && anchorPos.y == 0.0f)
+    {
+        anchorPos = { getWidth() * 0.5f, getHeight() * 0.5f };
+    }
+
+    float factor = clampedZoom / zoomLevel;
+    panX = anchorPos.x - factor * (anchorPos.x - panX);
+    panY = anchorPos.y - factor * (anchorPos.y - panY);
+
+    zoomLevel = clampedZoom;
+    repaint();
+}
+
+void RelativisticCanvasComponent::zoomIn()
+{
+    setZoomLevel (zoomLevel * 1.15f);
+}
+
+void RelativisticCanvasComponent::zoomOut()
+{
+    setZoomLevel (zoomLevel / 1.15f);
+}
+
+void RelativisticCanvasComponent::resetZoom()
+{
+    zoomLevel = 1.0f;
+    repaint();
+}
+
+void RelativisticCanvasComponent::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
+{
+    if (e.mods.isCommandDown() || e.mods.isCtrlDown() || e.mods.isAltDown())
+    {
+        float zoomDelta = (wheel.deltaY > 0.0f) ? 1.1f : 0.9f;
+        setZoomLevel (zoomLevel * zoomDelta, e.position);
+    }
+    else
+    {
+        panX += wheel.deltaX * 120.0f;
+        panY += wheel.deltaY * 120.0f;
+        repaint();
+    }
 }
 
 void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)

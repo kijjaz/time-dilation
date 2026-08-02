@@ -42,9 +42,13 @@ public:
 
     void mouseDown (const juce::MouseEvent& e) override;
     void mouseDoubleClick (const juce::MouseEvent& e) override;
-    void mouseDrag (const juce::MouseEvent& e) override;
-    void mouseUp (const juce::MouseEvent& e) override;
-    void mouseMove (const juce::MouseEvent& e) override;
+    void mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override;
+
+    void zoomIn();
+    void zoomOut();
+    void resetZoom();
+    void setZoomLevel (float newZoom, juce::Point<float> anchorPos = { 0, 0 });
+    float getZoomLevel() const { return zoomLevel; }
 
 private:
     RelativisticNodeGraph& nodeGraph;
@@ -54,6 +58,7 @@ private:
     bool showGrid = true;
     bool snapToGrid = false;
     float gridSize = 24.0f;
+    float zoomLevel = 1.0f;
     std::set<int> selectedNodeIds;
     int selectedConnectionId = 0;
     int draggingNodeId = 0;

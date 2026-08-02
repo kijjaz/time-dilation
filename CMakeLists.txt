@@ -89,6 +89,8 @@ target_include_directories(TimeDilationDAW PRIVATE
 # Binary Assets (Fonts & Graphics)
 juce_add_binary_data(TimeDilationAssets
     SOURCES
+        Source/assets/fonts/Oxanium-Bold.ttf
+        Source/assets/fonts/Oxanium-Regular.ttf
         Source/assets/fonts/SmoochSans.ttf
         Source/assets/fonts/NotoSans.ttf
 )

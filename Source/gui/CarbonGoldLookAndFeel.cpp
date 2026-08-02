@@ -16,11 +16,12 @@ CarbonGoldLookAndFeel::CarbonGoldLookAndFeel()
 
 juce::Typeface::Ptr CarbonGoldLookAndFeel::getTypefaceForFont (const juce::Font& font)
 {
-    auto smoochTf = FontManager::getInstance().getSmoochTypeface();
-    auto notoTf = FontManager::getInstance().getNotoTypeface();
+    bool isBold = font.isBold();
+    auto oxaniumTf = isBold ? FontManager::getInstance().getOxaniumBoldTypeface() : FontManager::getInstance().getOxaniumRegularTypeface();
+    if (oxaniumTf != nullptr) return oxaniumTf;
 
-    if (smoochTf != nullptr) return smoochTf;
-    if (notoTf != nullptr) return notoTf;
+    auto fallbackTf = FontManager::getInstance().getOxaniumRegularTypeface();
+    if (fallbackTf != nullptr) return fallbackTf;
 
     return LookAndFeel_V4::getTypefaceForFont (font);
 }

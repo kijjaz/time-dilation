@@ -26,4 +26,7 @@ private:
 
     RelativisticCanvasComponent canvasComponent;
 
-    JUCE_DECLARE_NON_COPYABLE_WIT
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeDilationAudioProcessorEditor)
+};
+
+} // namespace time_dilation

@@ -1499,8 +1499,8 @@ void RelativisticCanvasComponent::drawCable (juce::Graphics& g, juce::Point<floa
     g.setColour (cableColour);
     g.strokePath (path, juce::PathStrokeType (isFeedbackLoop ? 3.5f : 2.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
-    // 3. Render Feedback Warning Badge on Cable Midpoint
-    if (isFeedbackLoop)
+    // 3. Render Feedback Warning Badge on Cable Midpoint (only on return cable to prevent duplicate overlapping badges)
+    if (isFeedbackLoop && (p1.x > p2.x || p1.y > p2.y))
     {
         juce::Point<float> mid = path.getPointAlongPath (path.getLength() * 0.5f);
         g.setColour (juce::Colour (0xff7f1d1d));
@@ -1508,7 +1508,7 @@ void RelativisticCanvasComponent::drawCable (juce::Graphics& g, juce::Point<floa
         g.setColour (juce::Colour (0xffef4444));
         g.drawRoundedRectangle (mid.x - 70.0f, mid.y - 10.0f, 140.0f, 20.0f, 4.0f, 1.0f);
         g.setColour (juce::Colour (0xfff8fafc));
-        g.setFont (juce::FontOptions (12.0f, juce::Font::bold));
+        g.setFont (FontManager::getInstance().getOxaniumFont (11.0f, true));
         g.drawText ("[FEEDBACK: 1-SMP DELAY]", mid.x - 70.0f, mid.y - 10.0f, 140.0f, 20.0f, juce::Justification::centred);
     }
 }

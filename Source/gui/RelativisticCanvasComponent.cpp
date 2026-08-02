@@ -348,7 +348,7 @@ void RelativisticCanvasComponent::showMenuFile()
     juce::PopupMenu m;
     m.addSectionHeader ("--- PROJECT FILE MANAGEMENT ---");
     m.addItem (1, "New Patch", true);
-    m.addItem (5, "New Window (⌘N)", true);
+    m.addItem (5, "New Window (Cmd+N)", true);
     m.addItem (2, "Open Patch...", true);
     m.addItem (3, "Save Patch", true);
     m.addItem (4, "Save Patch As...", true);
@@ -397,15 +397,15 @@ void RelativisticCanvasComponent::showMenuEdit()
 {
     juce::PopupMenu m;
     m.addSectionHeader ("--- EDIT ACTIONS ---");
-    m.addItem (1, "Undo (⌘Z)", nodeGraph.canUndo());
-    m.addItem (2, "Redo (⌘⇧Z)", nodeGraph.canRedo());
+    m.addItem (1, "Undo (Cmd+Z)", nodeGraph.canUndo());
+    m.addItem (2, "Redo (Cmd+Shift+Z)", nodeGraph.canRedo());
     m.addSeparator();
-    m.addItem (3, "Cut (⌘X)", !selectedNodeIds.empty());
-    m.addItem (4, "Copy (⌘C)", !selectedNodeIds.empty());
-    m.addItem (5, "Paste (⌘V)", true);
-    m.addItem (6, "Duplicate (⌘D)", !selectedNodeIds.empty());
+    m.addItem (3, "Cut (Cmd+X)", !selectedNodeIds.empty());
+    m.addItem (4, "Copy (Cmd+C)", !selectedNodeIds.empty());
+    m.addItem (5, "Paste (Cmd+V)", true);
+    m.addItem (6, "Duplicate (Cmd+D)", !selectedNodeIds.empty());
     m.addSeparator();
-    m.addItem (7, "Select All (⌘A)", true);
+    m.addItem (7, "Select All (Cmd+A)", true);
     m.addItem (8, "Clear Patch", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuEdit),

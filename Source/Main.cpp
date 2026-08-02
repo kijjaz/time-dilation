@@ -11,7 +11,7 @@ public:
     TimeDilationApplication() {}
 
     const juce::String getApplicationName() override { return "Time Dilation DAW"; }
-    const juce::String getApplicationVersion() override { return "1.0.0"; }
+    const juce::String getApplicationVersion() override { return "0.0.1"; }
     bool moreThanOneInstanceAllowed() override { return true; }
 
     static TimeDilationApplication* getInstance()

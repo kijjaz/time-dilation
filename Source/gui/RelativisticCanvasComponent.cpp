@@ -762,7 +762,7 @@ void RelativisticCanvasComponent::showMenuHelp()
             else if (result == 7)
             {
                 showHelpDialog ("About Time Dilation DAW",
-                    "Time Dilation DAW (Version 4.0)\n"
+                    "Time Dilation DAW (Version 0.0.1)\n"
                     "Producer: Kijjaz\n\n"
                     "A state-of-the-art Relativistic Modular Workstation unifying top-down visual patching with bottom-up authentic C++ / DSP math expression coding.");
             }

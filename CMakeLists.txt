@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(TimeDilationDAW VERSION 1.0.0 LANGUAGES C CXX)
+project(TimeDilationDAW VERSION 0.0.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(tracktion_engine)
 # Define Native Standalone DAW App & VST3/AU Plugin
 juce_add_plugin(TimeDilationDAW
     COMPANY_NAME "Kijjaz"
+    VERSION "0.0.1"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE

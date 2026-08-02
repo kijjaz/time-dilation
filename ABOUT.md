@@ -1,6 +1,6 @@
-# Time Dilation DAW Workstation (Version 4.0 Specification)
+# Time Dilation DAW Workstation (Version 0.0.1)
 > **Producer**: Kijjaz  
-> **Status**: Active Production (Version 4.0)  
+> **Status**: Active Production (Version 0.0.1)  
 > **Platform Stack**: Native C++20 / JUCE 7 & Tracktion Engine (Standalone Workstation & VST3 / AU Audio Plugin)  
 
 ---

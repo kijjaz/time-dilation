@@ -652,15 +652,6 @@ juce::ValueTree RelativisticNodeGraph::saveToValueTree() const
     }
     tree.addChild (connsTree, -1, nullptr);
 
-    // Save Persistent Undo Stack inside File!
-    juce::ValueTree undoHistoryTree ("UndoHistory");
-    undoHistoryTree.setProperty ("undoIndex", undoIndex, nullptr);
-    for (const auto& uState : undoStack)
-    {
-        undoHistoryTree.addChild (uState.createCopy(), -1, nullptr);
-    }
-    tree.addChild (undoHistoryTree, -1, nullptr);
-
     return tree;
 }
 

@@ -91,7 +91,7 @@ public:
             setContentOwned (editor, true);
 
             setResizable (true, true);
-            setResizeLimits (800, 500, 1920, 1080);
+            setResizeLimits (800, 500, 10000, 10000);
             centreWithSize (960, 640);
 
             if (examplePatchId > 0)

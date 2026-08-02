@@ -333,9 +333,6 @@ void TimeScopeNode::process (int numSamples)
     monitoredGamma = gamma;
     monitoredTimeSec = localCoordinateTime;
 
-    setParameter ("gamma", gamma);
-    setParameter ("t_local", static_cast<float>(localCoordinateTime));
-
     if (!outlets.empty())
     {
         outlets[0].controlValue = static_cast<float>(localCoordinateTime);

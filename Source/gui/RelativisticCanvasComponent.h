@@ -67,6 +67,13 @@ private:
     };
     HoveredPortInfo hoveredPort;
 
+    // Canvas Viewport Panning State
+    float panX = 0.0f;
+    float panY = 0.0f;
+    bool isCanvasPanning = false;
+    juce::Point<float> panStartPos;
+    juce::Point<float> initialPanOffset;
+
     // Rubberband Marquee Selection State
     bool isMarqueeDragging = false;
     juce::Rectangle<float> marqueeRect;

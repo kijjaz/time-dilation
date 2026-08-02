@@ -440,7 +440,8 @@ void RelativisticCanvasComponent::showMenuView()
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuView),
         [this] (int result) {
-            if (result == 10) { cableStyle = CableStyle::Organic; btnToggleCord.setButtonText ("CORDS: ORGANIC"); }
+            if (result == 1) { panX = 0.0f; panY = 0.0f; }
+            else if (result == 10) { cableStyle = CableStyle::Organic; btnToggleCord.setButtonText ("CORDS: ORGANIC"); }
             else if (result == 11) { cableStyle = CableStyle::SmoothS; btnToggleCord.setButtonText ("CORDS: SMOOTH S"); }
             else if (result == 12) { cableStyle = CableStyle::Straight; btnToggleCord.setButtonText ("CORDS: STRAIGHT"); }
             repaint();
@@ -1075,6 +1076,40 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
             return true;
         }
     }
+    // 11. Arrow Keys (Move Selected Nodes or Pan Canvas Viewport)
+    if (key.getKeyCode() == juce::KeyPress::upKey ||
+        key.getKeyCode() == juce::KeyPress::downKey ||
+        key.getKeyCode() == juce::KeyPress::leftKey ||
+        key.getKeyCode() == juce::KeyPress::rightKey)
+    {
+        float step = key.getModifiers().isShiftDown() ? 1.0f : 10.0f;
+        float dx = 0.0f, dy = 0.0f;
+        if (key.getKeyCode() == juce::KeyPress::leftKey)  dx = -step;
+        if (key.getKeyCode() == juce::KeyPress::rightKey) dx = step;
+        if (key.getKeyCode() == juce::KeyPress::upKey)    dy = -step;
+        if (key.getKeyCode() == juce::KeyPress::downKey)  dy = step;
+
+        if (!selectedNodeIds.empty())
+        {
+            nodeGraph.pushUndoState();
+            for (int id : selectedNodeIds)
+            {
+                auto n = nodeGraph.getNodeById (id);
+                if (n) n->setPosition (n->getX() + dx, n->getY() + dy);
+            }
+            rebuildInspector();
+            repaint();
+            return true;
+        }
+        else
+        {
+            panX += dx * 2.0f;
+            panY += dy * 2.0f;
+            repaint();
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -1094,7 +1129,7 @@ juce::Point<float> RelativisticCanvasComponent::getInletPos (const RelativisticN
     const float nodeW = 150.0f;
     const int count = static_cast<int>(node.getInlets().size());
     const float spacing = nodeW / static_cast<float>(count + 1);
-    return { node.getX() + spacing * (idx + 1), node.getY() };
+    return { node.getX() + panX + spacing * (idx + 1), node.getY() + panY };
 }
 
 juce::Point<float> RelativisticCanvasComponent::getOutletPos (const RelativisticNode& node, int idx) const
@@ -1103,7 +1138,7 @@ juce::Point<float> RelativisticCanvasComponent::getOutletPos (const Relativistic
     const float nodeH = 44.0f;
     const int count = static_cast<int>(node.getOutlets().size());
     const float spacing = nodeW / static_cast<float>(count + 1);
-    return { node.getX() + spacing * (idx + 1), node.getY() + nodeH };
+    return { node.getX() + panX + spacing * (idx + 1), node.getY() + panY + nodeH };
 }
 
 void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
@@ -1197,8 +1232,11 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
     for (auto it = nodeGraph.getNodes().rbegin(); it != nodeGraph.getNodes().rend(); ++it)
     {
         const auto& node = *it;
-        if (mousePos.x >= node->getX() && mousePos.x <= node->getX() + nodeW &&
-            mousePos.y >= node->getY() && mousePos.y <= node->getY() + nodeH)
+        float nx = node->getX() + panX;
+        float ny = node->getY() + panY;
+
+        if (mousePos.x >= nx && mousePos.x <= nx + nodeW &&
+            mousePos.y >= ny && mousePos.y <= ny + nodeH)
         {
             if (isShift)
             {
@@ -1215,7 +1253,7 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
 
             selectedConnectionId = 0;
             draggingNodeId = node->getId();
-            dragOffset = { mousePos.x - node->getX(), mousePos.y - node->getY() };
+            dragOffset = { mousePos.x - nx, mousePos.y - ny };
 
             rebuildInspector();
             repaint();
@@ -1223,14 +1261,23 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
         }
     }
 
-    // 4. Empty Canvas Click -> Rubberband Marquee Selection
-    if (!isShift)
+    // 4. Empty Canvas Click -> Canvas Viewport Panning OR Rubberband Selection
+    if (isShift)
+    {
+        selectedConnectionId = 0;
+        isMarqueeDragging = true;
+        marqueeRect = { mousePos.x, mousePos.y, 0.0f, 0.0f };
+    }
+    else
     {
         selectedNodeIds.clear();
+        selectedConnectionId = 0;
+        isCanvasPanning = true;
+        panStartPos = e.position;
+        initialPanOffset = { panX, panY };
+        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
+        rebuildInspector();
     }
-    selectedConnectionId = 0;
-    isMarqueeDragging = true;
-    marqueeRect = { mousePos.x, mousePos.y, 0.0f, 0.0f };
     repaint();
 }
 
@@ -1287,7 +1334,13 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
         }
     }
 
-    if (isDraggingCable)
+    if (isCanvasPanning)
+    {
+        panX = initialPanOffset.x + (e.position.x - panStartPos.x);
+        panY = initialPanOffset.y + (e.position.y - panStartPos.y);
+        repaint();
+    }
+    else if (isDraggingCable)
     {
         cableDragPos = e.position;
         repaint();
@@ -1305,7 +1358,7 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
 
         for (const auto& node : nodeGraph.getNodes())
         {
-            juce::Rectangle<float> nodeRect (node->getX(), node->getY(), nodeW, nodeH);
+            juce::Rectangle<float> nodeRect (node->getX() + panX, node->getY() + panY, nodeW, nodeH);
             if (marqueeRect.intersects (nodeRect))
             {
                 selectedNodeIds.insert (node->getId());
@@ -1318,8 +1371,8 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
         auto anchorNode = nodeGraph.getNodeById (draggingNodeId);
         if (anchorNode)
         {
-            float dx = (e.position.x - dragOffset.x) - anchorNode->getX();
-            float dy = (e.position.y - dragOffset.y) - anchorNode->getY();
+            float dx = (e.position.x - dragOffset.x - panX) - anchorNode->getX();
+            float dy = (e.position.y - dragOffset.y - panY) - anchorNode->getY();
 
             for (int id : selectedNodeIds)
             {
@@ -1333,6 +1386,11 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
 
 void RelativisticCanvasComponent::mouseUp (const juce::MouseEvent& e)
 {
+    if (isCanvasPanning)
+    {
+        isCanvasPanning = false;
+        setMouseCursor (juce::MouseCursor::NormalCursor);
+    }
     if (isDraggingCable)
     {
         juce::Point<float> mousePos = e.position;
@@ -1516,8 +1574,8 @@ void RelativisticCanvasComponent::drawCable (juce::Graphics& g, juce::Point<floa
 void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared_ptr<RelativisticNode>& node)
 {
     bool isScope = node->getTypeName() == "time.scope" || node->getTypeName() == "time.display" || node->getTypeName() == "time.monitor";
-    const float x = node->getX();
-    const float y = node->getY();
+    const float x = node->getX() + panX;
+    const float y = node->getY() + panY;
     const float w = isScope ? 160.0f : 150.0f;
     const float h = (node->getTypeName() == "table") ? 68.0f : (isScope ? 75.0f : 44.0f);
 

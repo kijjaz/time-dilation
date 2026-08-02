@@ -170,6 +170,14 @@ public:
     void clearGraph();
     void createDefaultPatch();
 
+    // Interactive Relativistic Time Example Patches
+    void loadTimeWarpExamplePatch();
+    void loadTimeRetroExamplePatch();
+    void loadTimeStasisExamplePatch();
+    void loadTimeSingularityExamplePatch();
+    void loadTimeQuantizeExamplePatch();
+    void loadTimeTransportExamplePatch();
+
     // Undo / Redo Persistent Stack
     void pushUndoState();
     bool undo();

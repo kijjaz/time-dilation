@@ -565,6 +565,16 @@ void RelativisticCanvasComponent::showMenuHelp()
     m.addItem (4, "Pure Data Expression Scripting & C++ Math", true);
     m.addItem (5, "1-Sample Feedback Loop Protection", true);
     m.addItem (6, "Keyboard Shortcuts & Hotkeys", true);
+
+    juce::PopupMenu subExamples;
+    subExamples.addItem (10, "[time.warp~] Continuous Warp Speed Oscillator", true);
+    subExamples.addItem (11, "[time.retro~] Retrograde Reverse Playback", true);
+    subExamples.addItem (12, "[time.stasis~] Event Horizon Stasis Freeze", true);
+    subExamples.addItem (13, "[time.singularity~] Black Hole Gravitational Warping", true);
+    subExamples.addItem (14, "[time.quantize~] Relativistic Stutter Grid", true);
+    subExamples.addItem (15, "[time.transport] Multi-Clock Transport Sync", true);
+    m.addSubMenu ("Relativistic Time Example Patches", subExamples);
+
     m.addSeparator();
     m.addItem (7, "About Time Dilation DAW (v4.0)...", true);
 
@@ -596,6 +606,12 @@ void RelativisticCanvasComponent::showMenuHelp()
                     "UNIVERSAL TIME INLETS:\n"
                     "Every object has a purple time inlet (timeIn). Patching any time engine into an object's timeIn port dilates or reverses that object's clock independently!");
             }
+            else if (result == 10) { nodeGraph.loadTimeWarpExamplePatch(); repaint(); }
+            else if (result == 11) { nodeGraph.loadTimeRetroExamplePatch(); repaint(); }
+            else if (result == 12) { nodeGraph.loadTimeStasisExamplePatch(); repaint(); }
+            else if (result == 13) { nodeGraph.loadTimeSingularityExamplePatch(); repaint(); }
+            else if (result == 14) { nodeGraph.loadTimeQuantizeExamplePatch(); repaint(); }
+            else if (result == 15) { nodeGraph.loadTimeTransportExamplePatch(); repaint(); }
             else if (result == 3)
             {
                 showHelpDialog ("Wireless Signal Tapping Syntax (tap())",
@@ -1403,9 +1419,9 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         drawBar (meterX + meterW + 1.0f, rmsR);
     }
 
-    // Title Text in Sci-Fi Font
+    // Title Text in Sci-Fi Oxanium Font
     g.setColour (juce::Colour (0xfff8fafc));
-    g.setFont (juce::FontOptions (17.0f, juce::Font::bold));
+    g.setFont (FontManager::getInstance().getOxaniumFont (14.0f, true));
     float textW = outNode ? w - 40.0f : w - 12.0f;
     g.drawText (node->getLabel(), x + 10, y, textW, h, juce::Justification::centredLeft);
 
@@ -1428,7 +1444,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (p.x - 3.5f, p.y - 3.5f, 7.0f, 7.0f, 1.0f);
 
         // Port Name Label
-        g.setFont (juce::FontOptions (9.0f, juce::Font::plain));
+        g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, false));
         g.setColour (portCol.withAlpha (0.9f));
         g.drawText (port.name, p.x - 25.0f, p.y + 4.0f, 50.0f, 10.0f, juce::Justification::centred);
     }
@@ -1450,7 +1466,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (p.x - 3.5f, p.y - 3.5f, 7.0f, 7.0f, 1.0f);
 
         // Port Name Label
-        g.setFont (juce::FontOptions (9.0f, juce::Font::plain));
+        g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, false));
         g.setColour (portCol.withAlpha (0.9f));
         g.drawText (port.name, p.x - 25.0f, p.y - 14.0f, 50.0f, 10.0f, juce::Justification::centred);
     }

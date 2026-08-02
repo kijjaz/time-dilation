@@ -15,54 +15,20 @@ public:
         return instance;
     }
 
-    void loadFonts (const juce::File& fontDir)
-    {
-        if (BinaryData::OxaniumBold_ttfSize > 0)
-        {
-            oxaniumBoldTypeface = juce::Typeface::createSystemTypefaceFor (BinaryData::OxaniumBold_ttf, BinaryData::OxaniumBold_ttfSize);
-        }
-        if (BinaryData::OxaniumRegular_ttfSize > 0)
-        {
-            oxaniumRegularTypeface = juce::Typeface::createSystemTypefaceFor (BinaryData::OxaniumRegular_ttf, BinaryData::OxaniumRegular_ttfSize);
-        }
-
-        if (oxaniumBoldTypeface == nullptr)
-        {
-            auto boldFile = fontDir.getChildFile ("Oxanium-Bold.ttf");
-            if (boldFile.existsAsFile())
-            {
-                juce::MemoryBlock mb;
-                boldFile.loadFileAsData (mb);
-                oxaniumBoldTypeface = juce::Typeface::createSystemTypefaceFor (mb.getData(), mb.getSize());
-            }
-        }
-
-        if (oxaniumRegularTypeface == nullptr)
-        {
-            auto regFile = fontDir.getChildFile ("Oxanium-Regular.ttf");
-            if (regFile.existsAsFile())
-            {
-                juce::MemoryBlock mb;
-                regFile.loadFileAsData (mb);
-                oxaniumRegularTypeface = juce::Typeface::createSystemTypefaceFor (mb.getData(), mb.getSize());
-            }
-        }
-    }
-
     juce::Typeface::Ptr getOxaniumBoldTypeface()
     {
-        if (oxaniumBoldTypeface == nullptr && BinaryData::OxaniumBold_ttfSize > 0)
+        if (oxaniumBoldTypeface == nullptr)
         {
-            oxaniumBoldTypeface = juce::Typeface::createSystemTypefaceFor (BinaryData::OxaniumBold_ttf, BinaryData::OxaniumBold_ttfSize);
+            ensureFontsLoaded();
         }
         return oxaniumBoldTypeface;
     }
 
     juce::Typeface::Ptr getOxaniumRegularTypeface()
     {
-        if (oxaniumRegularTypeface == nullptr && BinaryData::OxaniumRegular_ttfSize > 0)
+        if (oxaniumRegularTypeface == nullptr)
         {
-            oxaniumRegularTypeface = juce::Typeface::createSystemTypefaceFor (BinaryData::OxaniumRegular_ttf, BinaryData::OxaniumRegular_ttfSize);
+            ensureFontsLoaded();
         }
         return oxaniumRegularTypeface;
     }
@@ -87,8 +53,69 @@ public:
         return getOxaniumFont (height, style == juce::Font::bold);
     }
 
+    void loadFonts (const juce::File& fontDir)
+    {
+        ensureFontsLoaded (fontDir);
+    }
+
 private:
-    FontManager() = default;
+    FontManager()
+    {
+        ensureFontsLoaded();
+    }
+
+    void ensureFontsLoaded (const juce::File& fontDir = juce::File())
+    {
+        if (oxaniumBoldTypeface != nullptr && oxaniumRegularTypeface != nullptr)
+            return;
+
+        // 1. Try BinaryData first (Embedded into binary executable)
+        int boldSize = 0;
+        const char* boldData = BinaryData::getNamedResource ("OxaniumBold_ttf", boldSize);
+        if (boldData != nullptr && boldSize > 0)
+        {
+            oxaniumBoldTypeface = juce::Typeface::createSystemTypefaceFor (boldData, boldSize);
+        }
+
+        int regSize = 0;
+        const char* regData = BinaryData::getNamedResource ("OxaniumRegular_ttf", regSize);
+        if (regData != nullptr && regSize > 0)
+        {
+            oxaniumRegularTypeface = juce::Typeface::createSystemTypefaceFor (regData, regSize);
+        }
+
+        // 2. Try disk fallback if embedded binary not present
+        if (oxaniumBoldTypeface == nullptr)
+        {
+            juce::File bFile = fontDir.getChildFile ("Oxanium-Bold.ttf");
+            if (!bFile.existsAsFile())
+            {
+                bFile = juce::File::getCurrentWorkingDirectory().getChildFile ("Source/assets/fonts/Oxanium-Bold.ttf");
+            }
+            if (bFile.existsAsFile())
+            {
+                juce::MemoryBlock mb;
+                bFile.loadFileAsData (mb);
+                oxaniumBoldTypeface = juce::Typeface::createSystemTypefaceFor (mb.getData(), mb.getSize());
+            }
+        }
+
+        if (oxaniumRegularTypeface == nullptr)
+        {
+            juce::File rFile = fontDir.getChildFile ("Oxanium-Regular.ttf");
+            if (!rFile.existsAsFile())
+            {
+                rFile = juce::File::getCurrentWorkingDirectory().getChildFile ("Source/assets/fonts/Oxanium-Regular.ttf");
+            }
+            if (rFile.existsAsFile())
+            {
+                juce::MemoryBlock mb;
+                rFile.loadFileAsData (mb);
+                oxaniumRegularTypeface = juce::Typeface::createSystemTypefaceFor (mb.getData(), mb.getSize());
+            }
+        }
+    }
+
     juce::Typeface::Ptr oxaniumBoldTypeface;
     juce::Typeface::Ptr oxaniumRegularTypeface;
 

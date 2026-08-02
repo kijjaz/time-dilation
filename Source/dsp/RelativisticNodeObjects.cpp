@@ -1179,16 +1179,21 @@ std::vector<ParameterInfo> GainNode::getParameterDefs() const
     return defs;
 }
 
-// 15. [out~] Master Audio Output Node Object with Live RMS & Peak Metering
+// 15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering
 OutNode::OutNode (int id)
-    : RelativisticNode (id, "out~", "out~ (Master Volume & Meters)")
+    : RelativisticNode (id, "out~", "out~ (Scope & Volume)")
 {
     addInlet ("L~", NodePortType::Audio);
     addInlet ("R~", NodePortType::Audio);
     addInlet ("vol_mod", NodePortType::Control);
     addOutlet ("L~", NodePortType::Audio);
     addOutlet ("R~", NodePortType::Audio);
+
     setParameter ("volume", 0.8f);
+    setParameter ("displayMode", 0.0f); // 0: Waveform vs Time, 1: X-Y Lissajous
+
+    scopeBufferL.assign (256, 0.0f);
+    scopeBufferR.assign (256, 0.0f);
 }
 
 void OutNode::process (int numSamples)
@@ -1213,6 +1218,11 @@ void OutNode::process (int numSamples)
         sumSqR += sR * sR;
         pL = std::max (pL, std::abs (sL));
         pR = std::max (pR, std::abs (sR));
+
+        // Circular Scope Buffer
+        scopeBufferL[scopeWriteIdx] = sL;
+        scopeBufferR[scopeWriteIdx] = sR;
+        scopeWriteIdx = (scopeWriteIdx + 1) % 256;
     }
 
     rmsL = std::sqrt (sumSqL / std::max (1, numSamples));
@@ -1223,14 +1233,29 @@ void OutNode::process (int numSamples)
 
 std::string OutNode::getDefaultFormulaScript() const
 {
-    return "// Master Output & Dual RMS/Peak Meter [out~]\n// Inputs: $v1 (Left Audio), $v2 (Right Audio), $v3 (Volume Mod)\n\nout_L = $v1 * (volume + $v3);\nout_R = $v2 * (volume + $v3);";
+    return "// Master Output & Oscilloscope [out~]\n// Inputs: $v1 (Left Audio), $v2 (Right Audio), $v3 (Volume Mod)\n\nout_L = $v1 * (volume + $v3);\nout_R = $v2 * (volume + $v3);";
 }
 
 std::vector<ParameterInfo> OutNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
     defs.push_back ({ "volume", "MASTER OUTPUT VOLUME", getParameter ("volume", 0.8f), 0.0f, 1.5f, getParamExpression ("volume"), -1 });
+    defs.push_back ({ "displayMode", "SCOPE MODE (0: TIME DOMAIN, 1: X-Y LISSAJOUS)", getParameter ("displayMode", 0.0f), 0.0f, 1.0f, getParamExpression ("displayMode"), -1 });
     return defs;
+}
+
+std::vector<std::string> OutNode::getExposedMethods() const
+{
+    return { "Toggle Scope Mode" };
+}
+
+void OutNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "Toggle Scope Mode")
+    {
+        float current = getParameter ("displayMode", 0.0f);
+        setParameter ("displayMode", (current > 0.5f) ? 0.0f : 1.0f);
+    }
 }
 
 // 16. [env~] Envelope Follower Node Object

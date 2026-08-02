@@ -256,7 +256,7 @@ public:
     std::vector<ParameterInfo> getParameterDefs() const override;
 };
 
-// 15. [out~] Master Audio Output Node Object with Live RMS & Peak Metering
+// 15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering
 class OutNode : public RelativisticNode
 {
 public:
@@ -264,17 +264,27 @@ public:
     void process (int numSamples) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
 
     float getRmsL() const { return rmsL; }
     float getRmsR() const { return rmsR; }
     float getPeakL() const { return peakL; }
     float getPeakR() const { return peakR; }
 
+    const std::vector<float>& getScopeL() const { return scopeBufferL; }
+    const std::vector<float>& getScopeR() const { return scopeBufferR; }
+    int getScopeWriteIndex() const { return scopeWriteIdx; }
+
 private:
     float rmsL = 0.0f;
     float rmsR = 0.0f;
     float peakL = 0.0f;
     float peakR = 0.0f;
+
+    std::vector<float> scopeBufferL;
+    std::vector<float> scopeBufferR;
+    int scopeWriteIdx = 0;
 };
 
 // 16. [env~] Envelope Follower Node Object

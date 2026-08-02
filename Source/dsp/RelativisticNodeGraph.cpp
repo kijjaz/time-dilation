@@ -369,24 +369,129 @@ void RelativisticNodeGraph::clearGraph()
 
 void RelativisticNodeGraph::createDefaultPatch()
 {
+    loadTimeWarpExamplePatch();
+}
+
+void RelativisticNodeGraph::loadTimeWarpExamplePatch()
+{
+    pushUndoState();
     clearGraph();
 
-    int nWarp  = addNode ("time.warp~",  80.0f, 60.0f);
-    int nOsc   = addNode ("osc~",        280.0f, 60.0f);
-    int nFilt  = addNode ("filter~",     280.0f, 220.0f);
-    int nDac   = addNode ("dac~",        280.0f, 380.0f);
+    int nWarp = addNode ("time.warp~", 80.0f, 80.0f);
+    int nOsc  = addNode ("osc~",       280.0f, 80.0f);
+    int nFilt = addNode ("filter~",    280.0f, 240.0f);
+    int nOut  = addNode ("out~",       280.0f, 400.0f);
+    int nDac  = addNode ("dac~",       480.0f, 400.0f);
 
-    // Connect time.warp~ outlet 0 (Time) -> osc~ inlet 0 (Time)
-    addConnection (nWarp, 0, nOsc, 0);
+    addConnection (nWarp, 0, nOsc, 0);  // time.warp~ -> osc~
+    addConnection (nOsc, 0, nFilt, 0);  // osc~ -> filter~
+    addConnection (nFilt, 0, nOut, 0);  // filter~ -> out~
+    addConnection (nFilt, 0, nDac, 0);  // filter~ -> dac~ L
+    addConnection (nFilt, 0, nDac, 1);  // filter~ -> dac~ R
 
-    // Connect osc~ outlet 0 (Audio) -> filter~ inlet 0 (Audio)
-    addConnection (nOsc, 0, nFilt, 0);
+    detectFeedbackLoops();
+}
 
-    // Connect filter~ outlet 0 (Audio) -> dac~ inlet 0 (Audio L)
-    addConnection (nFilt, 0, nDac, 0);
+void RelativisticNodeGraph::loadTimeRetroExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
 
-    // Connect filter~ outlet 0 (Audio) -> dac~ inlet 1 (Audio R)
-    addConnection (nFilt, 0, nDac, 1);
+    int nRetro  = addNode ("time.retro~", 80.0f, 80.0f);
+    int nSamp   = addNode ("sampler~",    280.0f, 80.0f);
+    int nDrive  = addNode ("drive~",      280.0f, 240.0f);
+    int nOut    = addNode ("out~",        280.0f, 400.0f);
+    int nDac    = addNode ("dac~",        480.0f, 400.0f);
+
+    addConnection (nRetro, 0, nSamp, 0);  // time.retro~ -> sampler~
+    addConnection (nSamp, 0, nDrive, 0);  // sampler~ -> drive~
+    addConnection (nDrive, 0, nOut, 0);   // drive~ -> out~
+    addConnection (nDrive, 0, nDac, 0);   // drive~ -> dac~ L
+    addConnection (nDrive, 0, nDac, 1);   // drive~ -> dac~ R
+
+    detectFeedbackLoops();
+}
+
+void RelativisticNodeGraph::loadTimeStasisExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nStasis = addNode ("time.stasis~", 80.0f, 80.0f);
+    int nOsc    = addNode ("osc~",         280.0f, 80.0f);
+    int nReverb = addNode ("reverb~",      280.0f, 240.0f);
+    int nOut    = addNode ("out~",         280.0f, 400.0f);
+    int nDac    = addNode ("dac~",         480.0f, 400.0f);
+
+    addConnection (nStasis, 0, nOsc, 0);   // time.stasis~ -> osc~
+    addConnection (nOsc, 0, nReverb, 0);   // osc~ -> reverb~
+    addConnection (nReverb, 0, nOut, 0);   // reverb~ -> out~
+    addConnection (nReverb, 0, nDac, 0);   // reverb~ -> dac~ L
+    addConnection (nReverb, 0, nDac, 1);   // reverb~ -> dac~ R
+
+    detectFeedbackLoops();
+}
+
+void RelativisticNodeGraph::loadTimeSingularityExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nSing = addNode ("time.singularity~", 80.0f, 80.0f);
+    int nOsc  = addNode ("osc~",              280.0f, 80.0f);
+    int nSv   = addNode ("svfilter~",         280.0f, 240.0f);
+    int nOut  = addNode ("out~",              280.0f, 400.0f);
+    int nDac  = addNode ("dac~",              480.0f, 400.0f);
+
+    addConnection (nSing, 0, nOsc, 0); // time.singularity~ -> osc~
+    addConnection (nOsc, 0, nSv, 0);   // osc~ -> svfilter~
+    addConnection (nSv, 0, nOut, 0);   // svfilter~ -> out~
+    addConnection (nSv, 0, nDac, 0);   // svfilter~ -> dac~ L
+    addConnection (nSv, 0, nDac, 1);   // svfilter~ -> dac~ R
+
+    detectFeedbackLoops();
+}
+
+void RelativisticNodeGraph::loadTimeQuantizeExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nQuant = addNode ("time.quantize~", 80.0f, 80.0f);
+    int nPhas  = addNode ("phasor~",        280.0f, 80.0f);
+    int nCrush = addNode ("crush~",         280.0f, 240.0f);
+    int nOut   = addNode ("out~",           280.0f, 400.0f);
+    int nDac   = addNode ("dac~",           480.0f, 400.0f);
+
+    addConnection (nQuant, 0, nPhas, 0);  // time.quantize~ -> phasor~
+    addConnection (nPhas, 0, nCrush, 0);  // phasor~ -> crush~
+    addConnection (nCrush, 0, nOut, 0);   // crush~ -> out~
+    addConnection (nCrush, 0, nDac, 0);   // crush~ -> dac~ L
+    addConnection (nCrush, 0, nDac, 1);   // crush~ -> dac~ R
+
+    detectFeedbackLoops();
+}
+
+void RelativisticNodeGraph::loadTimeTransportExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nTrans = addNode ("time.transport", 80.0f, 80.0f);
+    int nMetro = addNode ("time.metro~",    280.0f, 80.0f);
+    int nAdsr  = addNode ("adsr~",          280.0f, 240.0f);
+    int nOsc   = addNode ("osc~",           480.0f, 240.0f);
+    int nOut   = addNode ("out~",           380.0f, 420.0f);
+    int nDac   = addNode ("dac~",           580.0f, 420.0f);
+
+    addConnection (nTrans, 0, nMetro, 0); // time.transport timeOut -> time.metro~
+    addConnection (nMetro, 0, nAdsr, 0);  // time.metro~ pulse -> adsr~ trig
+    addConnection (nAdsr, 0, nOsc, 1);   // adsr~ -> osc~ gain mod
+    addConnection (nOsc, 0, nOut, 0);    // osc~ -> out~
+    addConnection (nOsc, 0, nDac, 0);    // osc~ -> dac~ L
+    addConnection (nOsc, 0, nDac, 1);    // osc~ -> dac~ R
+
+    detectFeedbackLoops();
 }
 
 void RelativisticNodeGraph::pushUndoState()

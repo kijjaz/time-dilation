@@ -1177,6 +1177,89 @@ void RelativisticCanvasComponent::mouseUp (const juce::MouseEvent& e)
     draggingNodeId = 0;
 }
 
+void RelativisticCanvasComponent::mouseMove (const juce::MouseEvent& e)
+{
+    juce::Point<float> mousePos = e.position;
+    HoveredPortInfo newHover;
+
+    for (const auto& node : nodeGraph.getNodes())
+    {
+        for (size_t i = 0; i < node->getInlets().size(); ++i)
+        {
+            auto p = getInletPos (*node, static_cast<int>(i));
+            if (p.getDistanceFrom (mousePos) < 12.0f)
+            {
+                newHover.nodeId = node->getId();
+                newHover.portIdx = static_cast<int>(i);
+                newHover.isInlet = true;
+                newHover.pos = p;
+
+                const auto& port = node->getInlets()[i];
+                newHover.portName = port.name;
+
+                if (port.audioData.getNumSamples() > 0 && port.audioData.getMagnitude (0, port.audioData.getNumSamples()) > 0.0001f)
+                {
+                    newHover.signalTypeName = "AUDIO RATE (CYAN)";
+                    float mag = port.audioData.getMagnitude (0, port.audioData.getNumSamples());
+                    newHover.routedValueText = "Audio Peak: " + juce::String (mag, 3).toStdString();
+                }
+                else if (port.type == NodePortType::Time)
+                {
+                    newHover.signalTypeName = "TIME DILATION (PURPLE)";
+                    newHover.routedValueText = "Gamma: " + juce::String (port.timeGamma, 2).toStdString() + "x";
+                }
+                else
+                {
+                    newHover.signalTypeName = "CONTROL RATE (AMBER)";
+                    newHover.routedValueText = "Val: " + juce::String (port.controlValue, 3).toStdString();
+                }
+                break;
+            }
+        }
+
+        if (newHover.nodeId != 0) break;
+
+        for (size_t i = 0; i < node->getOutlets().size(); ++i)
+        {
+            auto p = getOutletPos (*node, static_cast<int>(i));
+            if (p.getDistanceFrom (mousePos) < 12.0f)
+            {
+                newHover.nodeId = node->getId();
+                newHover.portIdx = static_cast<int>(i);
+                newHover.isInlet = false;
+                newHover.pos = p;
+
+                const auto& port = node->getOutlets()[i];
+                newHover.portName = port.name;
+
+                if (port.type == NodePortType::Audio)
+                {
+                    newHover.signalTypeName = "AUDIO RATE (CYAN)";
+                    float mag = port.audioData.getMagnitude (0, port.audioData.getNumSamples());
+                    newHover.routedValueText = "Audio Peak: " + juce::String (mag, 3).toStdString();
+                }
+                else if (port.type == NodePortType::Time)
+                {
+                    newHover.signalTypeName = "TIME DILATION (PURPLE)";
+                    newHover.routedValueText = "Gamma: " + juce::String (port.timeGamma, 2).toStdString() + "x";
+                }
+                else
+                {
+                    newHover.signalTypeName = "CONTROL RATE (AMBER)";
+                    newHover.routedValueText = "Val: " + juce::String (port.controlValue, 3).toStdString();
+                }
+                break;
+            }
+        }
+    }
+
+    if (newHover.nodeId != hoveredPort.nodeId || newHover.portIdx != hoveredPort.portIdx || newHover.isInlet != hoveredPort.isInlet)
+    {
+        hoveredPort = newHover;
+        repaint();
+    }
+}
+
 void RelativisticCanvasComponent::drawCable (juce::Graphics& g, juce::Point<float> p1, juce::Point<float> p2, NodePortType type, bool isFeedbackLoop)
 {
     juce::Colour cableColour = juce::Colour (0xff06b6d4); // Audio = Cyan
@@ -1317,15 +1400,16 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
     float textW = outNode ? w - 40.0f : w - 12.0f;
     g.drawText (node->getLabel(), x + 10, y, textW, h, juce::Justification::centredLeft);
 
-    // Inlets (Top Edge Dots)
+    // Inlets (Top Edge Dots with Labels)
     for (size_t i = 0; i < node->getInlets().size(); ++i)
     {
         auto p = getInletPos (*node, static_cast<int>(i));
-        NodePortType type = node->getInlets()[i].type;
+        const auto& port = node->getInlets()[i];
+        NodePortType type = port.type;
 
-        juce::Colour portCol = juce::Colour (0xff06b6d4);
-        if (type == NodePortType::Time)    portCol = juce::Colour (0xffa855f7);
-        if (type == NodePortType::Control) portCol = juce::Colour (0xfff59e0b);
+        bool hasAudioInput = (port.audioData.getNumSamples() > 0 && port.audioData.getMagnitude (0, port.audioData.getNumSamples()) > 0.0001f);
+
+        juce::Colour portCol = (hasAudioInput || type == NodePortType::Audio) ? juce::Colour (0xff06b6d4) : (type == NodePortType::Time ? juce::Colour (0xff8b5cf6) : juce::Colour (0xfff59e0b));
 
         g.setColour (juce::Colour (0xff181825));
         g.fillEllipse (p.x - 3.5f, p.y - 3.5f, 7.0f, 7.0f);
@@ -1333,17 +1417,21 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.fillEllipse (p.x - 2.5f, p.y - 2.5f, 5.0f, 5.0f);
         g.setColour (juce::Colours::white);
         g.drawEllipse (p.x - 3.5f, p.y - 3.5f, 7.0f, 7.0f, 1.0f);
+
+        // Port Name Label
+        g.setFont (juce::FontOptions (9.0f, juce::Font::plain));
+        g.setColour (portCol.withAlpha (0.9f));
+        g.drawText (port.name, p.x - 25.0f, p.y + 4.0f, 50.0f, 10.0f, juce::Justification::centred);
     }
 
-    // Outlets (Bottom Edge Dots)
+    // Outlets (Bottom Edge Dots with Labels)
     for (size_t i = 0; i < node->getOutlets().size(); ++i)
     {
         auto p = getOutletPos (*node, static_cast<int>(i));
-        NodePortType type = node->getOutlets()[i].type;
+        const auto& port = node->getOutlets()[i];
+        NodePortType type = port.type;
 
-        juce::Colour portCol = juce::Colour (0xff06b6d4);
-        if (type == NodePortType::Time)    portCol = juce::Colour (0xffa855f7);
-        if (type == NodePortType::Control) portCol = juce::Colour (0xfff59e0b);
+        juce::Colour portCol = (type == NodePortType::Audio) ? juce::Colour (0xff06b6d4) : (type == NodePortType::Time ? juce::Colour (0xff8b5cf6) : juce::Colour (0xfff59e0b));
 
         g.setColour (juce::Colour (0xff181825));
         g.fillEllipse (p.x - 3.5f, p.y - 3.5f, 7.0f, 7.0f);
@@ -1351,6 +1439,11 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.fillEllipse (p.x - 2.5f, p.y - 2.5f, 5.0f, 5.0f);
         g.setColour (juce::Colours::white);
         g.drawEllipse (p.x - 3.5f, p.y - 3.5f, 7.0f, 7.0f, 1.0f);
+
+        // Port Name Label
+        g.setFont (juce::FontOptions (9.0f, juce::Font::plain));
+        g.setColour (portCol.withAlpha (0.9f));
+        g.drawText (port.name, p.x - 25.0f, p.y - 14.0f, 50.0f, 10.0f, juce::Justification::centred);
     }
 }
 
@@ -1428,6 +1521,28 @@ void RelativisticCanvasComponent::paint (juce::Graphics& g)
         g.fillRect (marqueeRect);
         g.setColour (juce::Colour (0xff06b6d4)); // Cyan Stroke
         g.drawRect (marqueeRect, 1.5f);
+    }
+
+    // Render Floating Hover Tooltip Badge for Ports
+    if (hoveredPort.nodeId > 0)
+    {
+        float tipX = std::min (hoveredPort.pos.x + 12.0f, static_cast<float>(getWidth() - 200));
+        float tipY = std::max (10.0f, hoveredPort.pos.y - 45.0f);
+        float tipW = 180.0f;
+        float tipH = 40.0f;
+
+        g.setColour (juce::Colour (0xee0b1322));
+        g.fillRoundedRectangle (tipX, tipY, tipW, tipH, 5.0f);
+        g.setColour (juce::Colour (0xff38bdf8));
+        g.drawRoundedRectangle (tipX, tipY, tipW, tipH, 5.0f, 1.0f);
+
+        g.setColour (juce::Colour (0xfff8fafc));
+        g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
+        g.drawText ((hoveredPort.isInlet ? "INLET: " : "OUTLET: ") + hoveredPort.portName, tipX + 8, tipY + 4, tipW - 16, 14, juce::Justification::left);
+
+        g.setFont (juce::FontOptions (10.0f, juce::Font::plain));
+        g.setColour (juce::Colour (0xff38bdf8));
+        g.drawText (hoveredPort.signalTypeName + " | " + hoveredPort.routedValueText, tipX + 8, tipY + 20, tipW - 16, 14, juce::Justification::left);
     }
 }
 

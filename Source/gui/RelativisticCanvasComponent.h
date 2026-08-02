@@ -41,6 +41,7 @@ public:
     void mouseDoubleClick (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
     void mouseUp (const juce::MouseEvent& e) override;
+    void mouseMove (const juce::MouseEvent& e) override;
 
 private:
     RelativisticNodeGraph& nodeGraph;
@@ -52,6 +53,19 @@ private:
     int selectedConnectionId = 0;
     int draggingNodeId = 0;
     juce::Point<float> dragOffset;
+
+    // Hovered Port Info for Value Tooltips
+    struct HoveredPortInfo
+    {
+        int nodeId = 0;
+        int portIdx = 0;
+        bool isInlet = true;
+        juce::Point<float> pos;
+        std::string portName;
+        std::string signalTypeName;
+        std::string routedValueText;
+    };
+    HoveredPortInfo hoveredPort;
 
     // Rubberband Marquee Selection State
     bool isMarqueeDragging = false;

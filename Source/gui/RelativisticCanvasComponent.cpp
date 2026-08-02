@@ -1344,8 +1344,11 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
             }
             else
             {
-                selectedNodeIds.clear();
-                selectedNodeIds.insert (node->getId());
+                if (selectedNodeIds.count (node->getId()) == 0)
+                {
+                    selectedNodeIds.clear();
+                    selectedNodeIds.insert (node->getId());
+                }
             }
 
             selectedConnectionId = 0;
@@ -1358,7 +1361,7 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
         }
     }
 
-    // 4. Empty Canvas Click -> Canvas Viewport Panning OR Rubberband Selection
+    // 4. Empty Canvas Click -> Panel Panning OR Rubberband Selection (ONLY IF SHIFT IS HELD)
     if (isShift)
     {
         selectedConnectionId = 0;

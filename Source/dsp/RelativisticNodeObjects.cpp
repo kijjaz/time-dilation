@@ -162,6 +162,147 @@ std::vector<ParameterInfo> TimeSingularityNode::getParameterDefs() const
     return defs;
 }
 
+// 4d. [time.transport] Multi-Instance Relativistic Transport Object
+TimeTransportNode::TimeTransportNode (int id)
+    : RelativisticNode (id, "time.transport", "time.transport 120bpm")
+{
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
+    addInlet ("play", NodePortType::Control);     // Inlet 1: Play control (1 = start, 0 = pause)
+    addInlet ("stop", NodePortType::Control);     // Inlet 2: Stop control (1 = stop & reset)
+    addInlet ("goto", NodePortType::Control);     // Inlet 3: Jump beat position
+    addInlet ("loopMode", NodePortType::Control); // Inlet 4: Loop enable (0/1)
+
+    addOutlet ("timeOut", NodePortType::Time);    // Outlet 0: Dilated relativistic time factor (gamma)
+    addOutlet ("pulse~", NodePortType::Audio);    // Outlet 1: Audio tick pulse on every beat
+    addOutlet ("beat", NodePortType::Control);    // Outlet 2: Beat position float
+    addOutlet ("bar", NodePortType::Control);     // Outlet 3: Bar count (1, 2, 3...)
+    addOutlet ("status", NodePortType::Control);  // Outlet 4: Transport state (1 = play, 0 = stop, 2 = pause)
+
+    setParameter ("bpm", 120.0f);
+    setParameter ("syncGlobal", 0.0f); // 0 = Independent, 1 = Synced to DAW global transport
+    setParameter ("playState", 1.0f);  // 1 = Playing, 0 = Stopped
+    setParameter ("loopMode", 0.0f);   // 0 = Off, 1 = Loop Active
+    setParameter ("loopStart", 0.0f);  // Loop start beat
+    setParameter ("loopEnd", 16.0f);   // Loop end beat
+}
+
+void TimeTransportNode::process (int numSamples)
+{
+    double gamma = std::abs (inlets[0].timeGamma);
+    if (gamma < 0.001) gamma = 1.0;
+
+    float playCtrl = inlets[1].controlValue;
+    float stopCtrl = inlets[2].controlValue;
+    float gotoCtrl = inlets[3].controlValue;
+    float loopCtrl = inlets[4].controlValue;
+
+    if (stopCtrl > 0.5f)
+    {
+        isPlaying = false;
+        currentBeatPosition = 0.0;
+        setParameter ("playState", 0.0f);
+    }
+    else if (playCtrl > 0.0f)
+    {
+        isPlaying = (playCtrl > 0.5f);
+        setParameter ("playState", isPlaying ? 1.0f : 0.0f);
+    }
+    else
+    {
+        isPlaying = (getParameter ("playState", 1.0f) > 0.5f);
+    }
+
+    if (gotoCtrl > 0.0f)
+    {
+        currentBeatPosition = gotoCtrl;
+    }
+
+    float baseBpm = getModulatedParamValue ("bpm", 120.0f);
+    double effectiveBpm = baseBpm * gamma;
+    double beatsPerSample = (effectiveBpm / 60.0) / currentSampleRate;
+
+    float loopMode = (loopCtrl > 0.0f) ? loopCtrl : getModulatedParamValue ("loopMode", 0.0f);
+    float loopStart = getModulatedParamValue ("loopStart", 0.0f);
+    float loopEnd = getModulatedParamValue ("loopEnd", 16.0f);
+
+    auto* pulseOut = outlets[1].audioData.getWritePointer (0);
+    outlets[1].audioData.clear();
+
+    if (isPlaying)
+    {
+        for (int s = 0; s < numSamples; ++s)
+        {
+            double prevBeat = currentBeatPosition;
+            currentBeatPosition += beatsPerSample;
+
+            if (std::floor (currentBeatPosition) > std::floor (prevBeat))
+            {
+                pulseOut[s] = 0.9f;
+            }
+
+            if (loopMode > 0.5f && loopEnd > loopStart)
+            {
+                if (currentBeatPosition >= loopEnd)
+                {
+                    currentBeatPosition = loopStart + (currentBeatPosition - loopEnd);
+                }
+            }
+        }
+    }
+
+    outlets[0].timeGamma = gamma;
+    outlets[2].controlValue = static_cast<float>(currentBeatPosition);
+    outlets[3].controlValue = static_cast<float>(std::floor (currentBeatPosition / 4.0) + 1.0);
+    outlets[4].controlValue = isPlaying ? 1.0f : 0.0f;
+}
+
+std::string TimeTransportNode::getDefaultFormulaScript() const
+{
+    return "// Multi-Instance Relativistic Transport [time.transport]\n// Generates independent timeline clocks slaved or unslaved to global DAW\n\nbeat = currentBeatPosition;\nstatus = isPlaying ? 1.0 : 0.0;";
+}
+
+std::vector<ParameterInfo> TimeTransportNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "bpm", "TEMPO (BPM)", getParameter ("bpm", 120.0f), 20.0f, 300.0f, getParamExpression ("bpm"), -1 });
+    defs.push_back ({ "syncGlobal", "SYNC TO GLOBAL DAW (0/1)", getParameter ("syncGlobal", 0.0f), 0.0f, 1.0f, getParamExpression ("syncGlobal"), -1 });
+    defs.push_back ({ "playState", "PLAYBACK STATE (1:PLAY, 0:STOP)", getParameter ("playState", 1.0f), 0.0f, 1.0f, getParamExpression ("playState"), 1 });
+    defs.push_back ({ "loopMode", "LOOP MODE (0:OFF, 1:ON)", getParameter ("loopMode", 0.0f), 0.0f, 1.0f, getParamExpression ("loopMode"), 4 });
+    defs.push_back ({ "loopStart", "LOOP START BEAT", getParameter ("loopStart", 0.0f), 0.0f, 999.0f, getParamExpression ("loopStart"), -1 });
+    defs.push_back ({ "loopEnd", "LOOP END BEAT", getParameter ("loopEnd", 16.0f), 1.0f, 999.0f, getParamExpression ("loopEnd"), -1 });
+    return defs;
+}
+
+std::vector<std::string> TimeTransportNode::getExposedMethods() const
+{
+    return { "Play / Pause", "Stop & Reset", "Toggle Loop", "Toggle DAW Sync" };
+}
+
+void TimeTransportNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "Play / Pause")
+    {
+        isPlaying = !isPlaying;
+        setParameter ("playState", isPlaying ? 1.0f : 0.0f);
+    }
+    else if (methodName == "Stop & Reset")
+    {
+        isPlaying = false;
+        currentBeatPosition = 0.0;
+        setParameter ("playState", 0.0f);
+    }
+    else if (methodName == "Toggle Loop")
+    {
+        float loop = (getParameter ("loopMode", 0.0f) > 0.5f) ? 0.0f : 1.0f;
+        setParameter ("loopMode", loop);
+    }
+    else if (methodName == "Toggle DAW Sync")
+    {
+        float sync = (getParameter ("syncGlobal", 0.0f) > 0.5f) ? 0.0f : 1.0f;
+        setParameter ("syncGlobal", sync);
+    }
+}
+
 // 5. [osc~]
 OscNode::OscNode (int id)
     : RelativisticNode (id, "osc~", "osc~ 440 Hz")

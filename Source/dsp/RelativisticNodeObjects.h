@@ -69,6 +69,22 @@ public:
     std::vector<ParameterInfo> getParameterDefs() const override;
 };
 
+// 4d. [time.transport] Multi-Instance Relativistic Transport Object
+class TimeTransportNode : public RelativisticNode
+{
+public:
+    TimeTransportNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+
+private:
+    double currentBeatPosition = 0.0;
+    bool isPlaying = false;
+};
+
 // 5. [osc~] PolyBLEP VA Synthesizer Oscillator Object
 class OscNode : public RelativisticNode
 {

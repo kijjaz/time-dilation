@@ -447,6 +447,7 @@ void RelativisticCanvasComponent::showMenuPatch()
     subTime.addItem (13, "[time.metro~] Relativistic Metronome", true);
     subTime.addItem (14, "[time.stasis~] Gravitational Time Freeze", true);
     subTime.addItem (15, "[time.singularity~] Event Horizon Redshift", true);
+    subTime.addItem (16, "[time.transport] Multi-Instance Transport", true);
     m.addSubMenu ("Relativistic Time Engines", subTime);
 
     juce::PopupMenu subAudio;
@@ -491,6 +492,7 @@ void RelativisticCanvasComponent::showMenuPatch()
                 else if (result == 13) typeName = "time.metro~";
                 else if (result == 14) typeName = "time.stasis~";
                 else if (result == 15) typeName = "time.singularity~";
+                else if (result == 16) typeName = "time.transport";
                 else if (result == 20) typeName = "osc~";
                 else if (result == 21) typeName = "phasor~";
                 else if (result == 22) typeName = "sampler~";

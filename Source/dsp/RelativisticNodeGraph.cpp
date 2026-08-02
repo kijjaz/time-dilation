@@ -822,28 +822,35 @@ double RelativisticNodeGraph::tapSignal (const std::string& target) const
 
 void RelativisticNodeGraph::propagateTimeDilationHierarchy()
 {
-    // Hierarchical Time Dilation Inheritance:
-    // If a node does NOT have an explicit time inlet connected, it inherits time dilation from its upstream parent nodes!
-    for (const auto& conn : connections)
+    // Multi-pass Topological Time Dilation Inheritance:
+    // Propagate time dilation factor (gamma) down multi-stage node chains
+    for (int pass = 0; pass < 4; ++pass)
     {
-        auto srcNode = getNodeById (conn.sourceNodeId);
-        auto destNode = getNodeById (conn.destNodeId);
-
-        if (srcNode && destNode)
+        for (const auto& conn : connections)
         {
-            const auto& srcOutlets = srcNode->getOutlets();
-            auto& destInlets = destNode->getInlets();
+            auto srcNode = getNodeById (conn.sourceNodeId);
+            auto destNode = getNodeById (conn.destNodeId);
 
-            if (conn.sourceOutletIdx < static_cast<int>(srcOutlets.size()) &&
-                conn.destInletIdx < static_cast<int>(destInlets.size()))
+            if (srcNode && destNode)
             {
-                if (srcOutlets[conn.sourceOutletIdx].type == NodePortType::Time &&
-                    destInlets[conn.destInletIdx].type != NodePortType::Time)
+                double srcGamma = srcNode->getEffectiveGamma();
+
+                const auto& srcOutlets = srcNode->getOutlets();
+                auto& destInlets = destNode->getInlets();
+
+                if (conn.sourceOutletIdx < static_cast<int>(srcOutlets.size()) &&
+                    conn.destInletIdx < static_cast<int>(destInlets.size()))
                 {
-                    // Propagate inherited time gamma to non-time inlets
-                    if (!destInlets.empty())
+                    if (srcOutlets[conn.sourceOutletIdx].type == NodePortType::Time)
                     {
-                        destInlets[0].timeGamma = srcOutlets[conn.sourceOutletIdx].timeGamma;
+                        destInlets[conn.destInletIdx].timeGamma = srcOutlets[conn.sourceOutletIdx].timeGamma;
+                    }
+                    else if (!destInlets.empty())
+                    {
+                        if (destInlets[0].timeGamma == 1.0)
+                        {
+                            destInlets[0].timeGamma = srcGamma;
+                        }
                     }
                 }
             }

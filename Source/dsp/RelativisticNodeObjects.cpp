@@ -56,9 +56,10 @@ TimeQuantizeNode::TimeQuantizeNode (int id)
 void TimeQuantizeNode::process (int /*numSamples*/)
 {
     float steps = getParameter ("stepDivision", 4.0f);
+    steps = std::max (1.0f, steps);
     double rawGamma = inlets[0].timeGamma;
     double quantized = std::round (rawGamma * steps) / steps;
-    outlets[0].timeGamma = (quantized == 0.0) ? (1.0 / steps) : quantized;
+    outlets[0].timeGamma = (quantized == 0.0 && rawGamma != 0.0) ? (1.0 / steps) : quantized;
 }
 
 // 4. [time.metro~]
@@ -316,7 +317,7 @@ TimeScopeNode::TimeScopeNode (int id)
     setParameter ("t_local", 0.0f);
 }
 
-void TimeScopeNode::process (int /*numSamples*/)
+void TimeScopeNode::process (int numSamples)
 {
     float gamma = 1.0f;
     if (!inlets.empty() && inlets[0].timeGamma != 0.0f)
@@ -328,7 +329,7 @@ void TimeScopeNode::process (int /*numSamples*/)
         gamma = getParameter ("gamma", 1.0f);
     }
 
-    localCoordinateTime += (1.0 / currentSampleRate) * gamma;
+    localCoordinateTime += (static_cast<double>(numSamples) / currentSampleRate) * gamma;
     monitoredGamma = gamma;
     monitoredTimeSec = localCoordinateTime;
 

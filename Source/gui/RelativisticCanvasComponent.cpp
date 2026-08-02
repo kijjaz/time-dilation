@@ -443,17 +443,33 @@ void RelativisticCanvasComponent::showMenuView()
     juce::PopupMenu m;
     m.addSectionHeader ("--- CANVAS & INTERFACE VIEW ---");
 
+    m.addItem (2, "Show Canvas Grid (Dot Matrix)", true, showGrid);
+    m.addItem (3, "Snap to Grid", true, snapToGrid);
+
+    juce::PopupMenu subGridSize;
+    subGridSize.addItem (20, "12 px (Fine)", true, gridSize == 12.0f);
+    subGridSize.addItem (21, "24 px (Standard)", true, gridSize == 24.0f);
+    subGridSize.addItem (22, "48 px (Coarse)", true, gridSize == 48.0f);
+    m.addSubMenu ("Grid Spacing Size", subGridSize);
+
+    m.addSeparator();
     juce::PopupMenu subCords;
     subCords.addItem (10, "Organic Catenary Cables", true, cableStyle == CableStyle::Organic);
     subCords.addItem (11, "Smooth S-Curve Cables", true, cableStyle == CableStyle::SmoothS);
     subCords.addItem (12, "Straight Pure Data-Style", true, cableStyle == CableStyle::Straight);
     m.addSubMenu ("Patch Cord Style", subCords);
 
+    m.addSeparator();
     m.addItem (1, "Recenter Canvas View", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuView),
         [this] (int result) {
             if (result == 1) { panX = 0.0f; panY = 0.0f; }
+            else if (result == 2) { showGrid = !showGrid; }
+            else if (result == 3) { snapToGrid = !snapToGrid; }
+            else if (result == 20) { gridSize = 12.0f; }
+            else if (result == 21) { gridSize = 24.0f; }
+            else if (result == 22) { gridSize = 48.0f; }
             else if (result == 10) { cableStyle = CableStyle::Organic; btnToggleCord.setButtonText ("CORDS: ORGANIC"); }
             else if (result == 11) { cableStyle = CableStyle::SmoothS; btnToggleCord.setButtonText ("CORDS: SMOOTH S"); }
             else if (result == 12) { cableStyle = CableStyle::Straight; btnToggleCord.setButtonText ("CORDS: STRAIGHT"); }
@@ -465,7 +481,7 @@ void RelativisticCanvasComponent::showMenuObjects()
 {
     juce::PopupMenu m;
     m.addSectionHeader ("--- WORKSTATION OBJECT PALETTE ---");
-    m.addItem (1, "Search All Objects... (N / Double-Click)", true);
+    m.addItem (1, "Add New Object... (Cmd+1 / N / Double-Click)", true);
 
     juce::PopupMenu subMonitors;
     subMonitors.addItem (100, "[time.scope]\tRelativistic Time Monitor & Telemetry Visualizer", true);
@@ -477,7 +493,10 @@ void RelativisticCanvasComponent::showMenuObjects()
     subControl.addItem (110, "[number]\tControl Number Box (Click & Drag Value)", true);
     subControl.addItem (111, "[bang]\tControl Trigger Pulse (1.0 Spike)", true);
     subControl.addItem (112, "[bang~]\tAudio Rate 1-Sample Impulse Spike", true);
+    subControl.addItem (114, "[counter]\tSmart Value Counter (Low, High, Step, Carry)", true);
     subControl.addItem (113, "[table]\tInteractive Wavetable & Sample Canvas", true);
+    subControl.addItem (115, "[tap]\tControl Wireless Signal Tap", true);
+    subControl.addItem (116, "[tap~]\tAudio Wireless Signal Tap", true);
     m.addSubMenu ("Control & Interactors (Pd-Style)", subControl);
 
     juce::PopupMenu subTime;
@@ -495,26 +514,39 @@ void RelativisticCanvasComponent::showMenuObjects()
     subAudio.addItem (21, "[phasor~]\tRamp Phase Generator", true);
     subAudio.addItem (22, "[sampler~]\tAudio Buffer Sampler", true);
     subAudio.addItem (23, "[filter~]\tState-Variable Filter", true);
+    subAudio.addItem (41, "[svfilter~]\tDual SVF Filter", true);
+    subAudio.addItem (42, "[drive~]\tOverdrive Distortion", true);
+    subAudio.addItem (43, "[reverb~]\tAlgorithmic Reverb", true);
+    subAudio.addItem (44, "[crush~]\tBitcrusher / SR Reducer", true);
+    subAudio.addItem (45, "[adsr~]\tADSR Envelope Generator", true);
     subAudio.addItem (24, "[delay~]\tFeedback Delay Line", true);
     subAudio.addItem (25, "[dac~]\tMaster Audio DAC", true);
     subAudio.addItem (26, "[gain~]\tAudio Signal Scaler", true);
     subAudio.addItem (27, "[out~]\tMaster Output & Live VU Meters", true);
     subAudio.addItem (28, "[env~]\tEnvelope Follower", true);
-    m.addSubMenu ("Audio Processors", subAudio);
+    m.addSubMenu ("Audio Processors & Effects", subAudio);
 
     juce::PopupMenu subMath;
-    subMath.addItem (30, "[expr]\tControl Expression", true);
-    subMath.addItem (31, "[expr~]\tAudio Expression", true);
-    subMath.addItem (32, "[fexpr~]\tFilter Recurrent Expression", true);
+    subMath.addItem (30, "[expr]\tControl Expression ($v1, tap('prop'))", true);
+    subMath.addItem (31, "[expr~]\tAudio Expression ($v1, tap('prop'))", true);
+    subMath.addItem (32, "[fexpr~]\tFilter Recurrent Expression ($y1[-1])", true);
     subMath.addItem (33, "[v]\tValue Storage Control Node", true);
     subMath.addItem (34, "[z~]\t1-Sample Feedback Delay", true);
-    subMath.addItem (35, "[snapshot~]\tAudio Snapshot", true);
+    subMath.addItem (35, "[snapshot~]\tAudio Snapshot Converter", true);
     subMath.addItem (36, "[+]\tSignal/Control Adder", true);
     subMath.addItem (37, "[*]\tSignal/Control Multiplier", true);
     subMath.addItem (38, "[mtof]\tMIDI Note -> Hz Frequency", true);
     subMath.addItem (39, "[ftom]\tHz Frequency -> MIDI Note", true);
     subMath.addItem (40, "[note]\tAlgorithmic Note Generator", true);
     m.addSubMenu ("Math & Control Nodes", subMath);
+
+    juce::PopupMenu subTables;
+    subTables.addItem (113, "[table]\tInteractive Waveform Canvas / Table", true);
+    subTables.addItem (50, "[tabread~]\tTable Sample / Pitch Reader", true);
+    subTables.addItem (51, "[tabwrite~]\tTable Live Audio Recorder", true);
+    subTables.addItem (52, "[tabosc4~]\t4-Pt Wavetable Oscillator", true);
+    subTables.addItem (22, "[sampler~]\tAudio Sampler Engine", true);
+    m.addSubMenu ("Tables & Array Buffers", subTables);
 
     m.addSeparator();
     m.addItem (2, "Detect & Highlight Feedback Loops", true);
@@ -534,6 +566,9 @@ void RelativisticCanvasComponent::showMenuObjects()
                 else if (result == 111) typeName = "bang";
                 else if (result == 112) typeName = "bang~";
                 else if (result == 113) typeName = "table";
+                else if (result == 114) typeName = "counter";
+                else if (result == 115) typeName = "tap";
+                else if (result == 116) typeName = "tap~";
                 else if (result == 10) typeName = "time.warp~";
                 else if (result == 11) typeName = "time.retro~";
                 else if (result == 12) typeName = "time.quantize~";
@@ -561,6 +596,14 @@ void RelativisticCanvasComponent::showMenuObjects()
                 else if (result == 38) typeName = "mtof";
                 else if (result == 39) typeName = "ftom";
                 else if (result == 40) typeName = "note";
+                else if (result == 41) typeName = "svfilter~";
+                else if (result == 42) typeName = "drive~";
+                else if (result == 43) typeName = "reverb~";
+                else if (result == 44) typeName = "crush~";
+                else if (result == 45) typeName = "adsr~";
+                else if (result == 50) typeName = "tabread~";
+                else if (result == 51) typeName = "tabwrite~";
+                else if (result == 52) typeName = "tabosc4~";
 
                 if (!typeName.empty())
                 {
@@ -1091,8 +1134,9 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
         }
     }
 
-    // 9. Add Object Hotkey (N key)
-    if (!isCmdOrCtrl && (key.getKeyCode() == 'N' || key.getKeyCode() == 'n'))
+    // 9. Add Object Hotkey (Cmd+1 or N key)
+    if ((isCmdOrCtrl && key.getKeyCode() == '1') ||
+        (!isCmdOrCtrl && (key.getKeyCode() == 'N' || key.getKeyCode() == 'n')))
     {
         showObjectSearchMenu ({ getWidth() * 0.4f, getHeight() * 0.4f });
         return true;
@@ -1498,8 +1542,17 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
         auto anchorNode = nodeGraph.getNodeById (draggingNodeId);
         if (anchorNode)
         {
-            float dx = (e.position.x - dragOffset.x - panX) - anchorNode->getX();
-            float dy = (e.position.y - dragOffset.y - panY) - anchorNode->getY();
+            float targetX = (e.position.x - dragOffset.x - panX);
+            float targetY = (e.position.y - dragOffset.y - panY);
+
+            if (snapToGrid)
+            {
+                targetX = std::round (targetX / gridSize) * gridSize;
+                targetY = std::round (targetY / gridSize) * gridSize;
+            }
+
+            float dx = targetX - anchorNode->getX();
+            float dy = targetY - anchorNode->getY();
 
             for (int id : selectedNodeIds)
             {
@@ -1991,12 +2044,21 @@ void RelativisticCanvasComponent::paint (juce::Graphics& g)
     g.fillAll (juce::Colour (0xff070a12));
 
     // Sci-Fi Micro-Grid Dot Matrix
-    g.setColour (juce::Colour (0x1a94a3b8));
-    for (int gx = 12; gx < getWidth(); gx += 24)
+    if (showGrid)
     {
-        for (int gy = 55; gy < getHeight(); gy += 24)
+        g.setColour (juce::Colour (0x1a94a3b8));
+        float step = gridSize;
+        int startX = static_cast<int>(std::fmod (panX, step));
+        if (startX < 0) startX += static_cast<int>(step);
+        int startY = static_cast<int>(std::fmod (panY, step)) + 55;
+        if (startY < 55) startY += static_cast<int>(step);
+
+        for (int gx = startX; gx < getWidth(); gx += static_cast<int>(step))
         {
-            g.fillEllipse (static_cast<float>(gx), static_cast<float>(gy), 1.5f, 1.5f);
+            for (int gy = startY; gy < getHeight(); gy += static_cast<int>(step))
+            {
+                g.fillEllipse (static_cast<float>(gx), static_cast<float>(gy), 1.5f, 1.5f);
+            }
         }
     }
 

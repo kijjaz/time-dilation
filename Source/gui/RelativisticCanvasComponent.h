@@ -51,7 +51,9 @@ private:
     RelativisticLookAndFeel customLookAndFeel;
 
     CableStyle cableStyle = CableStyle::Organic;
-    bool useCurvedCords = true;
+    bool showGrid = true;
+    bool snapToGrid = false;
+    float gridSize = 24.0f;
     std::set<int> selectedNodeIds;
     int selectedConnectionId = 0;
     int draggingNodeId = 0;

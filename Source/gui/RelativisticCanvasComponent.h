@@ -37,6 +37,9 @@ public:
 
     bool keyPressed (const juce::KeyPress& key) override;
 
+    float getNodeWidth (const RelativisticNode& node) const;
+    float getNodeHeight (const RelativisticNode& node) const;
+
     void mouseDown (const juce::MouseEvent& e) override;
     void mouseDoubleClick (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
@@ -87,24 +90,28 @@ private:
     // Internal Clipboard Tree
     juce::ValueTree clipboardTree;
 
+    // Edit / Play Mode State
+    bool isEditMode = true;
+
     // Top Header Menu Bar Buttons
-    juce::TextButton btnMenuFile  { "File" };
-    juce::TextButton btnMenuEdit  { "Edit" };
-    juce::TextButton btnMenuView  { "View" };
-    juce::TextButton btnMenuPatch { "Patch" };
-    juce::TextButton btnMenuAudio { "Audio" };
-    juce::TextButton btnMenuHelp  { "Help" };
+    juce::TextButton btnMenuFile    { "File" };
+    juce::TextButton btnMenuEdit    { "Edit" };
+    juce::TextButton btnMenuView    { "View" };
+    juce::TextButton btnMenuObjects { "Objects" };
+    juce::TextButton btnMenuAudio   { "Audio" };
+    juce::TextButton btnMenuHelp    { "Help" };
 
     void showMenuFile();
     void showMenuEdit();
     void showMenuView();
-    void showMenuPatch();
+    void showMenuObjects();
     void showMenuAudio();
     void showMenuHelp();
     void showHelpDialog (const juce::String& topic, const juce::String& content);
 
     // Top Header Toolbar Buttons
     juce::TextButton btnAudioPower { "AUDIO: OFF (SAFE)" };
+    juce::TextButton btnToggleMode { "MODE: EDIT (Cmd+E)" };
     juce::TextButton btnUndo       { "UNDO" };
     juce::TextButton btnRedo       { "REDO" };
     juce::TextButton btnDuplicate  { "DUP (Cmd+D)" };

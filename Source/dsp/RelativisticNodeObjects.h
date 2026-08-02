@@ -240,6 +240,46 @@ public:
     std::vector<ParameterInfo> getParameterDefs() const override;
 };
 
+// 11b. [number] Control Number Box Object
+class NumberNode : public RelativisticNode
+{
+public:
+    NumberNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// 11c. [bang] Control Trigger Pulse Object
+class BangNode : public RelativisticNode
+{
+public:
+    BangNode (int id);
+    void triggerBang();
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+private:
+    bool bangRequested = false;
+};
+
+// 11d. [bang~] Audio Rate Impulse Spike Object
+class BangAudioNode : public RelativisticNode
+{
+public:
+    BangAudioNode (int id);
+    void triggerBang();
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+private:
+    bool bangRequested = false;
+};
+
 // 12. [expr~] Pure Data-style Audio Signal Expression Object
 class ExprAudioNode : public RelativisticNode
 {

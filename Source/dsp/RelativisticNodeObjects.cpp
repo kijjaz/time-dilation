@@ -1229,6 +1229,131 @@ std::vector<ParameterInfo> GainNode::getParameterDefs() const
     return defs;
 }
 
+// 11b. [number] Control Number Box Object
+NumberNode::NumberNode (int id)
+    : RelativisticNode (id, "number", "0")
+{
+    addInlet ("in", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    setParameter ("value", 0.0f);
+}
+
+void NumberNode::process (int /*numSamples*/)
+{
+    if (!inlets.empty() && inlets[0].controlValue != 0.0f)
+    {
+        setParameter ("value", inlets[0].controlValue);
+    }
+    float val = getParameter ("value", 0.0f);
+    outlets[0].controlValue = val;
+    setLabel (juce::String (val, 2).toStdString());
+}
+
+std::string NumberNode::getDefaultFormulaScript() const
+{
+    return "// Control Number Box Object [number]\n// Stores and outputs a floating-point control value\n\nout = value;";
+}
+
+std::vector<ParameterInfo> NumberNode::getParameterDefs() const
+{
+    return { { "value", "NUMBER VALUE", getParameter ("value", 0.0f), -9999.0f, 9999.0f, 0 } };
+}
+
+// 11c. [bang] Control Trigger Pulse Object
+BangNode::BangNode (int id)
+    : RelativisticNode (id, "bang", "bang")
+{
+    addInlet ("in", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    setParameter ("trigger", 0.0f);
+}
+
+void BangNode::triggerBang()
+{
+    bangRequested = true;
+}
+
+void BangNode::process (int /*numSamples*/)
+{
+    float trg = inlets[0].controlValue;
+    if (trg > 0.5f || bangRequested)
+    {
+        outlets[0].controlValue = 1.0f;
+        bangRequested = false;
+    }
+    else
+    {
+        outlets[0].controlValue = 0.0f;
+    }
+}
+
+std::string BangNode::getDefaultFormulaScript() const
+{
+    return "// Control Bang Trigger [bang]\n// Emits a 1.0 control trigger pulse when clicked or invoked\n\nout = trigger ? 1.0 : 0.0;";
+}
+
+std::vector<ParameterInfo> BangNode::getParameterDefs() const
+{
+    return { { "trigger", "MANUAL BANG TRIGGER", 0.0f, 0.0f, 1.0f, 0 } };
+}
+
+std::vector<std::string> BangNode::getExposedMethods() const
+{
+    return { "SEND BANG TRIGGER" };
+}
+
+void BangNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "SEND BANG TRIGGER") triggerBang();
+}
+
+// 11d. [bang~] Audio Rate Impulse Spike Object
+BangAudioNode::BangAudioNode (int id)
+    : RelativisticNode (id, "bang~", "bang~")
+{
+    addInlet ("in~", NodePortType::Audio);
+    addInlet ("trigger", NodePortType::Control);
+    addOutlet ("out~", NodePortType::Audio);
+}
+
+void BangAudioNode::triggerBang()
+{
+    bangRequested = true;
+}
+
+void BangAudioNode::process (int numSamples)
+{
+    auto* out = outlets[0].audioData.getWritePointer (0);
+    outlets[0].audioData.clear();
+
+    float trg = inlets[1].controlValue;
+    if (trg > 0.5f || bangRequested)
+    {
+        out[0] = 1.0f; // 1-Sample Audio Impulse Spike!
+        bangRequested = false;
+    }
+}
+
+std::string BangAudioNode::getDefaultFormulaScript() const
+{
+    return "// Audio Rate Impulse Spike Object [bang~]\n// Emits a single 1.0 sample audio impulse spike on trigger\n\nout = impulse_sample;";
+}
+
+std::vector<ParameterInfo> BangAudioNode::getParameterDefs() const
+{
+    return { { "trigger", "TRIGGER AUDIO IMPULSE", 0.0f, 0.0f, 1.0f, 0 } };
+}
+
+std::vector<std::string> BangAudioNode::getExposedMethods() const
+{
+    return { "FIRE IMPULSE SPIKE" };
+}
+
+void BangAudioNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "FIRE IMPULSE SPIKE") triggerBang();
+}
+
 // 15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering
 OutNode::OutNode (int id)
     : RelativisticNode (id, "out~", "out~ (Scope & Volume)")

@@ -78,11 +78,14 @@ public:
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
     std::vector<std::string> getExposedMethods() const override;
-    void invokeMethod (const std::string& methodName) override;
+    double getCurrentBeatPosition() const { return currentBeatPosition; }
+    bool getIsPlaying() const { return isPlaying; }
+    bool getIsBeatFlashing() const { return beatFlashCounter > 0; }
 
 private:
     double currentBeatPosition = 0.0;
     bool isPlaying = false;
+    int beatFlashCounter = 0;
 };
 
 // 4e. [time.scope] Relativistic Time Monitor & Telemetry Visualizer Object
@@ -278,6 +281,24 @@ public:
     void invokeMethod (const std::string& methodName) override;
 private:
     bool bangRequested = false;
+};
+
+// 11e. [counter] Smart Value Counter Object
+class CounterNode : public RelativisticNode
+{
+public:
+    CounterNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+
+    float getCurrentCount() const { return currentCount; }
+private:
+    float currentCount = 0.0f;
+    bool lastInletState = false;
+    bool lastResetState = false;
 };
 
 // 12. [expr~] Pure Data-style Audio Signal Expression Object

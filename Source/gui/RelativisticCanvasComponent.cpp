@@ -818,6 +818,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (31, "[number]\tControl Number Box (Click & Drag Value)", true);
     m.addItem (32, "[bang]\tControl Trigger Pulse Generator", true);
     m.addItem (33, "[bang~]\tAudio-Rate Impulse Spike Generator", true);
+    m.addItem (34, "[counter]\tSmart Value Counter (Low, High, Step, Carry Out)", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- AUDIO & DSP PROCESSORS ---");
@@ -887,6 +888,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
             else if (result == 31) typeName = "number";
             else if (result == 32) typeName = "bang";
             else if (result == 33) typeName = "bang~";
+            else if (result == 34) typeName = "counter";
 
             if (!typeName.empty())
             {
@@ -1756,6 +1758,36 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (cx - 10.0f, cy - 10.0f, 20.0f, 20.0f, 1.5f);
         g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.9f));
         g.fillEllipse (cx - 6.0f, cy - 6.0f, 12.0f, 12.0f);
+    }
+
+    // Special Canvas Visualization for [time.transport] Realtime Beat & Status Display + Beat Flash LED
+    auto transportNode = std::dynamic_pointer_cast<TimeTransportNode> (node);
+    if (transportNode)
+    {
+        double beats = transportNode->getCurrentBeatPosition();
+        int bar = static_cast<int>(std::floor (beats / 4.0)) + 1;
+        double beatInBar = std::fmod (beats, 4.0) + 1.0;
+        bool playing = transportNode->getIsPlaying();
+        bool flashing = transportNode->getIsBeatFlashing();
+
+        float ledX = x + w - 20.0f;
+        float ledY = y + h * 0.5f;
+        g.setColour (juce::Colour (0xff070a12));
+        g.fillEllipse (ledX - 8.0f, ledY - 8.0f, 16.0f, 16.0f);
+        
+        juce::Colour ledCol = flashing ? juce::Colour (0xfff59e0b) : (playing ? juce::Colour (0xff059669) : juce::Colour (0xff334155));
+        g.setColour (ledCol);
+        g.fillEllipse (ledX - 5.0f, ledY - 5.0f, 10.0f, 10.0f);
+        if (flashing)
+        {
+            g.setColour (juce::Colours::white);
+            g.drawEllipse (ledX - 8.0f, ledY - 8.0f, 16.0f, 16.0f, 2.0f);
+        }
+
+        g.setFont (FontManager::getInstance().getOxaniumFont (10.5f, true));
+        g.setColour (playing ? juce::Colour (0xff38bdf8) : juce::Colour (0xff94a3b8));
+        juce::String posStr = juce::String::formatted ("Bar %d : Beat %.1f", bar, beatInBar);
+        g.drawText (posStr, x + 10.0f, y + 26.0f, w - 36.0f, 16.0f, juce::Justification::centredLeft);
     }
 
     // Special Canvas Visualization for [time.scope] Live Telemetry & Kinetic Relativistic Gauge

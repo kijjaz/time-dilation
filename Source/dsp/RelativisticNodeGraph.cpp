@@ -250,6 +250,7 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "number" || typeName == "num" || typeName == "nb") node = std::make_shared<NumberNode> (id);
     else if (typeName == "bang" || typeName == "b") node = std::make_shared<BangNode> (id);
     else if (typeName == "bang~" || typeName == "b~") node = std::make_shared<BangAudioNode> (id);
+    else if (typeName == "counter" || typeName == "cnt") node = std::make_shared<CounterNode> (id);
     else if (typeName == "note")           node = std::make_shared<NoteGenNode> (id);
     else                                   node = std::make_shared<OscNode> (id);
 

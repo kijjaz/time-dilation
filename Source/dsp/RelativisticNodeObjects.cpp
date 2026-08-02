@@ -178,6 +178,7 @@ TimeTransportNode::TimeTransportNode (int id)
     addOutlet ("beat", NodePortType::Control);    // Outlet 2: Beat position float
     addOutlet ("bar", NodePortType::Control);     // Outlet 3: Bar count (1, 2, 3...)
     addOutlet ("status", NodePortType::Control);  // Outlet 4: Transport state (1 = play, 0 = stop, 2 = pause)
+    addOutlet ("bangOut", NodePortType::Control); // Outlet 5: Control Bang Pulse on Beat
 
     setParameter ("bpm", 120.0f);
     setParameter ("syncGlobal", 0.0f); // 0 = Independent, 1 = Synced to DAW global transport
@@ -229,6 +230,8 @@ void TimeTransportNode::process (int numSamples)
     auto* pulseOut = outlets[1].audioData.getWritePointer (0);
     outlets[1].audioData.clear();
 
+    bool beatCrossed = false;
+
     if (isPlaying)
     {
         for (int s = 0; s < numSamples; ++s)
@@ -239,6 +242,8 @@ void TimeTransportNode::process (int numSamples)
             if (std::floor (currentBeatPosition) > std::floor (prevBeat))
             {
                 pulseOut[s] = 0.9f;
+                beatCrossed = true;
+                beatFlashCounter = 6;
             }
 
             if (loopMode > 0.5f && loopEnd > loopStart)
@@ -251,8 +256,14 @@ void TimeTransportNode::process (int numSamples)
         }
     }
 
+    if (beatFlashCounter > 0) beatFlashCounter--;
+
     outlets[0].timeGamma = gamma;
     outlets[2].controlValue = static_cast<float>(currentBeatPosition);
+    outlets[3].controlValue = static_cast<float>(std::floor (currentBeatPosition / 4.0) + 1.0);
+    outlets[4].controlValue = isPlaying ? 1.0f : 0.0f;
+    if (outlets.size() > 5) outlets[5].controlValue = beatCrossed ? 1.0f : 0.0f;
+}
     outlets[3].controlValue = static_cast<float>(std::floor (currentBeatPosition / 4.0) + 1.0);
     outlets[4].controlValue = isPlaying ? 1.0f : 0.0f;
 }
@@ -1352,6 +1363,101 @@ std::vector<std::string> BangAudioNode::getExposedMethods() const
 void BangAudioNode::invokeMethod (const std::string& methodName)
 {
     if (methodName == "FIRE IMPULSE SPIKE") triggerBang();
+}
+
+// 11e. [counter] Smart Value Counter Object
+CounterNode::CounterNode (int id)
+    : RelativisticNode (id, "counter", "counter 0 15 1")
+{
+    addInlet ("in", NodePortType::Control);    // Inlet 0: Trigger / Bang (increment)
+    addInlet ("low", NodePortType::Control);   // Inlet 1: Low limit
+    addInlet ("high", NodePortType::Control);  // Inlet 2: High limit
+    addInlet ("step", NodePortType::Control);  // Inlet 3: Step size
+    addInlet ("reset", NodePortType::Control); // Inlet 4: Reset trigger
+
+    addOutlet ("count", NodePortType::Control); // Outlet 0: Current count
+    addOutlet ("carry", NodePortType::Control); // Outlet 1: Carry bang on overflow
+
+    setParameter ("low", 0.0f);
+    setParameter ("high", 15.0f);
+    setParameter ("step", 1.0f);
+    setParameter ("current", 0.0f);
+}
+
+void CounterNode::process (int /*numSamples*/)
+{
+    float lowVal = getParameter ("low", 0.0f);
+    float highVal = getParameter ("high", 15.0f);
+    float stepVal = getParameter ("step", 1.0f);
+
+    if (inlets.size() > 1 && inlets[1].controlValue != 0.0f) lowVal = inlets[1].controlValue;
+    if (inlets.size() > 2 && inlets[2].controlValue != 0.0f) highVal = inlets[2].controlValue;
+    if (inlets.size() > 3 && inlets[3].controlValue != 0.0f) stepVal = inlets[3].controlValue;
+
+    bool currentInletState = (inlets[0].controlValue > 0.5f);
+    bool currentResetState = (inlets.size() > 4 && inlets[4].controlValue > 0.5f);
+
+    bool triggerFired = (currentInletState && !lastInletState);
+    bool resetFired = (currentResetState && !lastResetState);
+    lastInletState = currentInletState;
+    lastResetState = currentResetState;
+
+    bool carryFired = false;
+
+    if (resetFired)
+    {
+        currentCount = lowVal;
+    }
+    else if (triggerFired)
+    {
+        currentCount += stepVal;
+        if (currentCount > highVal)
+        {
+            currentCount = lowVal;
+            carryFired = true;
+        }
+    }
+
+    setParameter ("current", currentCount);
+    outlets[0].controlValue = currentCount;
+    if (outlets.size() > 1) outlets[1].controlValue = carryFired ? 1.0f : 0.0f;
+
+    setLabel ("counter " + juce::String (static_cast<int>(currentCount)).toStdString());
+}
+
+std::string CounterNode::getDefaultFormulaScript() const
+{
+    return "// Smart Value Counter Object [counter]\n// Increments count on bang; outputs carry bang when hitting high limit\n\nif (bang) count = (count >= high) ? low : (count + step);";
+}
+
+std::vector<ParameterInfo> CounterNode::getParameterDefs() const
+{
+    return {
+        { "low", "MIN LOW BOUND", getParameter ("low", 0.0f), -999.0f, 999.0f, 0 },
+        { "high", "MAX HIGH BOUND", getParameter ("high", 15.0f), -999.0f, 999.0f, 0 },
+        { "step", "INCREMENT STEP", getParameter ("step", 1.0f), 0.1f, 100.0f, 0 },
+        { "current", "CURRENT COUNT", getParameter ("current", 0.0f), -999.0f, 999.0f, 0 }
+    };
+}
+
+std::vector<std::string> CounterNode::getExposedMethods() const
+{
+    return { "Increment (+1)", "Reset Counter" };
+}
+
+void CounterNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "Increment (+1)")
+    {
+        lastInletState = false;
+        inlets[0].controlValue = 1.0f;
+    }
+    else if (methodName == "Reset Counter")
+    {
+        lastResetState = false;
+        if (inlets.size() > 4) inlets[4].controlValue = 1.0f;
+        else currentCount = getParameter ("low", 0.0f);
+    }
 }
 
 // 15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering

@@ -454,39 +454,39 @@ void RelativisticCanvasComponent::showMenuPatch()
     m.addItem (1, "Add Object... (N / Double-Click)", true);
 
     juce::PopupMenu subTime;
-    subTime.addItem (10, "[time.warp~] Dilated Coordinate Clock", true);
-    subTime.addItem (11, "[time.retro~] Retrograde Time Reverser", true);
-    subTime.addItem (12, "[time.quantize~] Metric Grid Quantizer", true);
-    subTime.addItem (13, "[time.metro~] Relativistic Metronome", true);
-    subTime.addItem (14, "[time.stasis~] Gravitational Time Freeze", true);
-    subTime.addItem (15, "[time.singularity~] Event Horizon Redshift", true);
-    subTime.addItem (16, "[time.transport] Multi-Instance Transport", true);
+    subTime.addItem (10, "[time.warp~]\tDilated Coordinate Clock", true);
+    subTime.addItem (11, "[time.retro~]\tRetrograde Time Reverser", true);
+    subTime.addItem (12, "[time.quantize~]\tMetric Grid Quantizer", true);
+    subTime.addItem (13, "[time.metro~]\tRelativistic Metronome", true);
+    subTime.addItem (14, "[time.stasis~]\tGravitational Time Freeze", true);
+    subTime.addItem (15, "[time.singularity~]\tEvent Horizon Redshift", true);
+    subTime.addItem (16, "[time.transport]\tMulti-Instance Transport", true);
     m.addSubMenu ("Relativistic Time Engines", subTime);
 
     juce::PopupMenu subAudio;
-    subAudio.addItem (20, "[osc~] PolyBLEP VA Oscillator", true);
-    subAudio.addItem (21, "[phasor~] Ramp Phase Generator", true);
-    subAudio.addItem (22, "[sampler~] Audio Buffer Sampler", true);
-    subAudio.addItem (23, "[filter~] State-Variable Filter", true);
-    subAudio.addItem (24, "[delay~] Feedback Delay Line", true);
-    subAudio.addItem (25, "[dac~] Master Audio DAC", true);
-    subAudio.addItem (26, "[gain~] Audio Signal Scaler", true);
-    subAudio.addItem (27, "[out~] Master Output & Live VU Meters", true);
-    subAudio.addItem (28, "[env~] Envelope Follower", true);
+    subAudio.addItem (20, "[osc~]\tPolyBLEP VA Oscillator", true);
+    subAudio.addItem (21, "[phasor~]\tRamp Phase Generator", true);
+    subAudio.addItem (22, "[sampler~]\tAudio Buffer Sampler", true);
+    subAudio.addItem (23, "[filter~]\tState-Variable Filter", true);
+    subAudio.addItem (24, "[delay~]\tFeedback Delay Line", true);
+    subAudio.addItem (25, "[dac~]\tMaster Audio DAC", true);
+    subAudio.addItem (26, "[gain~]\tAudio Signal Scaler", true);
+    subAudio.addItem (27, "[out~]\tMaster Output & Live VU Meters", true);
+    subAudio.addItem (28, "[env~]\tEnvelope Follower", true);
     m.addSubMenu ("Audio Processors", subAudio);
 
     juce::PopupMenu subMath;
-    subMath.addItem (30, "[expr] Control Expression", true);
-    subMath.addItem (31, "[expr~] Audio Expression", true);
-    subMath.addItem (32, "[fexpr~] Filter Recurrent Expression", true);
-    subMath.addItem (33, "[v] Value Storage Control Node", true);
-    subMath.addItem (34, "[z~] 1-Sample Feedback Delay", true);
-    subMath.addItem (35, "[snapshot~] Audio Snapshot", true);
-    subMath.addItem (36, "[+] Signal/Control Adder", true);
-    subMath.addItem (37, "[*] Signal/Control Multiplier", true);
-    subMath.addItem (38, "[mtof] MIDI Note -> Hz Frequency", true);
-    subMath.addItem (39, "[ftom] Hz Frequency -> MIDI Note", true);
-    subMath.addItem (40, "[note] Algorithmic Note Generator", true);
+    subMath.addItem (30, "[expr]\tControl Expression", true);
+    subMath.addItem (31, "[expr~]\tAudio Expression", true);
+    subMath.addItem (32, "[fexpr~]\tFilter Recurrent Expression", true);
+    subMath.addItem (33, "[v]\tValue Storage Control Node", true);
+    subMath.addItem (34, "[z~]\t1-Sample Feedback Delay", true);
+    subMath.addItem (35, "[snapshot~]\tAudio Snapshot", true);
+    subMath.addItem (36, "[+]\tSignal/Control Adder", true);
+    subMath.addItem (37, "[*]\tSignal/Control Multiplier", true);
+    subMath.addItem (38, "[mtof]\tMIDI Note -> Hz Frequency", true);
+    subMath.addItem (39, "[ftom]\tHz Frequency -> MIDI Note", true);
+    subMath.addItem (40, "[note]\tAlgorithmic Note Generator", true);
     m.addSubMenu ("Math & Control Nodes", subMath);
 
     m.addSeparator();
@@ -773,39 +773,45 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
 {
     juce::PopupMenu m;
     m.addSectionHeader ("--- RELATIVISTIC TIME ENGINES ---");
-    m.addItem (1, "[time.warp~]        Dilated Coordinate Time Generator", true);
-    m.addItem (2, "[time.retro~]       Retrograde Time Reverser", true);
-    m.addItem (3, "[time.quantize~]    Metric Grid Time Quantizer", true);
-    m.addItem (4, "[time.metro~]       Dilated Metronome Pulse Generator", true);
-    m.addItem (24, "[time.stasis~]      Gravitational Time Stasis Freeze Engine", true);
-    m.addItem (25, "[time.singularity~] Event Horizon Gravitational Redshift Warp", true);
-    m.addItem (30, "[time.scope]        Relativistic Time & Telemetry Visualizer Monitor", true);
+    m.addItem (1, "[time.warp~]\tDilated Coordinate Time Generator", true);
+    m.addItem (2, "[time.retro~]\tRetrograde Time Reverser", true);
+    m.addItem (3, "[time.quantize~]\tMetric Grid Time Quantizer", true);
+    m.addItem (4, "[time.metro~]\tDilated Metronome Pulse Generator", true);
+    m.addItem (24, "[time.stasis~]\tGravitational Time Stasis Freeze Engine", true);
+    m.addItem (25, "[time.singularity~]\tEvent Horizon Gravitational Redshift Warp", true);
+    m.addItem (30, "[time.scope]\tRelativistic Time & Telemetry Visualizer Monitor", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- AUDIO & DSP PROCESSORS ---");
-    m.addItem (5, "[osc~]          Sine/Saw/Square Oscillator", true);
-    m.addItem (6, "[phasor~]       Linear Ramp Phase Generator", true);
-    m.addItem (7, "[sampler~]      Audio Buffer Sampler", true);
-    m.addItem (8, "[filter~]       State-Variable Filter", true);
-    m.addItem (9, "[delay~]        Feedback Delay Line", true);
-    m.addItem (10, "[dac~]         Audio Master Output DAC", true);
-    m.addItem (14, "[gain~]        Audio Signal Scaler", true);
-    m.addItem (15, "[out~]         Master Output Fader & Live Meters", true);
-    m.addItem (16, "[env~]         Envelope Follower (Peak Detector)", true);
-    m.addItem (17, "[tap]          Control Signal Wireless Tap", true);
-    m.addItem (18, "[tap~]         Audio Signal Wireless Tap", true);
+    m.addItem (5, "[osc~]\tSine/Saw/Square Oscillator", true);
+    m.addItem (6, "[phasor~]\tLinear Ramp Phase Generator", true);
+    m.addItem (7, "[sampler~]\tAudio Buffer Sampler", true);
+    m.addItem (8, "[filter~]\tState-Variable Filter", true);
+    m.addItem (9, "[delay~]\tFeedback Delay Line", true);
+    m.addItem (10, "[dac~]\tAudio Master Output DAC", true);
+    m.addItem (14, "[gain~]\tAudio Signal Scaler", true);
+    m.addItem (15, "[out~]\tMaster Output Fader & Live Meters", true);
+    m.addItem (16, "[env~]\tEnvelope Follower (Peak Detector)", true);
+    m.addItem (17, "[tap]\tControl Signal Wireless Tap", true);
+    m.addItem (18, "[tap~]\tAudio Signal Wireless Tap", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- MATH SIGNAL EXPRESSIONS & CONTROL NODES ---");
-    m.addItem (11, "[expr]         Control Expression ($v1, tap('node.prop'))", true);
-    m.addItem (12, "[expr~]        Audio Expression ($v1, tap('node.prop'))", true);
-    m.addItem (13, "[fexpr~]       Filter Recurrent Expression ($y1[-1])", true);
+    m.addItem (11, "[expr]\tControl Expression ($v1, tap('node.prop'))", true);
+    m.addItem (12, "[expr~]\tAudio Expression ($v1, tap('node.prop'))", true);
+    m.addItem (13, "[fexpr~]\tFilter Recurrent Expression ($y1[-1])", true);
+    m.addItem (19, "[v]\tValue Storage Control Node", true);
+    m.addItem (20, "[z~]\t1-Sample Feedback Delay Node", true);
+    m.addItem (21, "[snapshot~]\tAudio-to-Control Snapshot Node", true);
+    m.addItem (22, "[+]\tSignal & Control Adder", true);
+    m.addItem (23, "[*]\tSignal & Control Multiplier", true);
+
     m.addSeparator();
     m.addSectionHeader ("--- TABLES & ARRAY DATA NODES ---");
-    m.addItem (26, "[table]        Interactive Table / Array Buffer", true);
-    m.addItem (27, "[tabread~]     Table Sample / Pitch Reader", true);
-    m.addItem (28, "[tabwrite~]    Live Audio/Data Table Recorder", true);
-    m.addItem (29, "[tabosc4~]     4-Pt Wavetable Oscillator", true);
+    m.addItem (26, "[table]\tInteractive Table / Array Buffer", true);
+    m.addItem (27, "[tabread~]\tTable Sample / Pitch Reader", true);
+    m.addItem (28, "[tabwrite~]\tLive Audio/Data Table Recorder", true);
+    m.addItem (29, "[tabosc4~]\t4-Pt Wavetable Oscillator", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (juce::Rectangle<int> (static_cast<int>(spawnPos.x), static_cast<int>(spawnPos.y), 1, 1)),
         [this, spawnPos] (int result) {

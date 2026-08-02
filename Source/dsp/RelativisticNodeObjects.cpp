@@ -178,8 +178,8 @@ void OscNode::process (int numSamples)
 {
     double gamma = inlets[0].timeGamma;
     float freqCtrl = inlets[1].controlValue;
-    float baseFreq = getParameter ("frequency", 440.0f);
-    float gain = getParameter ("gain", 0.8f);
+    float baseFreq = getModulatedParamValue ("frequency", 440.0f);
+    float gain = getModulatedParamValue ("gain", 0.8f);
     float freq = (freqCtrl > 0.0f) ? freqCtrl : baseFreq;
 
     double effectiveFreq = std::abs (freq * gamma);
@@ -451,13 +451,12 @@ void FilterNode::process (int numSamples)
     auto* outL = outlets[0].audioData.getWritePointer (0);
     auto* outR = outlets[0].audioData.getWritePointer (1);
 
-    float cutoff = getParameter ("cutoff", 1200.0f);
-    cutoff = std::clamp (cutoff, 20.0f, 20000.0f);
-
-    float alpha = std::clamp (static_cast<float>(2.0 * juce::MathConstants<double>::pi * cutoff / currentSampleRate), 0.001f, 0.99f);
-
     for (int s = 0; s < numSamples; ++s)
     {
+        float cutoff = getModulatedParamValue ("cutoff", 1200.0f, s);
+        cutoff = std::clamp (cutoff, 20.0f, 20000.0f);
+        float alpha = std::clamp (static_cast<float>(2.0 * juce::MathConstants<double>::pi * cutoff / currentSampleRate), 0.001f, 0.99f);
+
         filterStateL += alpha * (inL[s] - filterStateL);
         filterStateR += alpha * (inR[s] - filterStateR);
 

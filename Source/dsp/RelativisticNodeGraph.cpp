@@ -63,6 +63,30 @@ int RelativisticNode::addModulationInlet (const std::string& paramKey)
     return inletIdx;
 }
 
+float RelativisticNode::getModulatedParamValue (const std::string& paramKey, float defaultVal, int sampleIdx) const
+{
+    float baseVal = getParameter (paramKey, defaultVal);
+    auto it = paramModInlets.find (paramKey);
+    if (it != paramModInlets.end())
+    {
+        int inletIdx = it->second;
+        if (inletIdx >= 0 && inletIdx < static_cast<int>(inlets.size()))
+        {
+            const auto& port = inlets[static_cast<size_t>(inletIdx)];
+            if (port.audioData.getNumSamples() > 0 && port.audioData.getMagnitude (0, port.audioData.getNumSamples()) > 0.0001f)
+            {
+                int samplePos = std::clamp (sampleIdx, 0, port.audioData.getNumSamples() - 1);
+                return port.audioData.getSample (0, samplePos);
+            }
+            else if (port.controlValue != 0.0f)
+            {
+                return port.controlValue;
+            }
+        }
+    }
+    return baseVal;
+}
+
 std::vector<ParameterInfo> RelativisticNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;

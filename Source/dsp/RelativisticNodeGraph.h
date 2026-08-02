@@ -87,6 +87,7 @@ public:
         auto it = parameters.find (key);
         return (it != parameters.end()) ? it->second : defaultVal;
     }
+    float getModulatedParamValue (const std::string& paramKey, float defaultVal = 0.0f, int sampleIdx = 0) const;
     const std::map<std::string, float>& getParameters() const { return parameters; }
 
     void setParamExpression (const std::string& key, const std::string& expr) { paramExpressions[key] = expr; }

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Dilation DAW - Algorithmic Logo Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070a12;
+            --panel-bg: #0d1322;
+            --panel-border: #1e293b;
+            --accent-cyan: #06b6d4;
+            --accent-violet: #8b5cf6;
+            --accent-gold: #f59e0b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 800px;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 50%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .concept-badge {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #c084fc;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .preview-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            width: 100%;
+            max-width: 1060px;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .svg-container {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #070a12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .svg-container img, .svg-container svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .icon-row {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .icon-box {
+            width: 240px;
+            height: 240px;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .math-specs {
+            background: rgba(7, 10, 18, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-top: 20px;
+        }
+
+        .math-specs span.highlight {
+            color: var(--accent-cyan);
+        }
+        .math-specs span.gold {
+            color: var(--accent-gold);
+        }
+        .math-specs span.violet {
+            color: var(--accent-violet);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="concept-badge">ALGORITHMIC LOGO DESIGN</div>
+        <h1>TIME DILATION DAW</h1>
+        <p>Blowing time dusts & crystals through a relativistic black hole of time from left to right, with directional volumetric light shining upon them.</p>
+    </div>
+
+    <div class="preview-grid">
+        <!-- Banner Logo Card -->
+        <div class="card">
+            <div class="card-title">
+                <span>HORIZONTAL BRAND BANNER LOGO</span>
+                <span class="card-tag">logo_banner.svg (1000x600)</span>
+            </div>
+            <div class="svg-container">
+                <img src="logo_banner.svg" alt="Time Dilation DAW Banner Logo">
+            </div>
+            <div class="math-specs">
+                <div><span class="violet">&bull; Black Hole Gravitational Singularity:</span> Event horizon at (420, 300) with r_event=65px, photon ring r_photon=82px, surrounded by 3-tier Einstein lensing rings.</div>
+                <div><span class="highlight">&bull; Geodesic Flow Streamlines:</span> 45 procedural bezier curves parameterized by relativistic deflection \(\Delta y \propto e^{-|y-y_0|/\sigma}\).</div>
+                <div><span class="gold">&bull; 3D Octahedral Time Crystals:</span> 16 faceted polyhedra rendered with normal lighting vectors \(\vec{n} \cdot \vec{L}\) and Doppler color shift (Cyan \(\rightarrow\) Violet \(\rightarrow\) Gold).</div>
+                <div><span class="highlight">&bull; Volumetric Lighting:</span> Top-left directional light source \(\vec{L} = (-0.6, -0.7, 0.4)\) creating specular edge glints and atmospheric rays.</div>
+            </div>
+        </div>
+
+        <!-- App Icon Card -->
+        <div class="card">
+            <div class="card-title">
+                <span>STANDALONE & PLUGIN APP ICON</span>
+                <span class="card-tag">logo_icon.svg (512x512)</span>
+            </div>
+            <div class="icon-row">
+                <div class="icon-box">
+                    <img src="logo_icon.svg" alt="App Icon 512x512">
+                </div>
+                <div style="flex: 1; min-width: 280px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--text-light);">Icon Application Modes</h3>
+                    <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 15px;">
+                        Optimized for macOS Dock icons, VST3/AU editor header graphics, app installer bundles, and favicon usage.
+                    </p>
+                    <div style="display: flex; gap: 12px;">
+                        <img src="logo_icon.svg" style="width: 64px; height: 64px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.2);">
+                        <img src="logo_icon.svg" style="width: 48px; height: 48px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+                        <img src="logo_icon.svg" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

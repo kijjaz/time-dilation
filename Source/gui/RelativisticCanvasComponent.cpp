@@ -348,6 +348,7 @@ void RelativisticCanvasComponent::showMenuFile()
     juce::PopupMenu m;
     m.addSectionHeader ("--- PROJECT FILE MANAGEMENT ---");
     m.addItem (1, "New Patch", true);
+    m.addItem (5, "New Window (⌘N)", true);
     m.addItem (2, "Open Patch...", true);
     m.addItem (3, "Save Patch", true);
     m.addItem (4, "Save Patch As...", true);
@@ -364,6 +365,18 @@ void RelativisticCanvasComponent::showMenuFile()
             {
                 nodeGraph.clearGraph();
                 repaint();
+            }
+            else if (result == 5)
+            {
+                if (auto* app = juce::JUCEApplication::getInstance())
+                {
+                    app->sendUnhandledBacktrace (juce::String());
+                    // Spawn new window via JUCE command
+                    juce::MessageManager::callAsync ([] {
+                        if (auto* appInstance = juce::JUCEApplication::getInstance())
+                            appInstance->anotherInstanceStarted ("");
+                    });
+                }
             }
             else if (result == 2 || result == 3 || result == 4)
             {

@@ -14,14 +14,19 @@ public:
     const juce::String getApplicationVersion() override { return "1.0.0"; }
     bool moreThanOneInstanceAllowed() override { return true; }
 
+    static TimeDilationApplication* getInstance()
+    {
+        return dynamic_cast<TimeDilationApplication*> (juce::JUCEApplication::getInstance());
+    }
+
     void initialise (const juce::String& /*commandLine*/) override
     {
-        mainWindow = std::make_unique<MainWindow> (getApplicationName());
+        createNewWindow ("Time Dilation DAW");
     }
 
     void shutdown() override
     {
-        mainWindow = nullptr;
+        windows.clear();
     }
 
     void systemRequestedQuit() override
@@ -32,7 +37,7 @@ public:
     class MainWindow : public juce::DocumentWindow
     {
     public:
-        explicit MainWindow (juce::String name)
+        MainWindow (juce::String name, int examplePatchId = 0)
             : DocumentWindow (name,
                               juce::Desktop::getInstance().getDefaultLookAndFeel()
                                   .findColour (juce::ResizableWindow::backgroundColourId),
@@ -40,17 +45,39 @@ public:
         {
             setUsingNativeTitleBar (true);
             processor = std::make_unique<TimeDilationAudioProcessor>();
-            setContentOwned (processor->createEditor(), true);
+            auto* editor = processor->createEditor();
+            setContentOwned (editor, true);
 
             setResizable (true, true);
             setResizeLimits (800, 500, 1920, 1080);
-            centreWithSize (getWidth(), getHeight());
+            centreWithSize (960, 640);
+
+            if (examplePatchId > 0)
+            {
+                if (auto* studioEd = dynamic_cast<TimeDilationAudioProcessorEditor*> (editor))
+                {
+                    if (auto* canvas = studioEd->getCanvasComponent())
+                    {
+                        if (examplePatchId == 10) canvas->getNodeGraph().loadTimeWarpExamplePatch();
+                        else if (examplePatchId == 11) canvas->getNodeGraph().loadTimeRetroExamplePatch();
+                        else if (examplePatchId == 12) canvas->getNodeGraph().loadTimeStasisExamplePatch();
+                        else if (examplePatchId == 13) canvas->getNodeGraph().loadTimeSingularityExamplePatch();
+                        else if (examplePatchId == 14) canvas->getNodeGraph().loadTimeQuantizeExamplePatch();
+                        else if (examplePatchId == 15) canvas->getNodeGraph().loadTimeTransportExamplePatch();
+                        canvas->repaint();
+                    }
+                }
+            }
+
             setVisible (true);
         }
 
         void closeButtonPressed() override
         {
-            JUCEApplication::getInstance()->systemRequestedQuit();
+            if (auto* app = TimeDilationApplication::getInstance())
+            {
+                app->closeWindow (this);
+            }
         }
 
     private:
@@ -58,8 +85,26 @@ public:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
 
+    MainWindow* createNewWindow (const juce::String& title, int examplePatchId = 0)
+    {
+        auto* w = new MainWindow (title, examplePatchId);
+        int offset = (windows.size() % 8) * 30;
+        w->setTopLeftPosition (w->getX() + offset, w->getY() + offset);
+        windows.add (w);
+        return w;
+    }
+
+    void closeWindow (MainWindow* targetWindow)
+    {
+        windows.removeObject (targetWindow, true);
+        if (windows.isEmpty())
+        {
+            quit();
+        }
+    }
+
 private:
-    std::unique_ptr<MainWindow> mainWindow;
+    juce::OwnedArray<MainWindow> windows;
 };
 
 } // namespace time_dilation

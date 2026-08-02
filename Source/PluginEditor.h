@@ -18,6 +18,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    RelativisticCanvasComponent* getCanvasComponent() { return &canvasComponent; }
+
 private:
     TimeDilationAudioProcessor& audioProcessor;
     CarbonGoldLookAndFeel lookAndFeel;

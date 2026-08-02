@@ -552,16 +552,27 @@ void RelativisticCanvasComponent::showMenuAudio()
     m.addSeparator();
 
     juce::PopupMenu subSampleRate;
-    subSampleRate.addItem (10, "44.1 kHz", true);
-    subSampleRate.addItem (11, "48.0 kHz", true);
-    subSampleRate.addItem (12, "96.0 kHz (Pro High-Res)", true);
+    subSampleRate.addItem (10, "44.1 kHz (44100 Hz)", true);
+    subSampleRate.addItem (11, "48.0 kHz (48000 Hz)", true);
+    subSampleRate.addItem (12, "88.2 kHz (88200 Hz)", true);
+    subSampleRate.addItem (13, "96.0 kHz (96000 Hz)", true);
+    subSampleRate.addItem (14, "176.4 kHz (176400 Hz)", true);
+    subSampleRate.addItem (15, "192.0 kHz (192000 Hz)", true);
+    subSampleRate.addSeparator();
+    subSampleRate.addItem (19, "Custom Sample Rate...", true);
     m.addSubMenu ("Sample Rate", subSampleRate);
 
     juce::PopupMenu subBuffer;
-    subBuffer.addItem (20, "128 Samples (Ultra Low Latency)", true);
-    subBuffer.addItem (21, "256 Samples (Pro Latency)", true);
-    subBuffer.addItem (22, "512 Samples (Standard)", true);
-    subBuffer.addItem (23, "1024 Samples (Safe Buffer)", true);
+    subBuffer.addItem (20, "32 Samples (Extreme Low Latency)", true);
+    subBuffer.addItem (21, "64 Samples (Ultra Low Latency)", true);
+    subBuffer.addItem (22, "128 Samples (Low Latency)", true);
+    subBuffer.addItem (23, "256 Samples (Pro Studio Latency)", true);
+    subBuffer.addItem (24, "512 Samples (Standard)", true);
+    subBuffer.addItem (25, "1024 Samples (Safe Buffer)", true);
+    subBuffer.addItem (26, "2048 Samples (High Reliability)", true);
+    subBuffer.addItem (27, "4096 Samples (Maximum Stability)", true);
+    subBuffer.addSeparator();
+    subBuffer.addItem (29, "Custom Buffer Size...", true);
     m.addSubMenu ("Buffer Size", subBuffer);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuAudio),
@@ -572,6 +583,58 @@ void RelativisticCanvasComponent::showMenuAudio()
                 juce::MessageManager::callAsync ([] {
                     juce::JUCEApplication::getInstance()->anotherInstanceStarted ("--audio-setup");
                 });
+            }
+            else if (result >= 10 && result <= 15)
+            {
+                double rates[6] = { 44100.0, 48000.0, 88200.0, 96000.0, 176400.0, 192000.0 };
+                double sr = rates[result - 10];
+                nodeGraph.prepare (sr, 512);
+                showHelpDialog ("Sample Rate Updated", "Audio DSP Engine configured to " + juce::String (sr) + " Hz.");
+            }
+            else if (result == 19)
+            {
+                auto alert = std::make_unique<juce::AlertWindow> ("CUSTOM SAMPLE RATE", "Enter custom sample rate in Hz (e.g. 22050, 32000, 88200, 192000, 384000):", juce::AlertWindow::QuestionIcon);
+                alert->addTextEditor ("srInput", "44100", "Sample Rate (Hz):");
+                alert->addButton ("Apply", 1);
+                alert->addButton ("Cancel", 0);
+                alert->enterModalState (true, juce::ModalCallbackFunction::create ([this, a = alert.get()] (int res) {
+                    if (res == 1)
+                    {
+                        double customSr = a->getTextEditorContents ("srInput").getDoubleValue();
+                        if (customSr > 1000.0 && customSr < 768000.0)
+                        {
+                            nodeGraph.prepare (customSr, 512);
+                            showHelpDialog ("Custom Sample Rate Applied", "Audio DSP Engine configured to " + juce::String (customSr) + " Hz.");
+                        }
+                    }
+                }), true);
+                alert.release();
+            }
+            else if (result >= 20 && result <= 27)
+            {
+                int sizes[8] = { 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+                int bs = sizes[result - 20];
+                nodeGraph.prepare (44100.0, bs);
+                showHelpDialog ("Buffer Size Updated", "Audio DSP Engine configured to " + juce::String (bs) + " samples block size.");
+            }
+            else if (result == 29)
+            {
+                auto alert = std::make_unique<juce::AlertWindow> ("CUSTOM BUFFER SIZE", "Enter custom buffer size in samples (e.g. 32, 64, 128, 256, 512, 1024, 2048):", juce::AlertWindow::QuestionIcon);
+                alert->addTextEditor ("bsInput", "256", "Buffer Size (Samples):");
+                alert->addButton ("Apply", 1);
+                alert->addButton ("Cancel", 0);
+                alert->enterModalState (true, juce::ModalCallbackFunction::create ([this, a = alert.get()] (int res) {
+                    if (res == 1)
+                    {
+                        int customBs = a->getTextEditorContents ("bsInput").getIntValue();
+                        if (customBs >= 16 && customBs <= 65536)
+                        {
+                            nodeGraph.prepare (44100.0, customBs);
+                            showHelpDialog ("Custom Buffer Size Applied", "Audio DSP Engine configured to " + juce::String (customBs) + " samples block size.");
+                        }
+                    }
+                }), true);
+                alert.release();
             }
         });
 }

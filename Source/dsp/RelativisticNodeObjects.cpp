@@ -303,6 +303,58 @@ void TimeTransportNode::invokeMethod (const std::string& methodName)
     }
 }
 
+// 4e. [time.scope] Relativistic Time Monitor & Telemetry Visualizer Object
+TimeScopeNode::TimeScopeNode (int id)
+    : RelativisticNode (id, "time.scope", "time.scope")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("in", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    addOutlet ("gammaOut", NodePortType::Control);
+
+    setParameter ("gamma", 1.0f);
+    setParameter ("t_local", 0.0f);
+}
+
+void TimeScopeNode::process (int /*numSamples*/)
+{
+    float gamma = 1.0f;
+    if (!inlets.empty() && inlets[0].timeGamma != 0.0f)
+    {
+        gamma = inlets[0].timeGamma;
+    }
+    else
+    {
+        gamma = getParameter ("gamma", 1.0f);
+    }
+
+    localCoordinateTime += (1.0 / currentSampleRate) * gamma;
+    monitoredGamma = gamma;
+    monitoredTimeSec = localCoordinateTime;
+
+    setParameter ("gamma", gamma);
+    setParameter ("t_local", static_cast<float>(localCoordinateTime));
+
+    if (!outlets.empty())
+    {
+        outlets[0].controlValue = static_cast<float>(localCoordinateTime);
+        if (outlets.size() > 1) outlets[1].controlValue = gamma;
+    }
+}
+
+std::string TimeScopeNode::getDefaultFormulaScript() const
+{
+    return "// Relativistic Time Scope Node [time.scope]\n// Monitors coordinate time (t_local) & time dilation factor (gamma)\n\nout = $t;\ngammaOut = gamma;";
+}
+
+std::vector<ParameterInfo> TimeScopeNode::getParameterDefs() const
+{
+    return {
+        { "gamma", "Dilation Factor (gamma)", 1.0f, -10.0f, 10.0f, 0 },
+        { "t_local", "Local Time (t_local sec)", 0.0f, 0.0f, 1000.0f, -1 }
+    };
+}
+
 // 5. [osc~]
 OscNode::OscNode (int id)
     : RelativisticNode (id, "osc~", "osc~ 440 Hz")

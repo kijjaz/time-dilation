@@ -699,6 +699,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (4, "[time.metro~]       Dilated Metronome Pulse Generator", true);
     m.addItem (24, "[time.stasis~]      Gravitational Time Stasis Freeze Engine", true);
     m.addItem (25, "[time.singularity~] Event Horizon Gravitational Redshift Warp", true);
+    m.addItem (30, "[time.scope]        Relativistic Time & Telemetry Visualizer Monitor", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- AUDIO & DSP PROCESSORS ---");
@@ -758,6 +759,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
             else if (result == 27) typeName = "tabread~";
             else if (result == 28) typeName = "tabwrite~";
             else if (result == 29) typeName = "tabosc4~";
+            else if (result == 30) typeName = "time.scope";
 
             if (!typeName.empty())
             {
@@ -1427,10 +1429,11 @@ void RelativisticCanvasComponent::drawCable (juce::Graphics& g, juce::Point<floa
 
 void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared_ptr<RelativisticNode>& node)
 {
+    bool isScope = node->getTypeName() == "time.scope" || node->getTypeName() == "time.display" || node->getTypeName() == "time.monitor";
     const float x = node->getX();
     const float y = node->getY();
-    const float w = 150.0f;
-    const float h = (node->getTypeName() == "table") ? 68.0f : 44.0f;
+    const float w = isScope ? 160.0f : 150.0f;
+    const float h = (node->getTypeName() == "table") ? 68.0f : (isScope ? 75.0f : 44.0f);
 
     bool isTimeObj = node->getTypeName().rfind ("time.", 0) == 0;
     bool isAudioObj = node->getTypeName().find ("~") != std::string::npos || node->getTypeName() == "dac~" || node->getTypeName() == "gain~" || node->getTypeName() == "out~";
@@ -1462,6 +1465,54 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
     {
         g.setColour (juce::Colour (0xff2e2e42)); // Hairline Dark Slate Border
         g.drawRoundedRectangle (x, y, w, h, 6.0f, 1.0f);
+    }
+    // Special Canvas Visualization for [time.scope] Live Telemetry & Kinetic Relativistic Gauge
+    auto timeScope = std::dynamic_pointer_cast<TimeScopeNode> (node);
+    if (timeScope)
+    {
+        float gamma = timeScope->getMonitoredGamma();
+        double tSec = timeScope->getMonitoredTimeSec();
+
+        // 1. Text Telemetry Display
+        g.setColour (juce::Colour (0xff06b6d4)); // Cyan
+        g.setFont (FontManager::getInstance().getOxaniumFont (11.0f, true));
+        juce::String gammaStr = juce::String::formatted ("γ: %+.2fx (%d%%)", gamma, static_cast<int>(gamma * 100.0f));
+        g.drawText (gammaStr, x + 10.0f, y + 20.0f, w - 16.0f, 15.0f, juce::Justification::centredLeft);
+
+        g.setColour (juce::Colour (0xfff59e0b)); // Gold
+        juce::String timeStr = juce::String::formatted ("t_loc: %.3fs", tSec);
+        g.drawText (timeStr, x + 10.0f, y + 35.0f, w - 16.0f, 15.0f, juce::Justification::centredLeft);
+
+        // 2. Kinetic Relativistic Speed Gauge Bar
+        float gx = x + 8.0f;
+        float gy = y + 52.0f;
+        float gw = w - 16.0f;
+        float gh = 15.0f;
+
+        g.setColour (juce::Colour (0xff070a12));
+        g.fillRoundedRectangle (gx, gy, gw, gh, 2.0f);
+        g.setColour (juce::Colour (0xff1e293b));
+        g.drawRoundedRectangle (gx, gy, gw, gh, 2.0f, 1.0f);
+
+        float midX = gx + gw * 0.5f;
+        float normGamma = std::clamp (gamma / 5.0f, -1.0f, 1.0f);
+        float barLen = normGamma * (gw * 0.48f);
+
+        if (gamma > 0.001f)
+        {
+            g.setColour (juce::Colour (0xff06b6d4)); // Forward: Cyber Cyan
+            g.fillRect (midX, gy + 2.0f, barLen, gh - 4.0f);
+        }
+        else if (gamma < -0.001f)
+        {
+            g.setColour (juce::Colour (0xfff59e0b)); // Retrograde: Relativistic Gold
+            g.fillRect (midX + barLen, gy + 2.0f, -barLen, gh - 4.0f);
+        }
+        else
+        {
+            g.setColour (juce::Colour (0xff8b5cf6)); // Stasis: Royal Violet
+            g.fillRect (midX - 3.0f, gy + 2.0f, 6.0f, gh - 4.0f);
+        }
     }
 
     // Special Canvas Visualization for [table] Interactive Waveform / Step Sequencer Canvas

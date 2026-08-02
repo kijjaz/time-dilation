@@ -85,6 +85,23 @@ private:
     bool isPlaying = false;
 };
 
+// 4e. [time.scope] Relativistic Time Monitor & Telemetry Visualizer Object
+class TimeScopeNode : public RelativisticNode
+{
+public:
+    TimeScopeNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    float getMonitoredGamma() const { return monitoredGamma; }
+    double getMonitoredTimeSec() const { return monitoredTimeSec; }
+
+private:
+    float monitoredGamma = 1.0f;
+    double monitoredTimeSec = 0.0;
+};
+
 // 5. [osc~] PolyBLEP & Wavetable Polyphonic Synthesizer Oscillator Object
 class OscNode : public RelativisticNode
 {

@@ -216,6 +216,7 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "time.stasis~")  node = std::make_shared<TimeStasisNode> (id);
     else if (typeName == "time.singularity~") node = std::make_shared<TimeSingularityNode> (id);
     else if (typeName == "time.transport")node = std::make_shared<TimeTransportNode> (id);
+    else if (typeName == "time.scope" || typeName == "time.display" || typeName == "time.monitor") node = std::make_shared<TimeScopeNode> (id);
     else if (typeName == "osc~")           node = std::make_shared<OscNode> (id);
     else if (typeName == "phasor~")        node = std::make_shared<PhasorNode> (id);
     else if (typeName == "sampler~")       node = std::make_shared<SamplerNode> (id);

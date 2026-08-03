@@ -217,7 +217,7 @@ def render_velocity_dependent_gradient_trails(particles, bh_x, bh_y, width):
     for p in particles:
         if p.particle_type in ("macro", "medium") or (p.particle_type == "standard" and random.random() > 0.35):
             if len(p.history) >= 2:
-                base_w = max(0.9, p.radius * 0.55)
+                base_w = max(1.5, p.radius * 0.85)
 
                 for k in range(len(p.history) - 1):
                     x1, y1, v1 = p.history[k]
@@ -226,8 +226,8 @@ def render_velocity_dependent_gradient_trails(particles, bh_x, bh_y, width):
                     if -60 <= x1 <= width + 60 and -60 <= x2 <= width + 60:
                         v_avg = (v1 + v2) * 0.5
 
-                        opacity = max(0.18, min(0.88, 0.90 - (v_avg / 12.0) * 0.68))
-                        stroke_w = max(0.6, base_w * (1.3 - (v_avg / 12.0) * 0.65))
+                        opacity = max(0.35, min(0.95, 0.95 - (v_avg / 12.0) * 0.55))
+                        stroke_w = max(1.4, base_w * (1.5 - (v_avg / 12.0) * 0.5))
 
                         head_c, trail_c = get_gradient_mixed_color(x1, y1, v1, p.color_seed, bh_x, bh_y)
                         seg_col = head_c if v_avg < 4.5 else trail_c
@@ -245,34 +245,34 @@ def create_time_dilation_logo_v10():
 
     svg_parts = []
 
-    # SVG Header - DEEP WARM OBSIDIAN WITH TRANSPARENT ALPHA BACKGROUND
+    # SVG Header - SOLID OBSIDIAN BLACK BACKGROUND (#070a12)
     svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%">
     <defs>
         <radialGradient id="bgGlow" cx="44%" cy="50%" r="65%">
-            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.35"/>
-            <stop offset="45%" stop-color="#090310" stop-opacity="0.10"/>
-            <stop offset="100%" stop-color="#040207" stop-opacity="0.0"/>
+            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.6"/>
+            <stop offset="45%" stop-color="#090310" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#070a12" stop-opacity="1.0"/>
         </radialGradient>
 
         <radialGradient id="singularityGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stop-color="#000000"/>
             <stop offset="50%" stop-color="#050109"/>
-            <stop offset="78%" stop-color="#c026d3" stop-opacity="0.75"/>
-            <stop offset="90%" stop-color="#ea580c" stop-opacity="0.85"/>
-            <stop offset="98%" stop-color="#f59e0b" stop-opacity="0.9"/>
+            <stop offset="78%" stop-color="#c026d3" stop-opacity="0.85"/>
+            <stop offset="90%" stop-color="#ea580c" stop-opacity="0.92"/>
+            <stop offset="98%" stop-color="#f59e0b" stop-opacity="0.98"/>
             <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
         </radialGradient>
 
         <linearGradient id="dopplerLightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.18"/>
-            <stop offset="35%" stop-color="#9333ea" stop-opacity="0.15"/>
-            <stop offset="70%" stop-color="#ea580c" stop-opacity="0.12"/>
-            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.04"/>
+            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.3"/>
+            <stop offset="35%" stop-color="#9333ea" stop-opacity="0.25"/>
+            <stop offset="70%" stop-color="#ea580c" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.08"/>
         </linearGradient>
 
         <!-- Filters -->
         <filter id="subtleGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
             <feMerge>
                 <feMergeNode in="blur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -285,15 +285,16 @@ def create_time_dilation_logo_v10():
         </filter>
     </defs>
 
+    <rect width="{width}" height="{height}" fill="#070a12"/>
     <rect width="{width}" height="{height}" fill="url(#bgGlow)"/>
 
     <!-- 1. Gravitational Light Lensing Arc -->
-    <g opacity="0.45" style="mix-blend-mode: screen;">
+    <g opacity="0.6" style="mix-blend-mode: screen;">
         <path d="M -100,-50 C 200,-20 {bh_x-120},{bh_y-r_photon-50} {bh_x},{bh_y-r_photon-35} C {bh_x+120},{bh_y-r_photon-20} 800,200 1100,500 L 1050,550 C 750,250 {bh_x+150},{bh_y-r_photon} {bh_x},{bh_y-r_photon-15} C {bh_x-150},{bh_y-r_photon-30} 150,-10 -150,-10 Z" fill="url(#dopplerLightGrad)"/>
     </g>
 
     <!-- 2. Warm Spacetime Grid Lines -->
-    <g stroke="#9333ea" stroke-opacity="0.12" stroke-width="0.9" fill="none">
+    <g stroke="#9333ea" stroke-opacity="0.22" stroke-width="1.4" fill="none">
     ''')
 
     for r in range(100, 540, 42):
@@ -415,7 +416,8 @@ def create_icon_only_logo_v10():
         </filter>
     </defs>
 
-    <rect width="{width}" height="{height}" rx="100" fill="url(#bgGlowIcon)"/>
+    <rect width="{width}" height="{height}" rx="110" fill="#070a12"/>
+    <rect width="{width}" height="{height}" rx="110" fill="url(#bgGlowIcon)"/>
 
     <!-- Light Rays -->
     <g opacity="0.45" style="mix-blend-mode: screen;">

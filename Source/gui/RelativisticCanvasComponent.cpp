@@ -355,6 +355,29 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
         repaint();
     };
 
+    // Quick Canvas Navigation HUD Toolbar Controls
+    addAndMakeVisible (btnNavZoomOut);
+    btnNavZoomOut.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1e293b));
+    btnNavZoomOut.onClick = [this] { zoomOut(); };
+
+    addAndMakeVisible (btnNavResetZoom);
+    btnNavResetZoom.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1e293b));
+    btnNavResetZoom.onClick = [this] { resetZoom(); };
+
+    addAndMakeVisible (btnNavZoomIn);
+    btnNavZoomIn.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1e293b));
+    btnNavZoomIn.onClick = [this] { zoomIn(); };
+
+    addAndMakeVisible (btnNavFitView);
+    btnNavFitView.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff0f766e));
+    btnNavFitView.setColour (juce::TextButton::textColourOffId, juce::Colour (0xff38bdf8));
+    btnNavFitView.onClick = [this] { fitAllNodesInView(); };
+
+    addAndMakeVisible (btnNavTidy);
+    btnNavTidy.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff6d28d9));
+    btnNavTidy.setColour (juce::TextButton::textColourOffId, juce::Colour (0xfff59e0b));
+    btnNavTidy.onClick = [this] { autoTidyLayout(); };
+
     startTimerHz (30);
 }
 
@@ -2214,24 +2237,22 @@ void RelativisticCanvasComponent::drawDelaylineDots (juce::Graphics& g, const Re
     g.setColour (juce::Colour (0xff334155).withAlpha (0.4f));
     g.drawDashedLine (juce::Line<float> (x + 4.0f, midY, x + w - 4.0f, midY), nullptr, 0, 1.0f);
 
-    const auto& dl = node.getAudioDelayLine();
-    const auto& buf = dl.getBuffer();
-    int bufSamples = buf.getNumSamples();
-    int writePos = dl.getWritePos();
+    float graphW = w - 12.0f;
+    float graphX = x + 6.0f;
+    int numDots = std::min (160, static_cast<int>(graphW));
+    if (numDots <= 0) return;
 
-    if (bufSamples > 0 && buf.getNumChannels() > 0)
+    std::vector<float> dots;
+    int writePos = 0;
+    int bufSamples = 0;
+    node.getAudioDelayLine().getSampleSnapshot (dots, numDots, writePos, bufSamples);
+
+    if (bufSamples > 0 && !dots.empty())
     {
-        const float* readPtr = buf.getReadPointer (0);
-        float graphW = w - 12.0f;
-        float graphX = x + 6.0f;
-        int numDots = std::min (160, static_cast<int>(graphW));
-        float stepS = static_cast<float>(bufSamples) / static_cast<float>(numDots);
-
         g.setColour (juce::Colour (0xff06b6d4));
         for (int i = 0; i < numDots; ++i)
         {
-            int sIdx = static_cast<int>(i * stepS) % bufSamples;
-            float sampleVal = readPtr[sIdx];
+            float sampleVal = dots[i];
             float px = graphX + (static_cast<float>(i) / static_cast<float>(numDots - 1)) * graphW;
             float py = midY - std::clamp (sampleVal, -1.5f, 1.5f) * ((h - 20.0f) * 0.45f);
 
@@ -2259,8 +2280,7 @@ void RelativisticCanvasComponent::drawControlPipeDots (juce::Graphics& g, const 
     g.setColour (juce::Colour (0xff334155).withAlpha (0.4f));
     g.drawLine (x + 4.0f, axisY, x + w - 4.0f, axisY, 1.0f);
 
-    const auto& pipe = node.getControlMessagePipe();
-    const auto& msgs = pipe.getMessages();
+    auto msgs = node.getControlMessagePipe().getSnapshotMessages();
 
     float graphW = w - 12.0f;
     float graphX = x + 6.0f;
@@ -2345,6 +2365,362 @@ void RelativisticCanvasComponent::resetZoom()
     repaint();
 }
 
+void RelativisticCanvasComponent::alignSelectedLeft()
+{
+    if (selectedNodeIds.size() < 2) return;
+    float minX = 99999.0f;
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            minX = std::min (minX, n->getX());
+    }
+    nodeGraph.pushUndoState();
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            n->setPosition (minX, n->getY());
+    }
+    repaint();
+}
+
+void RelativisticCanvasComponent::alignSelectedRight()
+{
+    if (selectedNodeIds.size() < 2) return;
+    float maxRight = -99999.0f;
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            maxRight = std::max (maxRight, n->getX() + getNodeWidth (*n));
+    }
+    nodeGraph.pushUndoState();
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            n->setPosition (maxRight - getNodeWidth (*n), n->getY());
+    }
+    repaint();
+}
+
+void RelativisticCanvasComponent::alignSelectedTop()
+{
+    if (selectedNodeIds.size() < 2) return;
+    float minY = 99999.0f;
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            minY = std::min (minY, n->getY());
+    }
+    nodeGraph.pushUndoState();
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            n->setPosition (n->getX(), minY);
+    }
+    repaint();
+}
+
+void RelativisticCanvasComponent::alignSelectedBottom()
+{
+    if (selectedNodeIds.size() < 2) return;
+    float maxBottom = -99999.0f;
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            maxBottom = std::max (maxBottom, n->getY() + getNodeHeight (*n));
+    }
+    nodeGraph.pushUndoState();
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            n->setPosition (n->getX(), maxBottom - getNodeHeight (*n));
+    }
+    repaint();
+}
+
+void RelativisticCanvasComponent::distributeSelectedHorizontally()
+{
+    if (selectedNodeIds.size() < 3) return;
+    std::vector<std::shared_ptr<RelativisticNode>> nodes;
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            nodes.push_back (n);
+    }
+    std::sort (nodes.begin(), nodes.end(), [] (const auto& a, const auto& b) { return a->getX() < b->getX(); });
+
+    float minX = nodes.front()->getX();
+    float maxX = nodes.back()->getX();
+    float step = (maxX - minX) / static_cast<float>(nodes.size() - 1);
+
+    nodeGraph.pushUndoState();
+    for (size_t i = 0; i < nodes.size(); ++i)
+    {
+        nodes[i]->setPosition (minX + static_cast<float>(i) * step, nodes[i]->getY());
+    }
+    repaint();
+}
+
+void RelativisticCanvasComponent::distributeSelectedVertically()
+{
+    if (selectedNodeIds.size() < 3) return;
+    std::vector<std::shared_ptr<RelativisticNode>> nodes;
+    for (int id : selectedNodeIds)
+    {
+        if (auto n = nodeGraph.getNodeById (id))
+            nodes.push_back (n);
+    }
+    std::sort (nodes.begin(), nodes.end(), [] (const auto& a, const auto& b) { return a->getY() < b->getY(); });
+
+    float minY = nodes.front()->getY();
+    float maxY = nodes.back()->getY();
+    float step = (maxY - minY) / static_cast<float>(nodes.size() - 1);
+
+    nodeGraph.pushUndoState();
+    for (size_t i = 0; i < nodes.size(); ++i)
+    {
+        nodes[i]->setPosition (nodes[i]->getX(), minY + static_cast<float>(i) * step);
+    }
+    repaint();
+}
+
+void RelativisticCanvasComponent::autoTidyLayout()
+{
+    const auto& nodes = nodeGraph.getNodes();
+    if (nodes.empty()) return;
+
+    nodeGraph.pushUndoState();
+
+    std::map<int, int> inDegree;
+    std::map<int, std::vector<int>> adj;
+    std::map<int, int> nodeLevel;
+
+    for (const auto& n : nodes)
+    {
+        inDegree[n->getId()] = 0;
+        nodeLevel[n->getId()] = 0;
+    }
+
+    for (const auto& conn : nodeGraph.getConnections())
+    {
+        adj[conn.sourceNodeId].push_back (conn.destNodeId);
+        inDegree[conn.destNodeId]++;
+    }
+
+    std::queue<int> q;
+    for (const auto& pair : inDegree)
+    {
+        if (pair.second == 0)
+        {
+            q.push (pair.first);
+            nodeLevel[pair.first] = 0;
+        }
+    }
+
+    while (!q.empty())
+    {
+        int curr = q.front();
+        q.pop();
+
+        int currLvl = nodeLevel[curr];
+        for (int neighbor : adj[curr])
+        {
+            nodeLevel[neighbor] = std::max (nodeLevel[neighbor], currLvl + 1);
+            inDegree[neighbor]--;
+            if (inDegree[neighbor] == 0)
+                q.push (neighbor);
+        }
+    }
+
+    std::map<int, std::vector<std::shared_ptr<RelativisticNode>>> levelNodes;
+    for (const auto& n : nodes)
+    {
+        levelNodes[nodeLevel[n->getId()]].push_back (n);
+    }
+
+    float startX = 80.0f;
+    float startY = 80.0f;
+    float levelSpacingY = 160.0f;
+    float itemSpacingX = 260.0f;
+
+    for (auto& pair : levelNodes)
+    {
+        int lvl = pair.first;
+        auto& lvlList = pair.second;
+
+        float currY = startY + static_cast<float>(lvl) * levelSpacingY;
+        for (size_t i = 0; i < lvlList.size(); ++i)
+        {
+            float currX = startX + static_cast<float>(i) * itemSpacingX;
+            lvlList[i]->setPosition (currX, currY);
+        }
+    }
+
+    fitAllNodesInView();
+    repaint();
+}
+
+void RelativisticCanvasComponent::showNodeContextMenu (const std::shared_ptr<RelativisticNode>& targetNode, juce::Point<float> mousePos)
+{
+    juce::PopupMenu m;
+    std::string header = targetNode ? ("NODE: " + targetNode->getLabel()) : "CANVAS CONTEXT MENU";
+    m.addSectionHeader (header);
+
+    if (targetNode)
+    {
+        m.addItem (1, "Duplicate (Cmd+D)", true);
+        m.addItem (2, "Cut (Cmd+X)", true);
+        m.addItem (3, "Copy (Cmd+C)", true);
+        m.addItem (4, "Delete Node", true);
+        m.addSeparator();
+
+        juce::PopupMenu subAlign;
+        subAlign.addItem (10, "Align Left", selectedNodeIds.size() >= 2);
+        subAlign.addItem (11, "Align Right", selectedNodeIds.size() >= 2);
+        subAlign.addItem (12, "Align Top", selectedNodeIds.size() >= 2);
+        subAlign.addItem (13, "Align Bottom", selectedNodeIds.size() >= 2);
+        subAlign.addSeparator();
+        subAlign.addItem (14, "Distribute Horizontally", selectedNodeIds.size() >= 3);
+        subAlign.addItem (15, "Distribute Vertically", selectedNodeIds.size() >= 3);
+        m.addSubMenu ("Align Selected", subAlign);
+
+        m.addItem (20, "Auto-Tidy Patch Layout (Cmd+Shift+R)", true);
+        m.addSeparator();
+
+        bool dlOn = targetNode->isShowDelaylineEnabled();
+        m.addItem (30, dlOn ? "Hide Audio Delayline (128px)" : "Show Audio Delayline (128px)", true);
+
+        bool pipeOn = targetNode->isShowPipeEnabled();
+        m.addItem (31, pipeOn ? "Hide Control Message Pipe (128px)" : "Show Control Message Pipe (128px)", true);
+    }
+    else
+    {
+        m.addItem (100, "Add New Object... (N)", true);
+        m.addItem (101, "Paste (Cmd+V)", clipboardTree.isValid());
+        m.addItem (20, "Auto-Tidy Patch Layout (Cmd+Shift+R)", true);
+        m.addItem (102, "Fit All Nodes in View", true);
+        m.addItem (103, "Reset Zoom (100%)", true);
+    }
+
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (juce::Rectangle<int> (mousePos.x, mousePos.y, 1, 1)),
+        [this, targetNode] (int res) {
+            if (res == 1) btnDuplicate.triggerClick();
+            else if (res == 2) {
+                if (!selectedNodeIds.empty()) {
+                    std::vector<int> sel (selectedNodeIds.begin(), selectedNodeIds.end());
+                    clipboardTree = nodeGraph.copyNodes (sel);
+                    nodeGraph.cutNodes (sel);
+                    selectedNodeIds.clear();
+                    repaint();
+                }
+            }
+            else if (res == 3) btnCopy.triggerClick();
+            else if (res == 4) {
+                if (!selectedNodeIds.empty()) {
+                    std::vector<int> sel (selectedNodeIds.begin(), selectedNodeIds.end());
+                    nodeGraph.cutNodes (sel);
+                    selectedNodeIds.clear();
+                    repaint();
+                }
+            }
+            else if (res == 10) alignSelectedLeft();
+            else if (res == 11) alignSelectedRight();
+            else if (res == 12) alignSelectedTop();
+            else if (res == 13) alignSelectedBottom();
+            else if (res == 14) distributeSelectedHorizontally();
+            else if (res == 15) distributeSelectedVertically();
+            else if (res == 20) autoTidyLayout();
+            else if (res == 30) {
+                if (targetNode) targetNode->setShowDelaylineEnabled (!targetNode->isShowDelaylineEnabled());
+                juce::MessageManager::callAsync ([this] { rebuildInspector(); repaint(); });
+            }
+            else if (res == 31) {
+                if (targetNode) targetNode->setShowPipeEnabled (!targetNode->isShowPipeEnabled());
+                juce::MessageManager::callAsync ([this] { rebuildInspector(); repaint(); });
+            }
+            else if (res == 100) spawnInlineObjectEditor ({ getWidth() * 0.4f, getHeight() * 0.4f });
+            else if (res == 101) btnPaste.triggerClick();
+            else if (res == 102) fitAllNodesInView();
+            else if (res == 103) resetZoom();
+        });
+}
+
+juce::Rectangle<float> RelativisticCanvasComponent::getMinimapBounds() const
+{
+    float miniW = 180.0f;
+    float miniH = 110.0f;
+    float miniX = 15.0f;
+    float miniY = static_cast<float>(getHeight()) - miniH - 55.0f;
+    return { miniX, miniY, miniW, miniH };
+}
+
+void RelativisticCanvasComponent::drawMinimap (juce::Graphics& g) const
+{
+    if (!showMinimap) return;
+
+    auto bounds = getMinimapBounds();
+    g.setColour (juce::Colour (0xee0b1322));
+    g.fillRoundedRectangle (bounds, 6.0f);
+    g.setColour (juce::Colour (0xff1e293b));
+    g.drawRoundedRectangle (bounds, 6.0f, 1.0f);
+
+    g.setColour (juce::Colour (0xff06b6d4));
+    g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
+    g.drawText ("MINIMAP RADAR", bounds.getX() + 6.0f, bounds.getY() + 3.0f, bounds.getWidth() - 12.0f, 12.0f, juce::Justification::centredLeft);
+
+    const auto& nodes = nodeGraph.getNodes();
+    if (nodes.empty()) return;
+
+    float minX = 99999.0f, minY = 99999.0f, maxX = -99999.0f, maxY = -99999.0f;
+    for (const auto& n : nodes)
+    {
+        minX = std::min (minX, n->getX());
+        minY = std::min (minY, n->getY());
+        maxX = std::max (maxX, n->getX() + getNodeWidth (*n));
+        maxY = std::max (maxY, n->getY() + getNodeHeight (*n));
+    }
+
+    float worldW = std::max (600.0f, maxX - minX + 200.0f);
+    float worldH = std::max (400.0f, maxY - minY + 200.0f);
+    float innerX = bounds.getX() + 6.0f;
+    float innerY = bounds.getY() + 18.0f;
+    float innerW = bounds.getWidth() - 12.0f;
+    float innerH = bounds.getHeight() - 24.0f;
+
+    float scaleX = innerW / worldW;
+    float scaleY = innerH / worldH;
+
+    for (const auto& n : nodes)
+    {
+        float mx = innerX + (n->getX() - minX + 100.0f) * scaleX;
+        float my = innerY + (n->getY() - minY + 100.0f) * scaleY;
+        float mw = std::max (3.0f, getNodeWidth (*n) * scaleX);
+        float mh = std::max (2.0f, getNodeHeight (*n) * scaleY);
+
+        bool isTimeObj = n->getTypeName().rfind ("time.", 0) == 0;
+        bool isAudioObj = n->getTypeName().find ("~") != std::string::npos;
+        juce::Colour nodeCol = isTimeObj ? juce::Colour (0xff8b5cf6) : (isAudioObj ? juce::Colour (0xff06b6d4) : juce::Colour (0xfff59e0b));
+
+        g.setColour (nodeCol.withAlpha (0.85f));
+        g.fillRect (mx, my, mw, mh);
+    }
+
+    float canvasW = std::max (100.0f, static_cast<float>(getWidth()) - 340.0f);
+    float canvasH = std::max (100.0f, static_cast<float>(getHeight()) - 100.0f);
+
+    float viewWorldX = (-panX) / zoomLevel;
+    float viewWorldY = (-panY + 45.0f) / zoomLevel;
+    float viewWorldW = canvasW / zoomLevel;
+    float viewWorldH = canvasH / zoomLevel;
+
+    float vx = innerX + (viewWorldX - minX + 100.0f) * scaleX;
+    float vy = innerY + (viewWorldY - minY + 100.0f) * scaleY;
+    float vw = std::clamp (viewWorldW * scaleX, 10.0f, innerW);
+    float vh = std::clamp (viewWorldH * scaleY, 8.0f, innerH);
+
+    g.setColour (juce::Colour (0xff38bdf8));
+    g.drawRect (vx, vy, vw, vh, 1.2f);
+}
+
 void RelativisticCanvasComponent::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
 {
     if (e.mods.isCommandDown() || e.mods.isCtrlDown() || e.mods.isAltDown())
@@ -2365,6 +2741,70 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
     grabKeyboardFocus();
     juce::Point<float> mousePos = e.position;
     bool isShift = e.mods.isShiftDown();
+
+    // 0a. Check Minimap Radar Click Panning
+    auto miniBounds = getMinimapBounds();
+    if (showMinimap && miniBounds.contains (mousePos))
+    {
+        isDraggingMinimap = true;
+        const auto& nodes = nodeGraph.getNodes();
+        if (!nodes.empty())
+        {
+            float minX = 99999.0f, minY = 99999.0f, maxX = -99999.0f, maxY = -99999.0f;
+            for (const auto& n : nodes)
+            {
+                minX = std::min (minX, n->getX());
+                minY = std::min (minY, n->getY());
+                maxX = std::max (maxX, n->getX() + getNodeWidth (*n));
+                maxY = std::max (maxY, n->getY() + getNodeHeight (*n));
+            }
+            float worldW = std::max (600.0f, maxX - minX + 200.0f);
+            float worldH = std::max (400.0f, maxY - minY + 200.0f);
+            float innerX = miniBounds.getX() + 6.0f;
+            float innerY = miniBounds.getY() + 18.0f;
+            float innerW = miniBounds.getWidth() - 12.0f;
+            float innerH = miniBounds.getHeight() - 24.0f;
+
+            float clickFracX = std::clamp ((mousePos.x - innerX) / innerW, 0.0f, 1.0f);
+            float clickFracY = std::clamp ((mousePos.y - innerY) / innerH, 0.0f, 1.0f);
+
+            float targetWorldX = minX - 100.0f + clickFracX * worldW;
+            float targetWorldY = minY - 100.0f + clickFracY * worldH;
+
+            float canvasW = std::max (100.0f, static_cast<float>(getWidth()) - 340.0f);
+            float canvasH = std::max (100.0f, static_cast<float>(getHeight()) - 100.0f);
+
+            panX = canvasW * 0.5f - targetWorldX * zoomLevel;
+            panY = 45.0f + canvasH * 0.5f - targetWorldY * zoomLevel;
+            repaint();
+        }
+        return;
+    }
+
+    // 0b. Check Right-Click Popup Context Menu
+    if (e.mods.isPopupMenu())
+    {
+        std::shared_ptr<RelativisticNode> clickedNode = nullptr;
+        for (auto it = nodeGraph.getNodes().rbegin(); it != nodeGraph.getNodes().rend(); ++it)
+        {
+            const auto& node = *it;
+            float nx = node->getX() + panX;
+            float ny = node->getY() + panY;
+            if (mousePos.x >= nx && mousePos.x <= nx + getNodeWidth (*node) &&
+                mousePos.y >= ny && mousePos.y <= ny + getNodeHeight (*node))
+            {
+                clickedNode = node;
+                if (selectedNodeIds.count (node->getId()) == 0)
+                {
+                    selectedNodeIds.clear();
+                    selectedNodeIds.insert (node->getId());
+                }
+                break;
+            }
+        }
+        showNodeContextMenu (clickedNode, e.getScreenPosition().toFloat());
+        return;
+    }
 
     // Autocomplete Popup Item Mouse Click Selection
     if (isEditingDraftObject && draftObjectEditor)

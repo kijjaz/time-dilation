@@ -71,11 +71,18 @@ struct ParameterInfo
 // Fractional Hermite 4-Point Delay Line for Audio Node Time Dilation
 class AudioTimeDelayLine
 {
+private:
+    mutable juce::SpinLock lock;
+    juce::AudioBuffer<float> buffer;
+    int writePos = 0;
+    double fs = 44100.0;
+
 public:
     AudioTimeDelayLine() = default;
 
     void prepare (double sampleRate, int numChannels, double maxDelaySeconds = 10.0)
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         fs = sampleRate;
         int maxSamples = static_cast<int>(sampleRate * maxDelaySeconds) + 32;
         buffer.setSize (numChannels, maxSamples);
@@ -85,12 +92,14 @@ public:
 
     void writeSample (int ch, float sample)
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         if (ch >= buffer.getNumChannels() || buffer.getNumSamples() <= 0) return;
         buffer.setSample (ch, writePos, sample);
     }
 
     void advanceWritePos()
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         int maxS = buffer.getNumSamples();
         if (maxS > 0)
             writePos = (writePos + 1) % maxS;
@@ -98,6 +107,7 @@ public:
 
     float readHermite (int ch, double delaySamples) const
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         int numS = buffer.getNumSamples();
         if (numS <= 0 || ch >= buffer.getNumChannels()) return 0.0f;
 
@@ -123,14 +133,33 @@ public:
         return c0 + static_cast<float>(f) * (c1 + static_cast<float>(f) * (c2 + static_cast<float>(f) * c3));
     }
 
-    int getBufferSamples() const { return buffer.getNumSamples(); }
-    int getWritePos() const { return writePos; }
-    const juce::AudioBuffer<float>& getBuffer() const { return buffer; }
+    int getBufferSamples() const
+    {
+        const juce::SpinLock::ScopedLockType sl (lock);
+        return buffer.getNumSamples();
+    }
 
-private:
-    juce::AudioBuffer<float> buffer;
-    int writePos = 0;
-    double fs = 44100.0;
+    int getWritePos() const
+    {
+        const juce::SpinLock::ScopedLockType sl (lock);
+        return writePos;
+    }
+
+    void getSampleSnapshot (std::vector<float>& destDots, int numDots, int& outWritePos, int& outTotalSamples) const
+    {
+        const juce::SpinLock::ScopedLockType sl (lock);
+        outTotalSamples = buffer.getNumSamples();
+        outWritePos = writePos;
+        destDots.assign (numDots, 0.0f);
+        if (outTotalSamples <= 0 || buffer.getNumChannels() <= 0) return;
+        const float* readPtr = buffer.getReadPointer (0);
+        float stepS = static_cast<float>(outTotalSamples) / static_cast<float>(numDots);
+        for (int i = 0; i < numDots; ++i)
+        {
+            int sIdx = static_cast<int>(i * stepS) % outTotalSamples;
+            destDots[i] = readPtr[sIdx];
+        }
+    }
 };
 
 // Time-Stamped Control Message Structure
@@ -146,17 +175,24 @@ struct ControlMessage
 // Time-Stamped Control Message Pipe for Control Node Time Dilation
 class ControlMessagePipe
 {
+private:
+    mutable juce::SpinLock lock;
+    std::vector<ControlMessage> messages;
+    std::vector<ControlMessage> history;
+
 public:
     ControlMessagePipe() = default;
 
     void clear()
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         messages.clear();
         history.clear();
     }
 
     void pushMessage (double targetTau, float val, const std::string& msg = "", bool bang = false, int port = 0)
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         ControlMessage m;
         m.targetTau = targetTau;
         m.value = val;
@@ -168,6 +204,7 @@ public:
 
     std::vector<ControlMessage> popPendingMessages (double currentTau)
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         std::vector<ControlMessage> pending;
         auto it = messages.begin();
         while (it != messages.end())
@@ -188,6 +225,7 @@ public:
 
     std::vector<ControlMessage> popRetrogradeMessages (double currentTau)
     {
+        const juce::SpinLock::ScopedLockType sl (lock);
         std::vector<ControlMessage> pending;
         auto it = history.rbegin();
         while (it != history.rend())
@@ -206,13 +244,23 @@ public:
         return pending;
     }
 
-    size_t getPendingCount() const { return messages.size(); }
-    size_t getHistoryCount() const { return history.size(); }
-    const std::vector<ControlMessage>& getMessages() const { return messages; }
+    size_t getPendingCount() const
+    {
+        const juce::SpinLock::ScopedLockType sl (lock);
+        return messages.size();
+    }
 
-private:
-    std::vector<ControlMessage> messages;
-    std::vector<ControlMessage> history;
+    size_t getHistoryCount() const
+    {
+        const juce::SpinLock::ScopedLockType sl (lock);
+        return history.size();
+    }
+
+    std::vector<ControlMessage> getSnapshotMessages() const
+    {
+        const juce::SpinLock::ScopedLockType sl (lock);
+        return messages;
+    }
 };
 
 class RelativisticNode

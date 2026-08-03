@@ -220,8 +220,39 @@ private:
 
     std::map<int, juce::Point<float>> initialNodePositions;
 
+    struct AlignmentGuide
+    {
+        float pos = 0.0f;
+        bool isVertical = true;
+        juce::Colour color = juce::Colour (0xff06b6d4);
+    };
+    std::vector<AlignmentGuide> activeGuides;
+
+    bool showMinimap = true;
+    bool isDraggingMinimap = false;
+
+    // Quick Canvas Navigation HUD Toolbar Buttons
+    juce::TextButton btnNavZoomOut   { "-" };
+    juce::TextButton btnNavResetZoom { "100%" };
+    juce::TextButton btnNavZoomIn    { "+" };
+    juce::TextButton btnNavFitView   { "FIT ALL" };
+    juce::TextButton btnNavTidy      { "TIDY" };
+
     void panCanvas (float dx, float dy);
     void fitAllNodesInView();
+
+    void alignSelectedLeft();
+    void alignSelectedRight();
+    void alignSelectedTop();
+    void alignSelectedBottom();
+    void distributeSelectedHorizontally();
+    void distributeSelectedVertically();
+    void autoTidyLayout();
+
+    void showNodeContextMenu (const std::shared_ptr<RelativisticNode>& targetNode, juce::Point<float> mousePos);
+
+    void drawMinimap (juce::Graphics& g) const;
+    juce::Rectangle<float> getMinimapBounds() const;
 
     juce::Point<float> getInletPos (const RelativisticNode& node, int idx) const;
     juce::Point<float> getOutletPos (const RelativisticNode& node, int idx) const;

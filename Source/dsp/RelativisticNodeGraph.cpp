@@ -250,6 +250,40 @@ void RelativisticNode::prepare (double sampleRate, int samplesPerBlock)
     audioDelayLine.prepare (sampleRate, 2, 5.0);
 }
 
+void RelativisticNode::processAudioTimeDelay (juce::AudioBuffer<float>& buffer, double /*effectiveGamma*/)
+{
+    int numSamples = buffer.getNumSamples();
+    if (numSamples <= 0 || buffer.getNumChannels() <= 0) return;
+
+    const float* src = buffer.getReadPointer (0);
+    for (int s = 0; s < numSamples; ++s)
+    {
+        audioDelayLine.writeSample (0, src[s]);
+        audioDelayLine.advanceWritePos();
+    }
+}
+
+void RelativisticNode::processControlTimePipe (double currentTau, double /*effectiveGamma*/)
+{
+    for (size_t i = 0; i < outlets.size(); ++i)
+    {
+        if (outlets[i].type == NodePortType::Control)
+        {
+            float val = outlets[i].controlValue;
+            controlMessagePipe.pushMessage (currentTau, val, "", false, static_cast<int>(i));
+        }
+    }
+
+    auto pending = controlMessagePipe.popPendingMessages (currentTau);
+    for (const auto& msg : pending)
+    {
+        if (msg.portIndex >= 0 && msg.portIndex < static_cast<int>(outlets.size()))
+        {
+            outlets[msg.portIndex].controlValue = msg.value;
+        }
+    }
+}
+
 juce::ValueTree RelativisticNode::saveToValueTree() const
 {
     juce::ValueTree v ("Node");
@@ -1477,13 +1511,18 @@ void RelativisticNodeGraph::process (juce::AudioBuffer<float>& masterOutput, int
     for (auto& node : nodes)
     {
         node->ensureBufferSize (numSamples);
+        double tau = node->updateCoordinateTime (numSamples);
+        double gamma = node->getEffectiveGamma();
+
         node->process (numSamples);
 
-        // Store 1-Block History Buffer for Feedback Loops & Sanitize Audio Output
+        // Feed Audio Delay Line visualizer buffer & Control Pipe telemetry
         for (auto& out : node->getOutlets())
         {
             if (out.type == NodePortType::Audio)
             {
+                node->processAudioTimeDelay (out.audioData, gamma);
+
                 for (int ch = 0; ch < out.audioData.getNumChannels(); ++ch)
                 {
                     auto* samples = out.audioData.getWritePointer (ch);
@@ -1514,6 +1553,8 @@ void RelativisticNodeGraph::process (juce::AudioBuffer<float>& masterOutput, int
                     out.previousBlockBuffer.copyFrom (1, 0, out.audioData, 1, 0, numSamples);
             }
         }
+
+        node->processControlTimePipe (tau, gamma);
     }
 
     propagateSignals();

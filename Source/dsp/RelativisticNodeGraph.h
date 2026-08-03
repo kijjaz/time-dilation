@@ -55,6 +55,7 @@ struct ParameterInfo
     float maxValue = 1.0f;
     std::string expression;
     int modInletIdx = -1; // -1 if not patched as modulation inlet
+    bool isInteger = false;
 };
 
 // Fractional Hermite 4-Point Delay Line for Audio Node Time Dilation

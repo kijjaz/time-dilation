@@ -750,7 +750,95 @@ private:
 };
 
 // ----------------------------------------------------
-// 54. [print] Control & Signal Data Logger Node Object
+// 55. [slider] Control Slider UI Node Object
+// ----------------------------------------------------
+class SliderNode : public RelativisticNode
+{
+public:
+    SliderNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 56. [toggle] Control Toggle Switch UI Node Object
+// ----------------------------------------------------
+class ToggleNode : public RelativisticNode
+{
+public:
+    ToggleNode (int id);
+    void toggleState();
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+};
+
+// ----------------------------------------------------
+// 57. [audio2time~] Audio Waveform to Time Dilation Signal Converter
+// ----------------------------------------------------
+class AudioToTimeNode : public RelativisticNode
+{
+public:
+    AudioToTimeNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 58. [time2audio~] Relativistic Time Signal to Audio Buffer Converter
+// ----------------------------------------------------
+class TimeToAudioNode : public RelativisticNode
+{
+public:
+    TimeToAudioNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 59. [time.math~] Time Signal Combiner & Relativistic Lorentz Math Processor
+// ----------------------------------------------------
+class TimeMathNode : public RelativisticNode
+{
+public:
+    TimeMathNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 60. [time.scale~] Time Dilation Signal Scaler & Shifter
+// ----------------------------------------------------
+class TimeScaleNode : public RelativisticNode
+{
+public:
+    TimeScaleNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 61. [time.filter~] Time Signal Inertia & Gravitational Slew Filter
+// ----------------------------------------------------
+class TimeFilterNode : public RelativisticNode
+{
+public:
+    TimeFilterNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+private:
+    double filteredGamma = 1.0;
+};
+// ----------------------------------------------------
+// 62. [print] Control & Signal Data Logger Node Object
 // ----------------------------------------------------
 class PrintMonitorNode : public RelativisticNode
 {

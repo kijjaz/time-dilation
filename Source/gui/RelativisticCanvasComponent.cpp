@@ -1522,9 +1522,17 @@ void RelativisticCanvasComponent::rebuildInspector()
         row.slider = std::make_unique<juce::Slider>();
         row.slider->setSliderStyle (juce::Slider::LinearHorizontal);
         row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 65, 18);
-        float minR = std::min (-99999.0f, def.minValue);
-        float maxR = std::max (99999.0f, def.maxValue);
-        row.slider->setRange (minR, maxR, 0.01);
+        if (def.isInteger)
+        {
+            row.slider->setRange (def.minValue, def.maxValue, 1.0);
+            row.slider->setNumDecimalPlacesToDisplay (0);
+        }
+        else
+        {
+            float minR = std::min (-99999.0f, def.minValue);
+            float maxR = std::max (99999.0f, def.maxValue);
+            row.slider->setRange (minR, maxR, 0.01);
+        }
         row.slider->setValue (def.value);
         row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
             auto n = nodeGraph.getNodeById (primaryId);

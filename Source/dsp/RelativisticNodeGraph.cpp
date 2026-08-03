@@ -330,6 +330,8 @@ bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
         "v", "msg", "message", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
         "svfilter~", "drive~", "reverb~", "crush~", "adsr~", "mtof", "ftom", "midi2freq",
         "number", "num", "nb", "display", "number.display", "bang", "b", "bang~", "b~", "counter", "cnt", "note",
+        "slider", "hslider", "vslider", "toggle", "tgl", "audio2time~", "a2t~", "time2audio~", "t2a~",
+        "time.math~", "time.combine~", "time.+", "time.-", "time.*", "time.scale~", "time.filter~",
         "seq", "step", "euclid", "markov", "tidal", "tidal~", "fbdrum~", "drum~", "drums~",
         "drumseq", "drumstep", "timeline", "arrangement"
     };
@@ -412,6 +414,13 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "bang" || typeName == "b") node = std::make_shared<BangNode> (id);
     else if (typeName == "bang~" || typeName == "b~") node = std::make_shared<BangAudioNode> (id);
     else if (typeName == "counter" || typeName == "cnt") node = std::make_shared<CounterNode> (id);
+    else if (typeName == "slider" || typeName == "hslider" || typeName == "vslider") node = std::make_shared<SliderNode> (id);
+    else if (typeName == "toggle" || typeName == "tgl") node = std::make_shared<ToggleNode> (id);
+    else if (typeName == "audio2time~" || typeName == "a2t~") node = std::make_shared<AudioToTimeNode> (id);
+    else if (typeName == "time2audio~" || typeName == "t2a~") node = std::make_shared<TimeToAudioNode> (id);
+    else if (typeName == "time.math~" || typeName == "time.combine~" || typeName == "time.+" || typeName == "time.-" || typeName == "time.*") node = std::make_shared<TimeMathNode> (id);
+    else if (typeName == "time.scale~") node = std::make_shared<TimeScaleNode> (id);
+    else if (typeName == "time.filter~") node = std::make_shared<TimeFilterNode> (id);
     else if (typeName == "note")           node = std::make_shared<NoteGenNode> (id);
     else if (typeName == "time.future~" || typeName == "future~") node = std::make_shared<TimeFutureNode> (id);
     else if (typeName == "seq" || typeName == "step") node = std::make_shared<StepSequencerNode> (id);
@@ -1421,6 +1430,18 @@ void RelativisticNodeGraph::process (juce::AudioBuffer<float>& masterOutput, int
                     }
                 }
 
+                out.previousBlockBuffer.copyFrom (0, 0, out.audioData, 0, 0, numSamples);
+                if (out.audioData.getNumChannels() > 1)
+                    out.previousBlockBuffer.copyFrom (1, 0, out.audioData, 1, 0, numSamples);
+            }
+            else if (out.type == NodePortType::Time)
+            {
+                float gVal = static_cast<float>(out.timeGamma);
+                for (int ch = 0; ch < out.audioData.getNumChannels(); ++ch)
+                {
+                    float* d = out.audioData.getWritePointer (ch);
+                    for (int s = 0; s < numSamples; ++s) d[s] = gVal;
+                }
                 out.previousBlockBuffer.copyFrom (0, 0, out.audioData, 0, 0, numSamples);
                 if (out.audioData.getNumChannels() > 1)
                     out.previousBlockBuffer.copyFrom (1, 0, out.audioData, 1, 0, numSamples);

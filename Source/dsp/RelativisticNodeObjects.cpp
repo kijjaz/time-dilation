@@ -3256,6 +3256,310 @@ void PrintMonitorNode::clearLog()
     logHistory.clear();
 }
 
+// 55. [slider] Control Slider UI Node Object
+SliderNode::SliderNode (int id)
+    : RelativisticNode (id, "slider", "slider (Control Slider)")
+{
+    addInlet ("val", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    setParameter ("value", 0.0f);
+    setParameter ("min", 0.0f);
+    setParameter ("max", 1.0f);
+    setParameter ("isInteger", 0.0f);
+    setParameter ("offset", 0.0f);
+}
+
+void SliderNode::process (int /*numSamples*/)
+{
+    float inVal = inlets[0].controlValue;
+    float val = (inVal != 0.0f) ? inVal : getParameter ("value", 0.0f);
+    float offset = getModulatedParamValue ("offset", 0.0f);
+    float minV = getParameter ("min", 0.0f);
+    float maxV = getParameter ("max", 1.0f);
+    val = std::clamp (val, minV, maxV);
+    if (getParameter ("isInteger", 0.0f) > 0.5f) val = std::round (val);
+
+    outlets[0].controlValue = val + offset;
+}
+
+std::string SliderNode::getDefaultFormulaScript() const
+{
+    return "// Control Slider Object [slider]\n// Outputs continuous or integer slider value + offset\n\nout = value + offset;";
+}
+
+std::vector<ParameterInfo> SliderNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "value", "SLIDER VALUE", getParameter ("value", 0.0f), getParameter ("min", 0.0f), getParameter ("max", 1.0f), getParamExpression ("value"), 0, getParameter ("isInteger", 0.0f) > 0.5f });
+    defs.push_back ({ "min", "MINIMUM BOUND", getParameter ("min", 0.0f), -10000.0f, 10000.0f, getParamExpression ("min"), -1, false });
+    defs.push_back ({ "max", "MAXIMUM BOUND", getParameter ("max", 1.0f), -10000.0f, 10000.0f, getParamExpression ("max"), -1, false });
+    defs.push_back ({ "isInteger", "INTEGER SNAP MODE (0/1)", getParameter ("isInteger", 0.0f), 0.0f, 1.0f, getParamExpression ("isInteger"), -1, true });
+    defs.push_back ({ "offset", "VALUE OFFSET", getParameter ("offset", 0.0f), -1000.0f, 1000.0f, getParamExpression ("offset"), -1, false });
+    return defs;
+}
+
+// 56. [toggle] Control Toggle Switch UI Node Object
+ToggleNode::ToggleNode (int id)
+    : RelativisticNode (id, "toggle", "toggle (0 / 1 Switch)")
+{
+    addInlet ("trig", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    setParameter ("state", 0.0f);
+    setParameter ("offset", 0.0f);
+}
+
+void ToggleNode::toggleState()
+{
+    float st = getParameter ("state", 0.0f);
+    setParameter ("state", (st > 0.5f) ? 0.0f : 1.0f);
+}
+
+void ToggleNode::process (int /*numSamples*/)
+{
+    float trig = inlets[0].controlValue;
+    if (trig > 0.5f) toggleState();
+
+    float state = (getParameter ("state", 0.0f) > 0.5f) ? 1.0f : 0.0f;
+    float offset = getModulatedParamValue ("offset", 0.0f);
+    outlets[0].controlValue = state + offset;
+}
+
+std::string ToggleNode::getDefaultFormulaScript() const
+{
+    return "// Control Toggle Switch [toggle]\n// Outputs 0 or 1 state + offset\n\nout = state + offset;";
+}
+
+std::vector<ParameterInfo> ToggleNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "state", "TOGGLE STATE (0 or 1)", getParameter ("state", 0.0f), 0.0f, 1.0f, getParamExpression ("state"), 0, true });
+    defs.push_back ({ "offset", "STATE OFFSET", getParameter ("offset", 0.0f), -100.0f, 100.0f, getParamExpression ("offset"), -1, true });
+    return defs;
+}
+
+std::vector<std::string> ToggleNode::getExposedMethods() const
+{
+    return { "Toggle Switch State" };
+}
+
+void ToggleNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "Toggle Switch State") toggleState();
+}
+
+// 57. [audio2time~] Audio Waveform to Time Dilation Signal Converter
+AudioToTimeNode::AudioToTimeNode (int id)
+    : RelativisticNode (id, "audio2time~", "audio2time~ (Audio -> Time Dilation)")
+{
+    addInlet ("audioIn", NodePortType::Audio);
+    addInlet ("depth", NodePortType::Control);
+    addInlet ("offset", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("depth", 1.0f);
+    setParameter ("offset", 1.0f);
+}
+
+void AudioToTimeNode::process (int numSamples)
+{
+    float depth = getModulatedParamValue ("depth", 1.0f);
+    float offset = getModulatedParamValue ("offset", 1.0f);
+
+    const float* audioIn = inlets[0].audioData.getReadPointer (0);
+    double avgAudio = 0.0;
+    if (audioIn != nullptr && numSamples > 0)
+    {
+        for (int s = 0; s < numSamples; ++s) avgAudio += audioIn[s];
+        avgAudio /= numSamples;
+    }
+
+    double gamma = offset + depth * avgAudio;
+    outlets[0].timeGamma = std::clamp (gamma, -16.0, 16.0);
+}
+
+std::string AudioToTimeNode::getDefaultFormulaScript() const
+{
+    return "// Audio to Time Dilation Converter [audio2time~]\n// gamma = offset + depth * audioIn\n\ngamma = offset + depth * audioIn;";
+}
+
+std::vector<ParameterInfo> AudioToTimeNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "depth", "AUDIO DILATION DEPTH", getParameter ("depth", 1.0f), -8.0f, 8.0f, getParamExpression ("depth"), 1, false });
+    defs.push_back ({ "offset", "BASE GAMMA OFFSET", getParameter ("offset", 1.0f), -8.0f, 8.0f, getParamExpression ("offset"), 2, false });
+    return defs;
+}
+
+// 58. [time2audio~] Relativistic Time Signal to Audio Buffer Converter
+TimeToAudioNode::TimeToAudioNode (int id)
+    : RelativisticNode (id, "time2audio~", "time2audio~ (Time Dilation -> Audio)")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("scale", NodePortType::Control);
+    addInlet ("offset", NodePortType::Control);
+    addOutlet ("audioOut", NodePortType::Audio);
+
+    setParameter ("scale", 1.0f);
+    setParameter ("offset", 0.0f);
+}
+
+void TimeToAudioNode::process (int numSamples)
+{
+    double inputGamma = inlets[0].timeGamma;
+    float scale = getModulatedParamValue ("scale", 1.0f);
+    float offset = getModulatedParamValue ("offset", 0.0f);
+
+    float audioVal = offset + scale * static_cast<float>(inputGamma - 1.0);
+
+    for (int ch = 0; ch < outlets[0].audioData.getNumChannels(); ++ch)
+    {
+        float* d = outlets[0].audioData.getWritePointer (ch);
+        for (int s = 0; s < numSamples; ++s) d[s] = audioVal;
+    }
+}
+
+std::string TimeToAudioNode::getDefaultFormulaScript() const
+{
+    return "// Time Dilation to Audio Converter [time2audio~]\n// audio = offset + scale * (gamma - 1.0)\n\naudio = offset + scale * (gamma - 1.0);";
+}
+
+std::vector<ParameterInfo> TimeToAudioNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "scale", "OUTPUT SIGNAL SCALE", getParameter ("scale", 1.0f), -10.0f, 10.0f, getParamExpression ("scale"), 1, false });
+    defs.push_back ({ "offset", "DC BIAS OFFSET", getParameter ("offset", 0.0f), -1.0f, 1.0f, getParamExpression ("offset"), 2, false });
+    return defs;
+}
+
+// 59. [time.math~] Time Signal Combiner & Relativistic Lorentz Math Processor
+TimeMathNode::TimeMathNode (int id)
+    : RelativisticNode (id, "time.math~", "time.math~ (Time Combiner)")
+{
+    addInlet ("timeIn1", NodePortType::Time);
+    addInlet ("timeIn2", NodePortType::Time);
+    addInlet ("mode", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("mode", 0.0f); // 0: Add, 1: Lorentz Mult, 2: Min, 3: Max, 4: Crossfade
+    setParameter ("mix", 0.5f);
+}
+
+void TimeMathNode::process (int /*numSamples*/)
+{
+    double g1 = inlets[0].timeGamma;
+    double g2 = inlets[1].timeGamma;
+    int mode = static_cast<int>(getParameter ("mode", 0.0f));
+    float mix = std::clamp (getParameter ("mix", 0.5f), 0.0f, 1.0f);
+
+    double resultGamma = 1.0;
+    if (mode == 0) // Additive superposition
+    {
+        resultGamma = g1 + g2 - 1.0;
+    }
+    else if (mode == 1) // Relativistic Lorentz Boost Multiplication (c = 4.0 lorentz bound)
+    {
+        double v1 = g1 - 1.0;
+        double v2 = g2 - 1.0;
+        double vComp = (v1 + v2) / (1.0 + (v1 * v2) / 16.0);
+        resultGamma = 1.0 + vComp;
+    }
+    else if (mode == 2) // Min time dilation
+    {
+        resultGamma = std::min (g1, g2);
+    }
+    else if (mode == 3) // Max time dilation
+    {
+        resultGamma = std::max (g1, g2);
+    }
+    else // Crossfade blend
+    {
+        resultGamma = (1.0 - mix) * g1 + mix * g2;
+    }
+
+    outlets[0].timeGamma = std::clamp (resultGamma, -16.0, 16.0);
+}
+
+std::string TimeMathNode::getDefaultFormulaScript() const
+{
+    return "// Time Signal Math Combiner [time.math~]\n// Combines multiple relativistic time signals using Lorentz composition or mixing\n\ngamma = combine(gamma1, gamma2, mode);";
+}
+
+std::vector<ParameterInfo> TimeMathNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "mode", "COMBINE MODE (0:Add, 1:Lorentz, 2:Min, 3:Max, 4:Mix)", getParameter ("mode", 0.0f), 0.0f, 4.0f, getParamExpression ("mode"), 2, true });
+    defs.push_back ({ "mix", "CROSSFADE MIX RATIO", getParameter ("mix", 0.5f), 0.0f, 1.0f, getParamExpression ("mix"), -1, false });
+    return defs;
+}
+
+// 60. [time.scale~] Time Dilation Signal Scaler & Shifter
+TimeScaleNode::TimeScaleNode (int id)
+    : RelativisticNode (id, "time.scale~", "time.scale~ (Time Scaler)")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("scale", NodePortType::Control);
+    addInlet ("offset", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("scale", 1.0f);
+    setParameter ("offset", 0.0f);
+}
+
+void TimeScaleNode::process (int /*numSamples*/)
+{
+    double gIn = inlets[0].timeGamma;
+    float scale = getModulatedParamValue ("scale", 1.0f);
+    float offset = getModulatedParamValue ("offset", 0.0f);
+
+    double gOut = (gIn - 1.0) * scale + 1.0 + offset;
+    outlets[0].timeGamma = std::clamp (gOut, -16.0, 16.0);
+}
+
+std::string TimeScaleNode::getDefaultFormulaScript() const
+{
+    return "// Time Signal Scaler [time.scale~]\n// gammaOut = (gammaIn - 1.0) * scale + 1.0 + offset\n\ngammaOut = (gammaIn - 1.0) * scale + 1.0 + offset;";
+}
+
+std::vector<ParameterInfo> TimeScaleNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "scale", "TIME DILATION MULTIPLIER", getParameter ("scale", 1.0f), -8.0f, 8.0f, getParamExpression ("scale"), 1, false });
+    defs.push_back ({ "offset", "GAMMA DILATION OFFSET", getParameter ("offset", 0.0f), -8.0f, 8.0f, getParamExpression ("offset"), 2, false });
+    return defs;
+}
+
+// 61. [time.filter~] Time Signal Inertia & Gravitational Slew Filter
+TimeFilterNode::TimeFilterNode (int id)
+    : RelativisticNode (id, "time.filter~", "time.filter~ (Time Inertia Filter)")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("inertia", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("inertia", 0.1f);
+}
+
+void TimeFilterNode::process (int /*numSamples*/)
+{
+    double targetGamma = inlets[0].timeGamma;
+    float inertia = std::clamp (getModulatedParamValue ("inertia", 0.1f), 0.001f, 0.999f);
+
+    filteredGamma += inertia * (targetGamma - filteredGamma);
+    outlets[0].timeGamma = filteredGamma;
+}
+
+std::string TimeFilterNode::getDefaultFormulaScript() const
+{
+    return "// Time Signal Inertia Filter [time.filter~]\n// Smooths abrupt time dilation jumps using gravitational mass momentum\n\ngammaOut += inertia * (gammaTarget - gammaOut);";
+}
+
+std::vector<ParameterInfo> TimeFilterNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "inertia", "GRAVITATIONAL INERTIA SLEW", getParameter ("inertia", 0.1f), 0.001f, 0.999f, getParamExpression ("inertia"), 1, false });
+    return defs;
+}
+
 } // namespace time_dilation
 
 

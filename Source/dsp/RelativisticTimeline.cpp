@@ -271,9 +271,9 @@ juce::ValueTree TimelineNode::saveToValueTree() const
     return v;
 }
 
-void TimelineNode::loadFromValueTree (const juce::ValueTree& v)
+void TimelineNode::loadFromValueTree (const juce::ValueTree& v, bool preserveExistingId)
 {
-    RelativisticNode::loadFromValueTree (v);
+    RelativisticNode::loadFromValueTree (v, preserveExistingId);
     auto tracksTree = v.getChildWithName ("Tracks");
     if (tracksTree.isValid())
     {

@@ -946,6 +946,9 @@ void RelativisticCanvasComponent::initObjectCatalog()
 
         // Control Interactors & Triggers
         { "number", "Control Number Box (Click & Drag Value)", "CTRL" },
+        { "num", "Control Number Box (Click & Drag Value)", "CTRL" },
+        { "msg", "Message Box (Store & Send Control Value)", "CTRL" },
+        { "message", "Message Box (Store & Send Control Value)", "CTRL" },
         { "bang", "Control Trigger Pulse Spiker", "CTRL" },
         { "bang~", "Audio-Rate Impulse Spike Spiker", "CTRL" },
         { "counter", "Smart Value Counter (Low, High, Step, Carry)", "CTRL" },
@@ -1474,6 +1477,8 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
         if (nodeGraph.undo())
         {
             selectedNodeIds.clear();
+            selectedConnectionId = 0;
+            rebuildInspector();
             repaint();
             return true;
         }
@@ -1486,6 +1491,8 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
         if (nodeGraph.redo())
         {
             selectedNodeIds.clear();
+            selectedConnectionId = 0;
+            rebuildInspector();
             repaint();
             return true;
         }

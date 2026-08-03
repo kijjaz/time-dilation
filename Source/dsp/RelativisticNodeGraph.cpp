@@ -236,9 +236,12 @@ juce::ValueTree RelativisticNode::saveToValueTree() const
     return v;
 }
 
-void RelativisticNode::loadFromValueTree (const juce::ValueTree& v)
+void RelativisticNode::loadFromValueTree (const juce::ValueTree& v, bool preserveExistingId)
 {
-    nodeId = v.getProperty ("id", nodeId);
+    if (!preserveExistingId)
+    {
+        nodeId = v.getProperty ("id", nodeId);
+    }
     nodeTypeName = v.getProperty ("type", juce::String (nodeTypeName)).toString().toStdString();
     nodeLabel = v.getProperty ("label", juce::String (nodeLabel)).toString().toStdString();
     posX = v.getProperty ("posX", posX);
@@ -288,7 +291,7 @@ bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
         "time.singularity~", "time.transport", "time.scope", "time.display", "time.monitor",
         "time.future~", "future~", "osc~", "phasor~", "sampler~", "filter~", "delay~",
         "dac~", "expr", "expr~", "fexpr~", "gain~", "out~", "out", "env~", "tap", "tap~",
-        "v", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
+        "v", "msg", "message", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
         "svfilter~", "drive~", "reverb~", "crush~", "adsr~", "mtof", "ftom",
         "number", "num", "nb", "bang", "b", "bang~", "b~", "counter", "cnt", "note",
         "seq", "step", "euclid", "markov", "tidal", "tidal~", "fbdrum~", "drum~", "drums~",
@@ -348,7 +351,7 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "env~")           node = std::make_shared<EnvFollowerNode> (id);
     else if (typeName == "tap")            node = std::make_shared<TapControlNode> (id);
     else if (typeName == "tap~")           node = std::make_shared<TapAudioNode> (id);
-    else if (typeName == "v")              node = std::make_shared<ValueNode> (id);
+    else if (typeName == "v" || typeName == "msg" || typeName == "message") node = std::make_shared<ValueNode> (id);
     else if (typeName == "z~")             node = std::make_shared<OneSampleDelayNode> (id);
     else if (typeName == "snapshot~")      node = std::make_shared<SnapshotNode> (id);
     else if (typeName == "+")              node = std::make_shared<AddMathNode> (id);
@@ -997,7 +1000,7 @@ std::vector<int> RelativisticNodeGraph::pasteNodes (const juce::ValueTree& clipb
             newIds.push_back (newId);
 
             auto n = getNodeById (newId);
-            if (n) n->loadFromValueTree (nv);
+            if (n) n->loadFromValueTree (nv, true);
             if (n) n->setPosition (x, y); // Maintain offset position
         }
     }
@@ -1070,6 +1073,8 @@ void RelativisticNodeGraph::loadFromValueTree (const juce::ValueTree& tree, bool
     clearGraph();
     audioEngineEnabled = tree.getProperty ("audioEngineEnabled", false);
 
+    int maxLoadedId = 0;
+
     auto nodesTree = tree.getChildWithName ("Nodes");
     if (nodesTree.isValid())
     {
@@ -1082,8 +1087,17 @@ void RelativisticNodeGraph::loadFromValueTree (const juce::ValueTree& tree, bool
 
             int nodeId = addNode (typeName, x, y);
             auto n = getNodeById (nodeId);
-            if (n) n->loadFromValueTree (nv);
+            if (n)
+            {
+                n->loadFromValueTree (nv, false);
+                maxLoadedId = std::max (maxLoadedId, n->getId());
+            }
         }
+    }
+
+    if (maxLoadedId >= nextNodeId)
+    {
+        nextNodeId = maxLoadedId + 1;
     }
 
     auto connsTree = tree.getChildWithName ("Connections");

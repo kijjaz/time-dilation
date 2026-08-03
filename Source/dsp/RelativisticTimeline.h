@@ -128,7 +128,7 @@ public:
     bool getIsPlaying() const { return isPlaying; }
 
     juce::ValueTree saveToValueTree() const override;
-    void loadFromValueTree (const juce::ValueTree& v) override;
+    void loadFromValueTree (const juce::ValueTree& v, bool preserveExistingId = false) override;
 
 private:
     std::vector<TimelineTrack> tracks;

@@ -110,7 +110,7 @@ public:
     virtual std::string getDefaultFormulaScript() const;
 
     virtual juce::ValueTree saveToValueTree() const;
-    virtual void loadFromValueTree (const juce::ValueTree& v);
+    virtual void loadFromValueTree (const juce::ValueTree& v, bool preserveExistingId = false);
 
     void setParentGraph (const RelativisticNodeGraph* graph) { parentGraph = graph; }
     const RelativisticNodeGraph* getParentGraph() const { return parentGraph; }

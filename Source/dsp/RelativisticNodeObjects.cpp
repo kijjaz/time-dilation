@@ -1526,7 +1526,7 @@ std::string NumberNode::getDefaultFormulaScript() const
 
 std::vector<ParameterInfo> NumberNode::getParameterDefs() const
 {
-    return { { "value", "NUMBER VALUE", getParameter ("value", 0.0f), -9999.0f, 9999.0f, 0 } };
+    return { { "value", "NUMBER VALUE", getParameter ("value", 0.0f), -9999.0f, 9999.0f, "" } };
 }
 
 // 11c. [bang] Control Trigger Pulse Object
@@ -1564,7 +1564,7 @@ std::string BangNode::getDefaultFormulaScript() const
 
 std::vector<ParameterInfo> BangNode::getParameterDefs() const
 {
-    return { { "trigger", "MANUAL BANG TRIGGER", 0.0f, 0.0f, 1.0f, 0 } };
+    return { { "trigger", "MANUAL BANG TRIGGER", 0.0f, 0.0f, 1.0f, "" } };
 }
 
 std::vector<std::string> BangNode::getExposedMethods() const
@@ -1611,7 +1611,7 @@ std::string BangAudioNode::getDefaultFormulaScript() const
 
 std::vector<ParameterInfo> BangAudioNode::getParameterDefs() const
 {
-    return { { "trigger", "TRIGGER AUDIO IMPULSE", 0.0f, 0.0f, 1.0f, 0 } };
+    return { { "trigger", "TRIGGER AUDIO IMPULSE", 0.0f, 0.0f, 1.0f, "" } };
 }
 
 std::vector<std::string> BangAudioNode::getExposedMethods() const
@@ -1692,10 +1692,10 @@ std::string CounterNode::getDefaultFormulaScript() const
 std::vector<ParameterInfo> CounterNode::getParameterDefs() const
 {
     return {
-        { "low", "MIN LOW BOUND", getParameter ("low", 0.0f), -999.0f, 999.0f, 0 },
-        { "high", "MAX HIGH BOUND", getParameter ("high", 15.0f), -999.0f, 999.0f, 0 },
-        { "step", "INCREMENT STEP", getParameter ("step", 1.0f), 0.1f, 100.0f, 0 },
-        { "current", "CURRENT COUNT", getParameter ("current", 0.0f), -999.0f, 999.0f, 0 }
+        { "low", "MIN LOW BOUND", getParameter ("low", 0.0f), -999.0f, 999.0f, "" },
+        { "high", "MAX HIGH BOUND", getParameter ("high", 15.0f), -999.0f, 999.0f, "" },
+        { "step", "INCREMENT STEP", getParameter ("step", 1.0f), 0.1f, 100.0f, "" },
+        { "current", "CURRENT COUNT", getParameter ("current", 0.0f), -999.0f, 999.0f, "" }
     };
 }
 

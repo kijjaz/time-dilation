@@ -1663,6 +1663,36 @@ void RelativisticCanvasComponent::rebuildInspector()
         methodButtons.push_back (std::move (btn));
     }
 
+    // Toggle 128px Delayline Dot Visualizer Button
+    bool hasDL = node->isShowDelaylineEnabled();
+    auto btnDL = std::make_unique<juce::TextButton> (hasDL ? "[TOGGLE DELAYLINE (128px)]: ON" : "[TOGGLE DELAYLINE (128px)]: OFF");
+    btnDL->setColour (juce::TextButton::buttonColourId, hasDL ? juce::Colour (0xff0e7490) : juce::Colour (0xff374151));
+    btnDL->onClick = [this, primaryId, hasDL] {
+        auto n = nodeGraph.getNodeById (primaryId);
+        if (n) {
+            n->setShowDelaylineEnabled (!hasDL);
+            rebuildInspector();
+            repaint();
+        }
+    };
+    addAndMakeVisible (*btnDL);
+    methodButtons.push_back (std::move (btnDL));
+
+    // Toggle 128px Control Pipe Dot Visualizer Button
+    bool hasPipe = node->isShowPipeEnabled();
+    auto btnPipe = std::make_unique<juce::TextButton> (hasPipe ? "[TOGGLE PIPE (128px)]: ON" : "[TOGGLE PIPE (128px)]: OFF");
+    btnPipe->setColour (juce::TextButton::buttonColourId, hasPipe ? juce::Colour (0xff7c3aed) : juce::Colour (0xff374151));
+    btnPipe->onClick = [this, primaryId, hasPipe] {
+        auto n = nodeGraph.getNodeById (primaryId);
+        if (n) {
+            n->setShowPipeEnabled (!hasPipe);
+            rebuildInspector();
+            repaint();
+        }
+    };
+    addAndMakeVisible (*btnPipe);
+    methodButtons.push_back (std::move (btnPipe));
+
     // Populate INCOMING and OUTGOING connection sections
     connectionRows.clear();
 
@@ -2079,25 +2109,124 @@ void RelativisticCanvasComponent::timerCallback()
 
 float RelativisticCanvasComponent::getNodeHeight (const RelativisticNode& node) const
 {
+    float baseH = 52.0f;
     if (node.getTypeName() == "time.scope" || node.getTypeName() == "time.display" || node.getTypeName() == "time.monitor")
-        return 110.0f;
-    if (node.getTypeName() == "time.xy" || node.getTypeName() == "xy" || node.getTypeName() == "xy~" || node.getTypeName() == "plot.xy")
-        return 110.0f;
-    if (node.getTypeName() == "spectrometer~" || node.getTypeName() == "spectrum~" || node.getTypeName() == "fft~")
-        return 110.0f;
-    if (node.getTypeName() == "table")
-        return 75.0f;
-    if (node.getTypeName() == "out~" || node.getTypeName() == "out")
-        return 100.0f;
-    if (node.getTypeName() == "seq" || node.getTypeName() == "step")
-        return 90.0f;
-    if (node.getTypeName() == "meter~" || node.getTypeName() == "vu~")
-        return 70.0f;
-    if (node.getTypeName() == "number~" || node.getTypeName() == "num~")
-        return 55.0f;
-    if (node.getTypeName() == "print" || node.getTypeName() == "monitor")
-        return 110.0f;
-    return 52.0f;
+        baseH = 110.0f;
+    else if (node.getTypeName() == "time.xy" || node.getTypeName() == "xy" || node.getTypeName() == "xy~" || node.getTypeName() == "plot.xy")
+        baseH = 110.0f;
+    else if (node.getTypeName() == "spectrometer~" || node.getTypeName() == "spectrum~" || node.getTypeName() == "fft~")
+        baseH = 110.0f;
+    else if (node.getTypeName() == "table")
+        baseH = 75.0f;
+    else if (node.getTypeName() == "out~" || node.getTypeName() == "out")
+        baseH = 100.0f;
+    else if (node.getTypeName() == "seq" || node.getTypeName() == "step")
+        baseH = 90.0f;
+    else if (node.getTypeName() == "meter~" || node.getTypeName() == "vu~")
+        baseH = 70.0f;
+    else if (node.getTypeName() == "number~" || node.getTypeName() == "num~")
+        baseH = 55.0f;
+    else if (node.getTypeName() == "print" || node.getTypeName() == "monitor")
+        baseH = 110.0f;
+
+    if (node.isShowDelaylineEnabled()) baseH += 128.0f;
+    if (node.isShowPipeEnabled()) baseH += 128.0f;
+
+    return baseH;
+}
+
+void RelativisticCanvasComponent::drawDelaylineDots (juce::Graphics& g, const RelativisticNode& node, float x, float y, float w, float h) const
+{
+    g.setColour (juce::Colour (0xff070a12));
+    g.fillRoundedRectangle (x, y, w, h, 3.0f);
+    g.setColour (juce::Colour (0xff1e293b));
+    g.drawRoundedRectangle (x, y, w, h, 3.0f, 1.0f);
+
+    g.setColour (juce::Colour (0xff06b6d4));
+    g.setFont (FontManager::getInstance().getOxaniumFont (9.5f, true));
+    g.drawText ("AUDIO DELAYLINE (128px SAMPLE DOTS)", x + 6.0f, y + 2.0f, w - 12.0f, 12.0f, juce::Justification::centredLeft);
+
+    float midY = y + h * 0.5f + 4.0f;
+    g.setColour (juce::Colour (0xff334155).withAlpha (0.4f));
+    g.drawDashedLine (juce::Line<float> (x + 4.0f, midY, x + w - 4.0f, midY), nullptr, 0, 1.0f);
+
+    const auto& dl = node.getAudioDelayLine();
+    const auto& buf = dl.getBuffer();
+    int bufSamples = buf.getNumSamples();
+    int writePos = dl.getWritePos();
+
+    if (bufSamples > 0 && buf.getNumChannels() > 0)
+    {
+        const float* readPtr = buf.getReadPointer (0);
+        float graphW = w - 12.0f;
+        float graphX = x + 6.0f;
+        int numDots = std::min (160, static_cast<int>(graphW));
+        float stepS = static_cast<float>(bufSamples) / static_cast<float>(numDots);
+
+        g.setColour (juce::Colour (0xff06b6d4));
+        for (int i = 0; i < numDots; ++i)
+        {
+            int sIdx = static_cast<int>(i * stepS) % bufSamples;
+            float sampleVal = readPtr[sIdx];
+            float px = graphX + (static_cast<float>(i) / static_cast<float>(numDots - 1)) * graphW;
+            float py = midY - std::clamp (sampleVal, -1.5f, 1.5f) * ((h - 20.0f) * 0.45f);
+
+            g.fillEllipse (px - 1.0f, py - 1.0f, 2.5f, 2.5f);
+        }
+
+        float writeX = graphX + (static_cast<float>(writePos) / static_cast<float>(bufSamples)) * graphW;
+        g.setColour (juce::Colour (0xfff59e0b));
+        g.drawLine (writeX, y + 14.0f, writeX, y + h - 4.0f, 1.2f);
+    }
+}
+
+void RelativisticCanvasComponent::drawControlPipeDots (juce::Graphics& g, const RelativisticNode& node, float x, float y, float w, float h) const
+{
+    g.setColour (juce::Colour (0xff070a12));
+    g.fillRoundedRectangle (x, y, w, h, 3.0f);
+    g.setColour (juce::Colour (0xff1e293b));
+    g.drawRoundedRectangle (x, y, w, h, 3.0f, 1.0f);
+
+    g.setColour (juce::Colour (0xff8b5cf6));
+    g.setFont (FontManager::getInstance().getOxaniumFont (9.5f, true));
+    g.drawText ("CONTROL MESSAGE PIPE (128px EVENT DOTS)", x + 6.0f, y + 2.0f, w - 12.0f, 12.0f, juce::Justification::centredLeft);
+
+    float axisY = y + h * 0.7f;
+    g.setColour (juce::Colour (0xff334155).withAlpha (0.4f));
+    g.drawLine (x + 4.0f, axisY, x + w - 4.0f, axisY, 1.0f);
+
+    const auto& pipe = node.getControlMessagePipe();
+    const auto& msgs = pipe.getMessages();
+
+    float graphW = w - 12.0f;
+    float graphX = x + 6.0f;
+    double currentTau = node.getLocalCoordinateTime();
+
+    if (!msgs.empty())
+    {
+        for (const auto& msg : msgs)
+        {
+            double diffTau = msg.targetTau - currentTau;
+            float normX = std::clamp (static_cast<float>(diffTau + 2.0) / 4.0f, 0.0f, 1.0f);
+            float px = graphX + normX * graphW;
+            float py = axisY - std::clamp (msg.value / 127.0f, 0.0f, 1.0f) * (h * 0.5f) - 4.0f;
+
+            if (msg.isBang)
+            {
+                g.setColour (juce::Colour (0xfff59e0b));
+                g.drawEllipse (px - 3.0f, py - 3.0f, 6.0f, 6.0f, 1.5f);
+            }
+            else
+            {
+                g.setColour (juce::Colour (0xff8b5cf6));
+                g.fillEllipse (px - 2.0f, py - 2.0f, 4.0f, 4.0f);
+            }
+        }
+    }
+
+    float currentX = graphX + 0.5f * graphW;
+    g.setColour (juce::Colour (0xff06b6d4));
+    g.drawLine (currentX, y + 14.0f, currentX, y + h - 4.0f, 1.2f);
 }
 
 juce::Point<float> RelativisticCanvasComponent::getInletPos (const RelativisticNode& node, int idx) const
@@ -3204,6 +3333,19 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         float lw = std::max (44.0f, static_cast<float>(portFont.getStringWidth (port.name)) + 6.0f);
         g.setColour (portCol.withAlpha (0.95f));
         g.drawText (port.name, p.x - lw * 0.5f, p.y + 3.0f, lw, 11.0f, juce::Justification::centred);
+    }
+
+    // Draw 128px Dot Visualizers if enabled
+    float curVisY = y + h - (node->isShowDelaylineEnabled() ? 128.0f : 0.0f) - (node->isShowPipeEnabled() ? 128.0f : 0.0f) - 6.0f;
+    if (node->isShowDelaylineEnabled())
+    {
+        drawDelaylineDots (g, *node, x + 6.0f, curVisY, w - 12.0f, 122.0f);
+        curVisY += 128.0f;
+    }
+    if (node->isShowPipeEnabled())
+    {
+        drawControlPipeDots (g, *node, x + 6.0f, curVisY, w - 12.0f, 122.0f);
+        curVisY += 128.0f;
     }
 
     // Outlets (Bottom Edge Dots with Smart Spaced Labels)

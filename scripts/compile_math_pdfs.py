@@ -96,3 +96,25 @@ if __name__ == "__main__":
             ])
         ]
     )
+
+    # 01. Relativistic Time Dilation & Universal timeIn Architecture
+    render_tex_paper_to_pdf(
+        os.path.join(math_dir, "01_relativistic_time_dilation.tex"),
+        os.path.join(math_dir, "01_relativistic_time_dilation.pdf"),
+        "01. Relativistic Time Dilation & Universal timeIn Architecture",
+        [
+            ("1. Relativistic Coordinate Time & Dilation Rate", [
+                "Coordinate time tau(t) is modulated by relativistic factor gamma(t) in [-16.0, 16.0]:",
+                "\\[ d\\tau = \\gamma(t) \\cdot dt, \\quad \\tau(t) = \\int_0^t \\gamma(t') \\, dt' \\]",
+                "Special relativity velocity time dilation follows Lorentz factor:"
+            ]),
+            ("2. Universal Node timeIn Propagation Architecture", [
+                "Every node in Time Dilation DAW features an explicit or implicit Inlet 0 designated timeIn (NodePortType::Time).",
+                "Graph executes propagateTimeDilationHierarchy() prior to DSP processing:",
+                "\\[ \\gamma_{\\text{node}} = \\gamma_{\\text{patched}} \\text{ if connected, else } \\gamma_{\\text{upstream}} \\text{ if unpatched} \\]",
+                "Sample-rate advance step d\\tau_n = \\gamma_{\\text{node}}[n] / f_s modulates both sub-sample audio resampling and control phase accumulators."
+            ])
+        ]
+    )
+
+

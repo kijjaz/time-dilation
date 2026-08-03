@@ -247,6 +247,7 @@ void RelativisticNode::prepare (double sampleRate, int samplesPerBlock)
     currentSampleRate = sampleRate;
     currentBlockSize = samplesPerBlock;
     ensureBufferSize (samplesPerBlock);
+    audioDelayLine.prepare (sampleRate, 2, 5.0);
 }
 
 juce::ValueTree RelativisticNode::saveToValueTree() const
@@ -258,6 +259,8 @@ juce::ValueTree RelativisticNode::saveToValueTree() const
     v.setProperty ("posX", posX, nullptr);
     v.setProperty ("posY", posY, nullptr);
     v.setProperty ("formulaScript", juce::String (formulaScript), nullptr);
+    v.setProperty ("showDelayline", showDelayline, nullptr);
+    v.setProperty ("showPipe", showPipe, nullptr);
 
     juce::ValueTree paramsTree ("Parameters");
     for (const auto& kv : parameters)
@@ -282,6 +285,8 @@ void RelativisticNode::loadFromValueTree (const juce::ValueTree& v, bool preserv
     posX = v.getProperty ("posX", posX);
     posY = v.getProperty ("posY", posY);
     formulaScript = v.getProperty ("formulaScript", juce::String (formulaScript)).toString().toStdString();
+    showDelayline = v.getProperty ("showDelayline", showDelayline);
+    showPipe = v.getProperty ("showPipe", showPipe);
 
     auto paramsTree = v.getChildWithName ("Parameters");
     if (paramsTree.isValid())

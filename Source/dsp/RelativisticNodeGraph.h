@@ -287,8 +287,16 @@ public:
     bool isAudioNode() const;
     bool isControlNode() const;
 
+    bool isShowDelaylineEnabled() const { return showDelayline; }
+    void setShowDelaylineEnabled (bool show) { showDelayline = show; }
+
+    bool isShowPipeEnabled() const { return showPipe; }
+    void setShowPipeEnabled (bool show) { showPipe = show; }
+
     AudioTimeDelayLine& getAudioDelayLine() { return audioDelayLine; }
+    const AudioTimeDelayLine& getAudioDelayLine() const { return audioDelayLine; }
     ControlMessagePipe& getControlMessagePipe() { return controlMessagePipe; }
+    const ControlMessagePipe& getControlMessagePipe() const { return controlMessagePipe; }
 
     void processAudioTimeDelay (juce::AudioBuffer<float>& buffer, double effectiveGamma);
     void processControlTimePipe (double currentTau, double effectiveGamma);
@@ -304,6 +312,9 @@ protected:
     double localCoordinateTime = 0.0;
     mutable double smoothedGamma = 1.0;
     double readDelayOffset = 0.0;
+
+    bool showDelayline = false;
+    bool showPipe = false;
 
     AudioTimeDelayLine audioDelayLine;
     ControlMessagePipe controlMessagePipe;

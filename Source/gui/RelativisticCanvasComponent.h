@@ -215,6 +215,8 @@ private:
 
     void drawNode (juce::Graphics& g, const std::shared_ptr<RelativisticNode>& node);
     void drawCable (juce::Graphics& g, juce::Point<float> p1, juce::Point<float> p2, NodePortType type, bool isFeedbackLoop = false);
+    void drawDelaylineDots (juce::Graphics& g, const RelativisticNode& node, float x, float y, float w, float h) const;
+    void drawControlPipeDots (juce::Graphics& g, const RelativisticNode& node, float x, float y, float w, float h) const;
 
     juce::Point<float> getInletPos (const RelativisticNode& node, int idx) const;
     juce::Point<float> getOutletPos (const RelativisticNode& node, int idx) const;

@@ -20,7 +20,7 @@
 \maketitle
 
 \begin{abstract}
-This document details the mathematical framework governing relativistic coordinate time dilation, Lorentz velocity transformations, Schwarzschild gravitational redshift event horizons, metric time grid quantization, and digital audio phase integration in \textbf{Time Dilation DAW (v4.0)}.
+This document details the mathematical framework governing relativistic coordinate time dilation, Lorentz velocity transformations, Schwarzschild gravitational redshift event horizons, metric time grid quantization, universal node \texttt{timeIn} propagation, and digital audio phase integration in \textbf{Time Dilation DAW (v0.0.1)}.
 \end{abstract}
 
 \section{Introduction to Relativistic Coordinate Time ($\tau$)}
@@ -36,6 +36,26 @@ The accumulated coordinate time $\tau(t)$ after physical elapsed timeline $t$ is
 \begin{equation}
 \tau(t) = \int_0^t \gamma(t') \, dt'
 \end{equation}
+
+\section{Universal Node \texttt{timeIn} Propagation Architecture}
+Every functional node object in the Time Dilation DAW graph engine incorporates an explicit or implicit Inlet 0 designated \texttt{timeIn} (\texttt{NodePortType::Time}). This architectural pattern guarantees universal relativistic time handling across all signal, control, telemetry, and sequencer nodes.
+
+\subsection{Hierarchical Time Dilation Inheritance}
+During each audio process cycle, the graph executes \texttt{propagateTimeDilationHierarchy()} prior to DSP evaluation:
+\begin{equation}
+\gamma_{\text{node}} = \begin{cases}
+\gamma_{\text{patched}} & \text{if Inlet 0 (\texttt{timeIn}) is explicitly connected to a time output} \\
+\gamma_{\text{upstream}} & \text{if \texttt{timeIn} is disconnected (\text{inherits upstream coordinate time})} \\
+1.0 & \text{if unpatched and root level (\text{stationary reference frame})}
+\end{cases}
+\end{equation}
+
+\subsection{Unified Sample-Rate \& Phase Modulation}
+Regardless of node class (Audio, Control, Monitor, or Sequencer), the effective local time step $d\tau_n$ evaluated by the node at sample step $n$ is:
+\begin{equation}
+d\tau_n = \frac{\gamma_{\text{node}}[n]}{f_s}
+\end{equation}
+For an audio node, $d\tau_n$ controls the Hermite sub-sample interpolation delay pointer advance rate. For a control or clock node (e.g. \texttt{seq}, \texttt{adsr\textasciitilde{}}, \texttt{phasor\textasciitilde{}}), $d\tau_n$ modulates the phase accumulator step $\Delta \phi = 2\pi f \cdot d\tau_n$.
 
 \section{Velocity Time Dilation (Special Relativity)}
 Under Einstein's Special Theory of Relativity, coordinate time dilation for an observer moving at relative velocity $v(t)$ with respect to speed of light $c$ is defined by the Lorentz factor:

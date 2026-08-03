@@ -28,7 +28,7 @@ Use this document to pinpoint exact line numbers before invoking `view_file` or 
 | [ProjectFileManager.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/ProjectFileManager.h) | 30 lines | Audio & DSP Engine |
 | [RelativisticExpressionParser.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticExpressionParser.cpp) | 129 lines | Audio & DSP Engine |
 | [RelativisticExpressionParser.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticExpressionParser.h) | 28 lines | Audio & DSP Engine |
-| [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) | 1451 lines | Audio & DSP Engine |
+| [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) | 1455 lines | Audio & DSP Engine |
 | [RelativisticNodeGraph.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h) | 261 lines | Audio & DSP Engine |
 | [RelativisticNodeObjects.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp) | 2963 lines | Audio & DSP Engine |
 | [RelativisticNodeObjects.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h) | 673 lines | Audio & DSP Engine |
@@ -222,7 +222,7 @@ _No major top-level class or method symbols detected._
 | :--- | :--- | :--- |
 | [13](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticExpressionParser.h#L13) | `RelativisticExpressionParser` | CLASS |
 
-### [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) (1451 lines)
+### [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) (1455 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
@@ -248,28 +248,28 @@ _No major top-level class or method symbols detected._
 | [498](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L498) | `RelativisticNodeGraph::clearGraph` | METHOD |
 | [506](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L506) | `RelativisticNodeGraph::createDefaultPatch` | METHOD |
 | [511](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L511) | `RelativisticNodeGraph::loadTimeWarpExamplePatch` | METHOD |
-| [549](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L549) | `RelativisticNodeGraph::loadTimeRetroExamplePatch` | METHOD |
-| [592](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L592) | `RelativisticNodeGraph::loadTimeStasisExamplePatch` | METHOD |
-| [637](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L637) | `RelativisticNodeGraph::loadTimeSingularityExamplePatch` | METHOD |
-| [673](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L673) | `RelativisticNodeGraph::loadTimeQuantizeExamplePatch` | METHOD |
-| [715](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L715) | `RelativisticNodeGraph::loadTimeTransportExamplePatch` | METHOD |
-| [754](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L754) | `RelativisticNodeGraph::loadTableExamplePatch` | METHOD |
-| [787](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L787) | `RelativisticNodeGraph::loadFutureBassDrumExamplePatch` | METHOD |
-| [830](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L830) | `RelativisticNodeGraph::loadRhythmicTimeWarpingExamplePatch` | METHOD |
-| [870](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L870) | `RelativisticNodeGraph::loadSoundPitchWarpingExamplePatch` | METHOD |
-| [910](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L910) | `RelativisticNodeGraph::pushUndoState` | METHOD |
-| [924](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L924) | `RelativisticNodeGraph::undo` | METHOD |
-| [935](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L935) | `RelativisticNodeGraph::redo` | METHOD |
-| [946](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L946) | `RelativisticNodeGraph::copyNodes` | METHOD |
-| [979](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L979) | `RelativisticNodeGraph::pasteNodes` | METHOD |
-| [1028](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1028) | `RelativisticNodeGraph::duplicateNodes` | METHOD |
-| [1034](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1034) | `RelativisticNodeGraph::cutNodes` | METHOD |
-| [1071](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1071) | `RelativisticNodeGraph::loadFromValueTree` | METHOD |
-| [1130](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1130) | `RelativisticNodeGraph::saveProjectToFile` | METHOD |
-| [1141](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1141) | `RelativisticNodeGraph::loadProjectFromFile` | METHOD |
-| [1220](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1220) | `RelativisticNodeGraph::propagateTimeDilationHierarchy` | METHOD |
-| [1258](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1258) | `RelativisticNodeGraph::propagateSignals` | METHOD |
-| [1309](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1309) | `RelativisticNodeGraph::process` | METHOD |
+| [551](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L551) | `RelativisticNodeGraph::loadTimeRetroExamplePatch` | METHOD |
+| [594](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L594) | `RelativisticNodeGraph::loadTimeStasisExamplePatch` | METHOD |
+| [641](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L641) | `RelativisticNodeGraph::loadTimeSingularityExamplePatch` | METHOD |
+| [677](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L677) | `RelativisticNodeGraph::loadTimeQuantizeExamplePatch` | METHOD |
+| [719](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L719) | `RelativisticNodeGraph::loadTimeTransportExamplePatch` | METHOD |
+| [758](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L758) | `RelativisticNodeGraph::loadTableExamplePatch` | METHOD |
+| [791](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L791) | `RelativisticNodeGraph::loadFutureBassDrumExamplePatch` | METHOD |
+| [834](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L834) | `RelativisticNodeGraph::loadRhythmicTimeWarpingExamplePatch` | METHOD |
+| [874](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L874) | `RelativisticNodeGraph::loadSoundPitchWarpingExamplePatch` | METHOD |
+| [914](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L914) | `RelativisticNodeGraph::pushUndoState` | METHOD |
+| [928](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L928) | `RelativisticNodeGraph::undo` | METHOD |
+| [939](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L939) | `RelativisticNodeGraph::redo` | METHOD |
+| [950](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L950) | `RelativisticNodeGraph::copyNodes` | METHOD |
+| [983](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L983) | `RelativisticNodeGraph::pasteNodes` | METHOD |
+| [1032](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1032) | `RelativisticNodeGraph::duplicateNodes` | METHOD |
+| [1038](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1038) | `RelativisticNodeGraph::cutNodes` | METHOD |
+| [1075](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1075) | `RelativisticNodeGraph::loadFromValueTree` | METHOD |
+| [1134](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1134) | `RelativisticNodeGraph::saveProjectToFile` | METHOD |
+| [1145](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1145) | `RelativisticNodeGraph::loadProjectFromFile` | METHOD |
+| [1224](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1224) | `RelativisticNodeGraph::propagateTimeDilationHierarchy` | METHOD |
+| [1262](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1262) | `RelativisticNodeGraph::propagateSignals` | METHOD |
+| [1313](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1313) | `RelativisticNodeGraph::process` | METHOD |
 
 ### [RelativisticNodeGraph.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h) (261 lines)
 

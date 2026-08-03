@@ -292,8 +292,8 @@ bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
         "time.future~", "future~", "osc~", "phasor~", "sampler~", "filter~", "delay~",
         "dac~", "expr", "expr~", "fexpr~", "gain~", "out~", "out", "env~", "tap", "tap~",
         "v", "msg", "message", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
-        "svfilter~", "drive~", "reverb~", "crush~", "adsr~", "mtof", "ftom",
-        "number", "num", "nb", "bang", "b", "bang~", "b~", "counter", "cnt", "note",
+        "svfilter~", "drive~", "reverb~", "crush~", "adsr~", "mtof", "ftom", "midi2freq",
+        "number", "num", "nb", "display", "number.display", "bang", "b", "bang~", "b~", "counter", "cnt", "note",
         "seq", "step", "euclid", "markov", "tidal", "tidal~", "fbdrum~", "drum~", "drums~",
         "drumseq", "drumstep", "timeline", "arrangement"
     };
@@ -365,9 +365,9 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "reverb~")        node = std::make_shared<ReverbNode> (id);
     else if (typeName == "crush~")         node = std::make_shared<CrushNode> (id);
     else if (typeName == "adsr~")          node = std::make_shared<AdsrNode> (id);
-    else if (typeName == "mtof")           node = std::make_shared<MtofNode> (id);
+    else if (typeName == "mtof" || typeName == "midi2freq") node = std::make_shared<MtofNode> (id);
     else if (typeName == "ftom")           node = std::make_shared<FtomNode> (id);
-    else if (typeName == "number" || typeName == "num" || typeName == "nb") node = std::make_shared<NumberNode> (id);
+    else if (typeName == "number" || typeName == "num" || typeName == "nb" || typeName == "display" || typeName == "number.display") node = std::make_shared<NumberNode> (id);
     else if (typeName == "bang" || typeName == "b") node = std::make_shared<BangNode> (id);
     else if (typeName == "bang~" || typeName == "b~") node = std::make_shared<BangAudioNode> (id);
     else if (typeName == "counter" || typeName == "cnt") node = std::make_shared<CounterNode> (id);
@@ -515,10 +515,11 @@ void RelativisticNodeGraph::loadTimeWarpExamplePatch()
 
     int nWarp = addNode ("time.warp~", 100.0f, 100.0f);
     int nSeq  = addNode ("seq",        420.0f, 100.0f);
-    int nOsc  = addNode ("osc~",       420.0f, 240.0f);
-    int nFilt = addNode ("filter~",    420.0f, 380.0f);
-    int nGain = addNode ("gain~",      420.0f, 520.0f);
-    int nOut  = addNode ("out~",       420.0f, 660.0f);
+    int nMtof = addNode ("mtof",       420.0f, 240.0f);
+    int nOsc  = addNode ("osc~",       420.0f, 380.0f);
+    int nFilt = addNode ("filter~",    420.0f, 520.0f);
+    int nGain = addNode ("gain~",      420.0f, 660.0f);
+    int nOut  = addNode ("out~",       420.0f, 800.0f);
 
     auto nodeSeq = std::dynamic_pointer_cast<StepSequencerNode> (getNodeById (nSeq));
     if (nodeSeq) nodeSeq->setPatternString ("60 63 65 67 70 72 75 77");
@@ -537,7 +538,8 @@ void RelativisticNodeGraph::loadTimeWarpExamplePatch()
 
     addConnection (nWarp, 0, nSeq, 0);   // time.warp~ timeOut -> seq timeIn
     addConnection (nWarp, 0, nOsc, 0);   // time.warp~ timeOut -> osc~ timeIn
-    addConnection (nSeq, 0, nOsc, 1);    // seq pitch -> osc~ freq (Inlet 1)
+    addConnection (nSeq, 0, nMtof, 0);   // seq pitch (MIDI note) -> mtof note
+    addConnection (nMtof, 0, nOsc, 1);   // mtof freq (Hz) -> osc~ freq (Inlet 1)
     addConnection (nOsc, 0, nFilt, 1);   // osc~ out~ -> filter~ in~ (Inlet 1)
     addConnection (nFilt, 0, nGain, 1);  // filter~ out~ -> gain~ in~ (Inlet 1)
     addConnection (nGain, 0, nOut, 1);   // gain~ out~ -> out~ inL~ (Inlet 1)
@@ -596,10 +598,11 @@ void RelativisticNodeGraph::loadTimeStasisExamplePatch()
 
     int nStasis = addNode ("time.stasis~", 100.0f, 100.0f);
     int nSeq    = addNode ("seq",          420.0f, 100.0f);
-    int nOsc    = addNode ("osc~",         420.0f, 240.0f);
-    int nReverb = addNode ("reverb~",      420.0f, 380.0f);
-    int nGain   = addNode ("gain~",        420.0f, 520.0f);
-    int nOut    = addNode ("out~",         420.0f, 660.0f);
+    int nMtof   = addNode ("mtof",         420.0f, 240.0f);
+    int nOsc    = addNode ("osc~",         420.0f, 380.0f);
+    int nReverb = addNode ("reverb~",      420.0f, 520.0f);
+    int nGain   = addNode ("gain~",        420.0f, 660.0f);
+    int nOut    = addNode ("out~",         420.0f, 800.0f);
 
     auto nodeStasis = getNodeById (nStasis);
     if (nodeStasis) nodeStasis->setParameter ("freeze", 0.0f);
@@ -625,7 +628,8 @@ void RelativisticNodeGraph::loadTimeStasisExamplePatch()
 
     addConnection (nStasis, 0, nSeq, 0);   // time.stasis~ timeOut -> seq timeIn
     addConnection (nStasis, 0, nOsc, 0);   // time.stasis~ timeOut -> osc~ timeIn
-    addConnection (nSeq, 0, nOsc, 1);      // seq pitch -> osc~ freq (Inlet 1)
+    addConnection (nSeq, 0, nMtof, 0);    // seq pitch -> mtof note
+    addConnection (nMtof, 0, nOsc, 1);    // mtof freq -> osc~ freq (Inlet 1)
     addConnection (nOsc, 0, nReverb, 1);   // osc~ out~ -> reverb~ inL~ (Inlet 1)
     addConnection (nReverb, 0, nGain, 1);  // reverb~ out~ -> gain~ in~ (Inlet 1)
     addConnection (nGain, 0, nOut, 1);    // gain~ out~ -> out~ inL~ (Inlet 1)

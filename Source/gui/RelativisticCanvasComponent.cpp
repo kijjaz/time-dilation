@@ -4394,7 +4394,7 @@ void RelativisticCanvasComponent::drawNotificationBanner (juce::Graphics& g) con
     juce::Font f = FontManager::getInstance().getOxaniumFont (12.5f, true);
     g.setFont (f);
     g.setColour (textCol);
-    g.drawText ((isNotificationWarning ? "! " : "✓ ") + notificationText,
+    g.drawText ((isNotificationWarning ? "[!] " : "[OK] ") + notificationText,
                 bannerX + 16.0f, bannerY, bannerW - 32.0f, bannerH, juce::Justification::centredLeft);
 }
 
@@ -4413,13 +4413,13 @@ void RelativisticCanvasComponent::drawDebugOverlay (juce::Graphics& g) const
     lines.add ("GLOBAL VARIABLES:");
     for (const auto& kv : nodeGraph.getGlobalVariables())
     {
-        lines.add ("  • $" + juce::String (kv.first) + " = " + juce::String (kv.second, 4));
+        lines.add ("  > $" + juce::String (kv.first) + " = " + juce::String (kv.second, 4));
     }
     if (nodeGraph.getGlobalVariables().empty())
     {
-        lines.add ("  • $bpm = 120.0");
-        lines.add ("  • $t = 0.000s");
-        lines.add ("  • $gamma = 1.000x");
+        lines.add ("  > $bpm = 120.0");
+        lines.add ("  > $t = 0.000s");
+        lines.add ("  > $gamma = 1.000x");
     }
 
     float hudH = lines.size() * 15.0f + 10.0f;
@@ -4453,8 +4453,8 @@ void RelativisticCanvasComponent::drawNodeDebugOverlay (juce::Graphics& g, const
 
     juce::StringArray lines;
     lines.add ("DEBUG NODE #" + juce::String (node.getId()) + " [" + node.getTypeName() + "]");
-    lines.add ("  • τ (local): " + juce::String (const_cast<RelativisticNode&>(node).updateCoordinateTime (0), 3) + "s");
-    lines.add ("  • γ (eff):   " + juce::String (node.getEffectiveGamma(), 3) + "x");
+    lines.add ("  > tau (local): " + juce::String (const_cast<RelativisticNode&>(node).updateCoordinateTime (0), 3) + "s");
+    lines.add ("  > gamma (eff): " + juce::String (node.getEffectiveGamma(), 3) + "x");
 
     // Inlets Telemetry
     for (size_t i = 0; i < node.getInlets().size(); ++i)
@@ -4464,16 +4464,16 @@ void RelativisticCanvasComponent::drawNodeDebugOverlay (juce::Graphics& g, const
         if (in.type == NodePortType::Time) valStr = juce::String (in.timeGamma, 2) + "x (time)";
         else if (in.type == NodePortType::Audio) valStr = juce::String (in.audioData.getMagnitude (0, std::max (1, in.audioData.getNumSamples())), 3) + " (audio peak)";
         else valStr = juce::String (in.controlValue, 3) + " (ctrl)";
-        lines.add ("  • in" + juce::String (i) + " (" + juce::String (in.name) + "): " + valStr);
+        lines.add ("  > in" + juce::String (i) + " (" + juce::String (in.name) + "): " + valStr);
     }
 
     // Parameters Telemetry
     for (const auto& kv : node.getParameters())
     {
-        lines.add ("  • param [" + juce::String (kv.first) + "]: " + juce::String (kv.second, 3));
+        lines.add ("  > param [" + juce::String (kv.first) + "]: " + juce::String (kv.second, 3));
     }
 
-    float boxW = std::max (w, 180.0f);
+    float boxW = std::max (w, 195.0f);
     float boxH = lines.size() * 14.0f + 8.0f;
 
     g.setColour (juce::Colour (0xee090d16)); // Deep Slate Card Fill

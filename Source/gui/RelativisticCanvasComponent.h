@@ -218,6 +218,11 @@ private:
     void drawDelaylineDots (juce::Graphics& g, const RelativisticNode& node, float x, float y, float w, float h) const;
     void drawControlPipeDots (juce::Graphics& g, const RelativisticNode& node, float x, float y, float w, float h) const;
 
+    std::map<int, juce::Point<float>> initialNodePositions;
+
+    void panCanvas (float dx, float dy);
+    void fitAllNodesInView();
+
     juce::Point<float> getInletPos (const RelativisticNode& node, int idx) const;
     juce::Point<float> getOutletPos (const RelativisticNode& node, int idx) const;
 

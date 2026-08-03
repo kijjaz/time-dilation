@@ -711,13 +711,14 @@ void RelativisticCanvasComponent::showMenuView()
     subCords.addItem (11, "Smooth S-Curve Cables", true, cableStyle == CableStyle::SmoothS);
     subCords.addItem (12, "Straight Pure Data-Style", true, cableStyle == CableStyle::Straight);
     m.addSubMenu ("Patch Cord Style", subCords);
-
     m.addSeparator();
     m.addItem (1, "Recenter Canvas View & Reset Zoom", true);
+    m.addItem (109, "Fit All Nodes in View", true);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuView),
         [this] (int result) {
             if (result == 1) { panX = 0.0f; panY = 0.0f; resetZoom(); }
+            else if (result == 109) { fitAllNodesInView(); }
             else if (result == 2) { showGrid = !showGrid; }
             else if (result == 3) { snapToGrid = !snapToGrid; }
             else if (result == 20) { gridSize = 12.0f; }
@@ -737,6 +738,57 @@ void RelativisticCanvasComponent::showMenuView()
             else if (result == 12) { cableStyle = CableStyle::Straight; btnToggleCord.setButtonText ("CORDS: STRAIGHT"); }
             repaint();
         });
+}
+
+void RelativisticCanvasComponent::panCanvas (float dx, float dy)
+{
+    panX += dx;
+    panY += dy;
+    repaint();
+}
+
+void RelativisticCanvasComponent::fitAllNodesInView()
+{
+    const auto& nodes = nodeGraph.getNodes();
+    if (nodes.empty())
+    {
+        panX = 0.0f;
+        panY = 0.0f;
+        zoomLevel = 1.0f;
+        repaint();
+        return;
+    }
+
+    float minX = 99999.0f, minY = 99999.0f;
+    float maxX = -99999.0f, maxY = -99999.0f;
+
+    for (const auto& n : nodes)
+    {
+        float x = n->getX();
+        float y = n->getY();
+        float w = getNodeWidth (*n);
+        float h = getNodeHeight (*n);
+
+        minX = std::min (minX, x);
+        minY = std::min (minY, y);
+        maxX = std::max (maxX, x + w);
+        maxY = std::max (maxY, y + h);
+    }
+
+    float canvasW = std::max (100.0f, getWidth() - 340.0f);
+    float canvasH = std::max (100.0f, getHeight() - 100.0f);
+
+    float bboxW = std::max (10.0f, maxX - minX + 60.0f);
+    float bboxH = std::max (10.0f, maxY - minY + 60.0f);
+
+    float fitZoom = std::min (canvasW / bboxW, canvasH / bboxH);
+    fitZoom = std::clamp (fitZoom, 0.4f, 1.5f);
+
+    zoomLevel = fitZoom;
+    panX = (canvasW - (maxX + minX) * fitZoom) * 0.5f;
+    panY = 55.0f + (canvasH - (maxY + minY) * fitZoom) * 0.5f;
+
+    repaint();
 }
 
 void RelativisticCanvasComponent::showMenuObjects()
@@ -1644,16 +1696,20 @@ void RelativisticCanvasComponent::rebuildInspector()
                                 auto n = nodeGraph.getNodeById (primaryId);
                                 auto sampler = std::dynamic_pointer_cast<SamplerNode> (n);
                                 if (sampler) sampler->loadAudioFile (result);
-                                rebuildInspector();
-                                repaint();
+                                juce::MessageManager::callAsync ([this] {
+                                    rebuildInspector();
+                                    repaint();
+                                });
                             }
                         });
                 }
                 else
                 {
                     n->invokeMethod (m);
-                    rebuildInspector();
-                    repaint();
+                    juce::MessageManager::callAsync ([this] {
+                        rebuildInspector();
+                        repaint();
+                    });
                 }
             }
         };
@@ -1671,8 +1727,10 @@ void RelativisticCanvasComponent::rebuildInspector()
         auto n = nodeGraph.getNodeById (primaryId);
         if (n) {
             n->setShowDelaylineEnabled (!hasDL);
-            rebuildInspector();
-            repaint();
+            juce::MessageManager::callAsync ([this] {
+                rebuildInspector();
+                repaint();
+            });
         }
     };
     addAndMakeVisible (*btnDL);
@@ -1686,8 +1744,10 @@ void RelativisticCanvasComponent::rebuildInspector()
         auto n = nodeGraph.getNodeById (primaryId);
         if (n) {
             n->setShowPipeEnabled (!hasPipe);
-            rebuildInspector();
-            repaint();
+            juce::MessageManager::callAsync ([this] {
+                rebuildInspector();
+                repaint();
+            });
         }
     };
     addAndMakeVisible (*btnPipe);
@@ -1733,8 +1793,10 @@ void RelativisticCanvasComponent::rebuildInspector()
             r.btnRemoveWire->onClick = [this, cid] {
                 nodeGraph.pushUndoState();
                 nodeGraph.removeConnection (cid);
-                rebuildInspector();
-                repaint();
+                juce::MessageManager::callAsync ([this] {
+                    rebuildInspector();
+                    repaint();
+                });
             };
             addAndMakeVisible (*r.btnRemoveWire);
 
@@ -1779,8 +1841,10 @@ void RelativisticCanvasComponent::rebuildInspector()
             r.btnRemoveWire->onClick = [this, cid] {
                 nodeGraph.pushUndoState();
                 nodeGraph.removeConnection (cid);
-                rebuildInspector();
-                repaint();
+                juce::MessageManager::callAsync ([this] {
+                    rebuildInspector();
+                    repaint();
+                });
             };
             addAndMakeVisible (*r.btnRemoveWire);
 
@@ -2483,13 +2547,29 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
             draggingNodeId = node->getId();
             dragOffset = { mousePos.x - nx, mousePos.y - ny };
 
+            initialNodePositions.clear();
+            for (int id : selectedNodeIds)
+            {
+                auto n = nodeGraph.getNodeById (id);
+                if (n) initialNodePositions[id] = { n->getX(), n->getY() };
+            }
+
             rebuildInspector();
             repaint();
             return;
         }
     }
 
-    // 4. Empty Canvas Click -> Panel Panning OR Rubberband Selection (ONLY IF SHIFT IS HELD)
+    // 4. Empty Canvas Click -> Panel Panning OR Rubberband Selection
+    if (e.mods.isMiddleButtonDown() || e.mods.isRightButtonDown() || (e.mods.isLeftButtonDown() && juce::KeyPress::isKeyCurrentlyDown (juce::KeyPress::spaceKey)))
+    {
+        isCanvasPanning = true;
+        panStartPos = e.position;
+        initialPanOffset = { panX, panY };
+        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
+        return;
+    }
+
     if (isShift)
     {
         selectedConnectionId = 0;
@@ -2617,12 +2697,17 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
         }
         else if (auto numNode = std::dynamic_pointer_cast<NumberNode> (n))
         {
-            float currVal = numNode->getParameter ("value", 0.0f);
-            float step = e.mods.isShiftDown() ? 0.1f : 1.0f;
-            float newVal = currVal - (static_cast<float>(e.getDistanceFromDragStartY()) * 0.1f * step);
-            numNode->setParameter ("value", newVal);
-            repaint();
-            return;
+            float nx = numNode->getX() + panX;
+            float nw = getNodeWidth (*numNode);
+            if (e.mouseDownPosition.x >= nx + nw * 0.4f)
+            {
+                float currVal = numNode->getParameter ("value", 0.0f);
+                float step = e.mods.isShiftDown() ? 0.1f : 1.0f;
+                float newVal = currVal - (static_cast<float>(e.getDistanceFromDragStartY()) * 0.1f * step);
+                numNode->setParameter ("value", newVal);
+                repaint();
+                return;
+            }
         }
     }
 
@@ -2632,12 +2717,12 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
         panY = initialPanOffset.y + (e.position.y - panStartPos.y);
         repaint();
     }
-    else if (isDraggingCable && isEditMode)
+    else if (isDraggingCable)
     {
         cableDragPos = e.position;
         repaint();
     }
-    else if (isMarqueeDragging && isEditMode)
+    else if (isMarqueeDragging)
     {
         float x1 = std::min (e.mouseDownPosition.x, e.position.x);
         float y1 = std::min (e.mouseDownPosition.y, e.position.y);
@@ -2655,7 +2740,7 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
         }
         repaint();
     }
-    else if (draggingNodeId > 0 && isEditMode)
+    else if (draggingNodeId > 0)
     {
         auto anchorNode = nodeGraph.getNodeById (draggingNodeId);
         if (anchorNode)
@@ -2669,13 +2754,24 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
                 targetY = std::round (targetY / gridSize) * gridSize;
             }
 
-            float dx = targetX - anchorNode->getX();
-            float dy = targetY - anchorNode->getY();
+            float deltaX = targetX - anchorNode->getX();
+            float deltaY = targetY - anchorNode->getY();
 
             for (int id : selectedNodeIds)
             {
                 auto n = nodeGraph.getNodeById (id);
-                if (n) n->setPosition (n->getX() + dx, n->getY() + dy);
+                if (n)
+                {
+                    auto initIt = initialNodePositions.find (id);
+                    if (initIt != initialNodePositions.end())
+                    {
+                        n->setPosition (initIt->second.x + deltaX, initIt->second.y + deltaY);
+                    }
+                    else
+                    {
+                        n->setPosition (n->getX() + deltaX, n->getY() + deltaY);
+                    }
+                }
             }
             repaint();
         }
@@ -3376,85 +3472,96 @@ void RelativisticCanvasComponent::paint (juce::Graphics& g)
     // Dark Carbon Canvas Background
     g.fillAll (juce::Colour (0xff070a12));
 
-    // Sci-Fi Micro-Grid Dot Matrix
-    if (showGrid)
-    {
-        g.setColour (juce::Colour (0x1a94a3b8));
-        float step = gridSize;
-        int startX = static_cast<int>(std::fmod (panX, step));
-        if (startX < 0) startX += static_cast<int>(step);
-        int startY = static_cast<int>(std::fmod (panY, step)) + 55;
-        if (startY < 55) startY += static_cast<int>(step);
+    const float inspectorW = 320.0f;
+    const float inspectorX = std::max (0.0f, static_cast<float>(getWidth()) - inspectorW);
+    const float canvasH = std::max (0.0f, static_cast<float>(getHeight()) - 95.0f);
 
-        for (int gx = startX; gx < getWidth(); gx += static_cast<int>(step))
+    // 1. Render Canvas Elements inside STRICT Clipped Bounds
+    {
+        juce::Graphics::ScopedSaveState state (g);
+        g.reduceClipRegion (juce::Rectangle<int> (0, 45, static_cast<int>(inspectorX), static_cast<int>(canvasH)));
+
+        // Sci-Fi Micro-Grid Dot Matrix
+        if (showGrid)
         {
-            for (int gy = startY; gy < getHeight(); gy += static_cast<int>(step))
+            g.setColour (juce::Colour (0x1a94a3b8));
+            float step = gridSize;
+            int startX = static_cast<int>(std::fmod (panX, step));
+            if (startX < 0) startX += static_cast<int>(step);
+            int startY = static_cast<int>(std::fmod (panY, step)) + 55;
+            if (startY < 55) startY += static_cast<int>(step);
+
+            for (int gx = startX; gx < static_cast<int>(inspectorX); gx += static_cast<int>(step))
             {
-                g.fillEllipse (static_cast<float>(gx), static_cast<float>(gy), 1.5f, 1.5f);
+                for (int gy = startY; gy < static_cast<int>(canvasH + 45.0f); gy += static_cast<int>(step))
+                {
+                    g.fillEllipse (static_cast<float>(gx), static_cast<float>(gy), 1.5f, 1.5f);
+                }
             }
+        }
+
+        // Draw Connections
+        for (const auto& conn : nodeGraph.getConnections())
+        {
+            auto srcNode = nodeGraph.getNodeById (conn.sourceNodeId);
+            auto destNode = nodeGraph.getNodeById (conn.destNodeId);
+
+            if (srcNode && destNode)
+            {
+                auto p1 = getOutletPos (*srcNode, conn.sourceOutletIdx);
+                auto p2 = getInletPos (*destNode, conn.destInletIdx);
+                NodePortType type = srcNode->getOutlets()[conn.sourceOutletIdx].type;
+
+                drawCable (g, p1, p2, type, conn.isFeedbackLoop);
+
+                if (conn.id == selectedConnectionId)
+                {
+                    g.setColour (juce::Colour (0xfff59e0b)); // Glowing Gold Cable Selection
+                    g.drawEllipse (p1.x - 7.0f, p1.y - 7.0f, 14.0f, 14.0f, 2.0f);
+                    g.drawEllipse (p2.x - 7.0f, p2.y - 7.0f, 14.0f, 14.0f, 2.0f);
+                }
+            }
+        }
+
+        // Draw Dragging Cable
+        if (isDraggingCable)
+        {
+            auto srcNode = nodeGraph.getNodeById (cableSrcNodeId);
+            if (srcNode)
+            {
+                auto p1 = getOutletPos (*srcNode, cableSrcOutletIdx);
+                NodePortType type = srcNode->getOutlets()[cableSrcOutletIdx].type;
+                drawCable (g, p1, cableDragPos, type);
+            }
+        }
+
+        // Draw Canvas Nodes
+        for (const auto& node : nodeGraph.getNodes())
+        {
+            drawNode (g, node);
+        }
+
+        // Draw Rubberband Marquee Selection Box
+        if (isMarqueeDragging)
+        {
+            g.setColour (juce::Colour (0x3306b6d4)); // Translucent Cyan Fill
+            g.fillRect (marqueeRect);
+            g.setColour (juce::Colour (0xff06b6d4)); // Cyan Stroke
+            g.drawRect (marqueeRect, 1.5f);
         }
     }
 
-    // Top Header Toolbar Panel
+    // 2. Top Header Toolbar Panel (On Top of Canvas)
     g.setColour (juce::Colour (0xff0f172a));
     g.fillRect (0, 0, getWidth(), 45);
     g.setColour (juce::Colour (0xff1e293b));
     g.drawHorizontalLine (45, 0.0f, static_cast<float>(getWidth()));
 
-    // Right Side Dual Inspector Panel Background
-    const float inspectorW = 320.0f;
-    const float inspectorX = getWidth() - inspectorW;
+    // 3. Right Side Dual Inspector Panel Background (On Top of Canvas)
     g.setColour (juce::Colour (0xff0d1322));
-    g.fillRect (inspectorX, 45.0f, inspectorW, getHeight() - 95.0f);
+    g.fillRect (inspectorX, 45.0f, inspectorW, canvasH);
     g.setColour (juce::Colour (0xff1e293b));
     g.drawVerticalLine (static_cast<int>(inspectorX), 45.0f, static_cast<float>(getHeight() - 50));
-
-    for (const auto& conn : nodeGraph.getConnections())
-    {
-        auto srcNode = nodeGraph.getNodeById (conn.sourceNodeId);
-        auto destNode = nodeGraph.getNodeById (conn.destNodeId);
-
-        if (srcNode && destNode)
-        {
-            auto p1 = getOutletPos (*srcNode, conn.sourceOutletIdx);
-            auto p2 = getInletPos (*destNode, conn.destInletIdx);
-            NodePortType type = srcNode->getOutlets()[conn.sourceOutletIdx].type;
-
-            drawCable (g, p1, p2, type, conn.isFeedbackLoop);
-
-            if (conn.id == selectedConnectionId)
-            {
-                g.setColour (juce::Colour (0xfff59e0b)); // Glowing Gold Cable Selection
-                g.drawEllipse (p1.x - 7.0f, p1.y - 7.0f, 14.0f, 14.0f, 2.0f);
-                g.drawEllipse (p2.x - 7.0f, p2.y - 7.0f, 14.0f, 14.0f, 2.0f);
-            }
-        }
-    }
-
-    if (isDraggingCable)
-    {
-        auto srcNode = nodeGraph.getNodeById (cableSrcNodeId);
-        if (srcNode)
-        {
-            auto p1 = getOutletPos (*srcNode, cableSrcOutletIdx);
-            NodePortType type = srcNode->getOutlets()[cableSrcOutletIdx].type;
-            drawCable (g, p1, cableDragPos, type);
-        }
-    }
-
-    for (const auto& node : nodeGraph.getNodes())
-    {
-        drawNode (g, node);
-    }
-
-    // Draw Rubberband Marquee Selection Box
-    if (isMarqueeDragging)
-    {
-        g.setColour (juce::Colour (0x3306b6d4)); // Translucent Cyan Fill
-        g.fillRect (marqueeRect);
-        g.setColour (juce::Colour (0xff06b6d4)); // Cyan Stroke
-        g.drawRect (marqueeRect, 1.5f);
-    }
 
     // Render Floating Hover Tooltip Badge for Ports
     if (hoveredPort.nodeId > 0)

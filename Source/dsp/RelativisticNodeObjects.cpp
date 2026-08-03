@@ -1233,23 +1233,17 @@ std::vector<ParameterInfo> DacNode::getParameterDefs() const
 
 std::vector<ParameterInfo> ExprNode::getParameterDefs() const
 {
-    std::vector<ParameterInfo> defs;
-    defs.push_back ({ "scale", "EXPRESSION SCALE", getParameter ("scale", 1.0f), 0.0f, 10.0f, getParamExpression ("scale"), -1 });
-    return defs;
+    return {};
 }
 
 std::vector<ParameterInfo> ExprAudioNode::getParameterDefs() const
 {
-    std::vector<ParameterInfo> defs;
-    defs.push_back ({ "gain", "EXPRESSION AUDIO GAIN", getParameter ("gain", 1.0f), 0.0f, 2.0f, getParamExpression ("gain"), -1 });
-    return defs;
+    return {};
 }
 
 std::vector<ParameterInfo> FexprAudioNode::getParameterDefs() const
 {
-    std::vector<ParameterInfo> defs;
-    defs.push_back ({ "feedback", "RECURRENT FEEDBACK GAIN", getParameter ("feedback", 0.95f), 0.0f, 0.999f, getParamExpression ("feedback"), -1 });
-    return defs;
+    return {};
 }
 
 std::string TimeWarpNode::getDefaultFormulaScript() const

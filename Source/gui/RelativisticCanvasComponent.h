@@ -203,6 +203,10 @@ private:
     juce::TextEditor formulaEditor;
     juce::TextButton btnApplyFormula { "APPLY C++ / MATH FORMULA" };
 
+    juce::Label exprFormulaLabel { "exprLabel", "MATH EXPRESSION FORMULA:" };
+    juce::TextEditor exprFormulaEditor;
+    juce::TextButton btnApplyExprFormula { "APPLY EXPRESSION FORMULA" };
+
     juce::File currentProjectFile;
 
     void savePatchAs();

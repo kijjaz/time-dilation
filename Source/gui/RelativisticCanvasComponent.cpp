@@ -293,6 +293,51 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
         }
     };
 
+    addChildComponent (exprFormulaLabel);
+    exprFormulaLabel.setFont (juce::FontOptions (12.0f, juce::Font::bold));
+    exprFormulaLabel.setColour (juce::Label::textColourId, juce::Colour (0xff06b6d4));
+
+    addChildComponent (exprFormulaEditor);
+    exprFormulaEditor.setFont (juce::FontOptions (12.0f));
+    exprFormulaEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colour (0xff0f172a));
+    exprFormulaEditor.setColour (juce::TextEditor::outlineColourId, juce::Colour (0xff06b6d4));
+    exprFormulaEditor.onReturnKey = [this] {
+        int primaryId = !selectedNodeIds.empty() ? *selectedNodeIds.begin() : 0;
+        auto n = nodeGraph.getNodeById (primaryId);
+        if (n)
+        {
+            std::string exprStr = exprFormulaEditor.getText().toStdString();
+            std::string typeName = n->getTypeName();
+            if (typeName == "expr")           n->setLabel ("expr " + exprStr);
+            else if (typeName == "expr~")     n->setLabel ("expr~ " + exprStr);
+            else if (typeName == "fexpr~")    n->setLabel ("fexpr~ " + exprStr);
+            else                              n->setLabel (exprStr);
+            n->setFormulaScript (exprStr);
+            rebuildInspector();
+            repaint();
+        }
+    };
+
+    addChildComponent (btnApplyExprFormula);
+    btnApplyExprFormula.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff0f766e));
+    btnApplyExprFormula.setColour (juce::TextButton::textColourOffId, juce::Colour (0xff38bdf8));
+    btnApplyExprFormula.onClick = [this] {
+        int primaryId = !selectedNodeIds.empty() ? *selectedNodeIds.begin() : 0;
+        auto n = nodeGraph.getNodeById (primaryId);
+        if (n)
+        {
+            std::string exprStr = exprFormulaEditor.getText().toStdString();
+            std::string typeName = n->getTypeName();
+            if (typeName == "expr")           n->setLabel ("expr " + exprStr);
+            else if (typeName == "expr~")     n->setLabel ("expr~ " + exprStr);
+            else if (typeName == "fexpr~")    n->setLabel ("fexpr~ " + exprStr);
+            else                              n->setLabel (exprStr);
+            n->setFormulaScript (exprStr);
+            rebuildInspector();
+            repaint();
+        }
+    };
+
     addChildComponent (inlineLabelEditor);
     inlineLabelEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colour (0xff1e293b));
     inlineLabelEditor.setColour (juce::TextEditor::outlineColourId, juce::Colour (0xffeab308));
@@ -1585,6 +1630,16 @@ void RelativisticCanvasComponent::rebuildInspector()
 
     inspectorTitleLabel.setText ("INSPECTOR: [" + node->getLabel() + "]", juce::dontSendNotification);
     formulaEditor.setText (node->getFormulaScript());
+
+    std::string typeName = node->getTypeName();
+    std::string label = node->getLabel();
+    std::string formula = label;
+    if (typeName == "expr" && label.rfind ("expr ", 0) == 0)             formula = label.substr (5);
+    else if (typeName == "expr~" && label.rfind ("expr~ ", 0) == 0)       formula = label.substr (6);
+    else if (typeName == "fexpr~" && label.rfind ("fexpr~ ", 0) == 0)     formula = label.substr (7);
+
+    exprFormulaLabel.setText ("MATH EXPRESSION (" + typeName + "):", juce::dontSendNotification);
+    exprFormulaEditor.setText (formula);
 
     auto defs = node->getParameterDefs();
     for (const auto& def : defs)
@@ -4174,6 +4229,30 @@ void RelativisticCanvasComponent::resized()
     {
         // TOP-DOWN Mode (Object-Specific Parameters, Expressions & Methods)
         float rowY = inspectorTop + 45.0f;
+
+        int primaryId = !selectedNodeIds.empty() ? *selectedNodeIds.begin() : 0;
+        auto node = nodeGraph.getNodeById (primaryId);
+        std::string typeName = node ? node->getTypeName() : "";
+        bool isExprType = (typeName == "expr" || typeName == "expr~" || typeName == "fexpr~");
+
+        if (isExprType)
+        {
+            exprFormulaLabel.setBounds (inspectorX + 15, rowY, inspectorW - 30, 18);
+            exprFormulaEditor.setBounds (inspectorX + 15, rowY + 20, inspectorW - 30, 26);
+            btnApplyExprFormula.setBounds (inspectorX + 15, rowY + 50, inspectorW - 30, 26);
+            
+            exprFormulaLabel.setVisible (true);
+            exprFormulaEditor.setVisible (true);
+            btnApplyExprFormula.setVisible (true);
+
+            rowY += 84.0f;
+        }
+        else
+        {
+            exprFormulaLabel.setVisible (false);
+            exprFormulaEditor.setVisible (false);
+            btnApplyExprFormula.setVisible (false);
+        }
         for (auto& row : propertyRows)
         {
             if (row.label) row.label->setBounds (inspectorX + 15, rowY, inspectorW - 30, 18);
@@ -4276,6 +4355,10 @@ void RelativisticCanvasComponent::resized()
         {
             if (mBtn) mBtn->setVisible (false);
         }
+
+        exprFormulaLabel.setVisible (false);
+        exprFormulaEditor.setVisible (false);
+        btnApplyExprFormula.setVisible (false);
 
         if (incomingSectionHeader) incomingSectionHeader->setVisible (false);
         if (outgoingSectionHeader) outgoingSectionHeader->setVisible (false);

@@ -1,11 +1,13 @@
 #include "RelativisticCanvasComponent.h"
 #include "RelativisticNodeObjects.h"
+#include "RelativisticSequencers.h"
 #include "RelativisticTimeline.h"
 #include "TimelineEditorComponent.h"
 #include "ProjectFileManager.h"
 #include "FontManager.h"
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <BinaryData.h>
+
 
 namespace time_dilation
 {
@@ -1857,9 +1859,8 @@ float RelativisticCanvasComponent::getNodeHeight (const RelativisticNode& node) 
     return 52.0f;
 }
 
-}
-
 juce::Point<float> RelativisticCanvasComponent::getInletPos (const RelativisticNode& node, int idx) const
+
 {
     const float nodeW = getNodeWidth (node);
     const int count = static_cast<int>(node.getInlets().size());
@@ -2669,26 +2670,8 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         }
     }
 
-                // Logo Color Palette: Royal Violet -> Cyber Cyan -> Relativistic Gold
-                float pos = static_cast<float>(b) / static_cast<float>(bands.size() - 1);
-                juce::Colour barCol;
-                if (pos < 0.4f)
-                    barCol = juce::Colour (0xff8b5cf6).interpolatedWith (juce::Colour (0xff06b6d4), pos / 0.4f);
-                else
-                    barCol = juce::Colour (0xff06b6d4).interpolatedWith (juce::Colour (0xfff59e0b), (pos - 0.4f) / 0.6f);
-
-                g.setColour (barCol);
-                g.fillRect (bx + 0.5f, by, std::max (1.0f, barW - 1.0f), bh);
-
-                // Peak cap dot
-                float py = gy + gh - 2.0f - normP * (gh - 4.0f);
-                g.setColour (juce::Colour (0xfff59e0b));
-                g.fillRect (bx + 0.5f, py - 1.5f, std::max (1.0f, barW - 1.0f), 2.0f);
-            }
-        }
-    }
-
     // Special Canvas Visualization for [table] Interactive Waveform / Step Sequencer Canvas
+
     auto tableNode = std::dynamic_pointer_cast<TableNode> (node);
     if (tableNode)
     {

@@ -3221,10 +3221,11 @@ void PrintMonitorNode::process (int /*numSamples*/)
     {
         lastLoggedValue = val;
         std::lock_guard<std::mutex> lock (logMutex);
-        juce::String entry = juce::String::formatted ("t=%.2fs : val=%.4f", inlets[0].coordinateTime, val);
+        juce::String entry = juce::String::formatted (juce::CharPointer_UTF8 ("\xce\xb3=%.2fx : val=%.4f"), inlets[0].timeGamma, val);
         logHistory.push_back (entry.toStdString());
         if (logHistory.size() > 16) logHistory.erase (logHistory.begin());
     }
+
 }
 
 std::string PrintMonitorNode::getDefaultFormulaScript() const

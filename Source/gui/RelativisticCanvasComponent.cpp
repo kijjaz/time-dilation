@@ -3613,79 +3613,78 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawText (posStr, x + 10.0f, y + 26.0f, w - 36.0f, 16.0f, juce::Justification::centredLeft);
     }
 
-    // Special Canvas Visualization for [time.scope] Live Telemetry & Kinetic Relativistic Gauge
+    // Special Canvas Visualization for [time.scope] CRT Oscilloscope Display
     auto timeScope = std::dynamic_pointer_cast<TimeScopeNode> (node);
     if (timeScope)
     {
         float gamma = timeScope->getMonitoredGamma();
         double tSec = timeScope->getMonitoredTimeSec();
+        float speed = timeScope->getParameter ("speed", 1.0f);
+        float timeWin = timeScope->getParameter ("timeWindow", 1.0f);
 
-        // 1. Text Telemetry Display
-        g.setColour (juce::Colour (0xff06b6d4));
-        g.setFont (FontManager::getInstance().getOxaniumFont (11.0f, true));
-        juce::String gammaStr = juce::String::formatted (juce::CharPointer_UTF8 ("\xce\xb3: %+.2fx (%d%%)"), gamma, static_cast<int>(gamma * 100.0f));
-        g.drawText (gammaStr, x + 10.0f, y + 20.0f, w - 16.0f, 15.0f, juce::Justification::centredLeft);
+        float screenX = x + 8.0f;
+        float screenY = y + 20.0f;
+        float screenW = w - 16.0f;
+        float screenH = h - 26.0f;
 
-        g.setColour (juce::Colour (0xfff59e0b));
-        juce::String timeStr = juce::String::formatted ("t_loc: %.3fs", tSec);
-        g.drawText (timeStr, x + 10.0f, y + 35.0f, w - 16.0f, 15.0f, juce::Justification::centredLeft);
+        // Dark CRT Scope Background
+        g.setColour (juce::Colour (0xff050811));
+        g.fillRoundedRectangle (screenX, screenY, screenW, screenH, 4.0f);
+        g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.4f));
+        g.drawRoundedRectangle (screenX, screenY, screenW, screenH, 4.0f, 1.0f);
 
-        // Live Signal History Waveform Trace Box
-        float graphX = x + 8.0f;
-        float graphY = y + 52.0f;
-        float graphW = w - 16.0f;
-        float graphH = 32.0f;
+        // 1. Time Axis & Division Grid Reticle
+        g.setColour (juce::Colour (0x1f06b6d4));
+        float midY = screenY + screenH * 0.5f;
+        g.drawHorizontalLine (static_cast<int>(midY), screenX + 2.0f, screenX + screenW - 2.0f);
+        g.drawHorizontalLine (static_cast<int>(screenY + screenH * 0.25f), screenX + 2.0f, screenX + screenW - 2.0f);
+        g.drawHorizontalLine (static_cast<int>(screenY + screenH * 0.75f), screenX + 2.0f, screenX + screenW - 2.0f);
 
-        g.setColour (juce::Colour (0xff070a12));
-        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 2.0f);
-        g.setColour (juce::Colour (0xff1e293b));
-        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 2.0f, 1.0f);
+        // Vertical Time Grid Division Lines & Labels
+        int numTimeDivs = 4;
+        g.setFont (FontManager::getInstance().getOxaniumFont (8.5f, false));
+        for (int div = 0; div <= numTimeDivs; ++div)
+        {
+            float divX = screenX + (static_cast<float>(div) / static_cast<float>(numTimeDivs)) * screenW;
+            g.setColour (juce::Colour (0x1a94a3b8));
+            g.drawVerticalLine (static_cast<int>(divX), screenY + 12.0f, screenY + screenH - 12.0f);
 
+            double divTime = (div / static_cast<double>(numTimeDivs)) * timeWin;
+            g.setColour (juce::Colour (0xff64748b));
+            g.drawText (juce::String (divTime, 2) + "s", divX - 15.0f, screenY + screenH - 11.0f, 30.0f, 10.0f, juce::Justification::centred);
+        }
+
+        // 2. Waveform Trace
         const auto& hist = timeScope->getSignalHistory();
+        size_t writePos = timeScope->getHistoryWritePos();
+        float scaleMax = std::max (0.01f, timeScope->getAutoScaleMax());
+
         if (!hist.empty())
         {
-            juce::Path p;
-            float midY = graphY + graphH * 0.5f;
-            for (size_t i = 0; i < hist.size(); ++i)
+            juce::Path wavePath;
+            size_t total = hist.size();
+            float sweepHeadX = screenX;
+            float sweepHeadY = midY;
+
+            for (size_t i = 0; i < total; ++i)
             {
-                float px = graphX + (static_cast<float>(i) / static_cast<float>(hist.size() - 1)) * graphW;
-                float py = midY - std::clamp (hist[i], -2.0f, 2.0f) * (graphH * 0.4f);
-                if (i == 0) p.startNewSubPath (px, py);
-                else p.lineTo (px, py);
+                size_t readIdx = (writePos + i) % total;
+                float val = std::clamp (hist[readIdx] / scaleMax, -1.0f, 1.0f);
+                float px = screenX + (static_cast<float>(i) / static_cast<float>(total - 1)) * screenW;
+                float py = midY - val * (screenH * 0.38f);
+
+                if (i == 0) wavePath.startNewSubPath (px, py);
+                else        wavePath.lineTo (px, py);
+
+                if (i == total - 1) { sweepHeadX = px; sweepHeadY = py; }
             }
+
+            // Glowing Cyan Scope Line
             g.setColour (juce::Colour (0xff06b6d4));
-            g.strokePath (p, juce::PathStrokeType (1.2f));
-        }
+            g.strokePath (wavePath, juce::PathStrokeType (1.5f));
 
-        // Kinetic Relativistic Speed Gauge Bar
-        float gx = x + 8.0f;
-        float gy = y + 88.0f;
-        float gw = w - 16.0f;
-        float gh = 12.0f;
-
-        g.setColour (juce::Colour (0xff070a12));
-        g.fillRoundedRectangle (gx, gy, gw, gh, 2.0f);
-        g.setColour (juce::Colour (0xff1e293b));
-        g.drawRoundedRectangle (gx, gy, gw, gh, 2.0f, 1.0f);
-
-        float midX = gx + gw * 0.5f;
-        float normGamma = std::clamp (gamma / 5.0f, -1.0f, 1.0f);
-        float barLen = normGamma * (gw * 0.48f);
-
-        if (gamma > 0.001f)
-        {
-            g.setColour (juce::Colour (0xff06b6d4));
-            g.fillRect (midX, gy + 2.0f, barLen, gh - 4.0f);
-        }
-        else if (gamma < -0.001f)
-        {
+            // Sweep Beam LED Head
             g.setColour (juce::Colour (0xfff59e0b));
-            g.fillRect (midX + barLen, gy + 2.0f, -barLen, gh - 4.0f);
-        }
-        else
-        {
-            g.setColour (juce::Colour (0xff8b5cf6));
-            g.fillRect (midX - 3.0f, gy + 2.0f, 6.0f, gh - 4.0f);
         }
     }
 
@@ -3745,49 +3744,6 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
                 g.setColour (juce::Colour (0xff06b6d4)); // Cyber Cyan
                 g.strokePath (wavePath, juce::PathStrokeType (1.5f));
             }
-        }
-    }
-
-    // Special Canvas Visualization for [time.scope] Auto-Scaling Time Telemetry Visualizer
-    auto scopeNode = std::dynamic_pointer_cast<TimeScopeNode> (node);
-    if (scopeNode)
-    {
-        float graphX = x + 8.0f;
-        float graphY = y + 22.0f;
-        float graphW = w - 16.0f;
-        float graphH = h - 26.0f;
-
-        g.setColour (juce::Colour (0xff050811));
-        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
-        g.setColour (juce::Colour (0xff8b5cf6).withAlpha (0.4f));
-        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
-
-        const auto& hist = scopeNode->getSignalHistory();
-        float scaleMax = std::max (0.01f, scopeNode->getAutoScaleMax());
-
-        if (!hist.empty())
-        {
-            juce::Path wavePath;
-            float midY = graphY + graphH * 0.5f;
-            int total = static_cast<int>(hist.size());
-
-            for (int i = 0; i < 64; ++i)
-            {
-                int idx = i * (total / 64);
-                float val = hist[idx] / scaleMax;
-                float px = graphX + (static_cast<float>(i) / 63.0f) * graphW;
-                float py = midY - val * (graphH * 0.42f);
-
-                if (i == 0) wavePath.startNewSubPath (px, py);
-                else        wavePath.lineTo (px, py);
-            }
-
-            g.setColour (juce::Colour (0xff8b5cf6)); // Royal Violet Time Wave
-            g.strokePath (wavePath, juce::PathStrokeType (1.5f));
-
-            g.setColour (juce::Colour (0xffc084fc));
-            g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
-            g.drawText ("SCALE: ±" + juce::String (scaleMax, 2) + "x", graphX + 4, graphY + 2, graphW - 8, 12, juce::Justification::topRight);
         }
     }
 

@@ -344,31 +344,28 @@ void TimeTransportNode::invokeMethod (const std::string& methodName)
 
 // 4e. [time.scope] Relativistic Time Monitor & Telemetry Visualizer Object
 TimeScopeNode::TimeScopeNode (int id)
-    : RelativisticNode (id, "time.scope", "time.scope")
+    : RelativisticNode (id, "time.scope", "time.scope 1.0x")
 {
-    addInlet ("timeIn", NodePortType::Time);
-    addInlet ("in", NodePortType::Control);
-    addOutlet ("out", NodePortType::Control);
-    addOutlet ("gammaOut", NodePortType::Control);
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
+    addInlet ("in", NodePortType::Control);        // Inlet 1: Audio / Control signal input
+    addInlet ("speed", NodePortType::Control);     // Inlet 2: Time sweep speed modulation
 
-    setParameter ("gamma", 1.0f);
-    setParameter ("t_local", 0.0f);
-    signalHistory.assign (128, 0.0f);
+    addOutlet ("out", NodePortType::Control);      // Outlet 0: Local coordinate time
+    addOutlet ("gammaOut", NodePortType::Control); // Outlet 1: Dilated gamma factor
+
+    setParameter ("speed", 1.0f);
+    setParameter ("timeWindow", 1.0f);
+    signalHistory.assign (256, 0.0f);
 }
 
 void TimeScopeNode::process (int numSamples)
 {
-    float gamma = 1.0f;
-    if (!inlets.empty() && inlets[0].timeGamma != 0.0f)
-    {
-        gamma = inlets[0].timeGamma;
-    }
-    else
-    {
-        gamma = getParameter ("gamma", 1.0f);
-    }
+    float gamma = (inlets[0].timeGamma != 0.0f) ? inlets[0].timeGamma : 1.0f;
+    float modSpeed = (inlets.size() > 2 && inlets[2].isConnected) ? inlets[2].controlValue : 0.0f;
+    float baseSpeed = getParameter ("speed", 1.0f);
+    float effectiveSpeed = std::clamp (baseSpeed + modSpeed, 0.05f, 20.0f);
 
-    localCoordinateTime += (static_cast<double>(numSamples) / currentSampleRate) * gamma;
+    localCoordinateTime += (static_cast<double>(numSamples) / currentSampleRate) * gamma * effectiveSpeed;
     monitoredGamma = gamma;
     monitoredTimeSec = localCoordinateTime;
 
@@ -383,7 +380,7 @@ void TimeScopeNode::process (int numSamples)
     signalHistory[historyWritePos] = sampleVal;
     historyWritePos = (historyWritePos + 1) % signalHistory.size();
 
-    float peakInHistory = 1.0f;
+    float peakInHistory = 0.1f;
     for (float v : signalHistory) peakInHistory = std::max (peakInHistory, std::abs (v));
     autoScaleMax += 0.1f * (peakInHistory * 1.15f - autoScaleMax);
 
@@ -396,14 +393,14 @@ void TimeScopeNode::process (int numSamples)
 
 std::string TimeScopeNode::getDefaultFormulaScript() const
 {
-    return "// Relativistic Time Scope Node [time.scope]\n// Monitors coordinate time (t_local) & time dilation factor (gamma)\n\nout = $t;\ngammaOut = gamma;";
+    return "// Relativistic Time Scope Node [time.scope]\n// Plots signal over dilated time axis (t_local) with adjustable time sweep speed\n\nout = $t;\ngammaOut = gamma;";
 }
 
 std::vector<ParameterInfo> TimeScopeNode::getParameterDefs() const
 {
     return {
-        { "gamma", "Dilation Factor (gamma)", 1.0f, -99999.0f, 99999.0f, "", 0 },
-        { "t_local", "Local Time (t_local sec)", 0.0f, -99999.0f, 99999.0f, "", -1 }
+        { "speed", "TIME SWEEP SPEED", getParameter ("speed", 1.0f), 0.1f, 10.0f, getParamExpression ("speed"), -1 },
+        { "timeWindow", "TIME AXIS WINDOW (SEC)", getParameter ("timeWindow", 1.0f), 0.1f, 5.0f, getParamExpression ("timeWindow"), -1 }
     };
 }
 

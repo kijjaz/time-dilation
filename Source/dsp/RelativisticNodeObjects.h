@@ -116,6 +116,7 @@ public:
     float getMonitoredGamma() const { return monitoredGamma; }
     double getMonitoredTimeSec() const { return monitoredTimeSec; }
     const std::vector<float>& getSignalHistory() const { return signalHistory; }
+    size_t getHistoryWritePos() const { return historyWritePos; }
     float getAutoScaleMax() const { return autoScaleMax; }
 
 private:

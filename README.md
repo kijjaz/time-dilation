@@ -133,7 +133,7 @@ By modulating the local flow of time using relativistic gravitational equations,
 
 ## 📐 Mathematical Formulation & Theoretical Documentation
 
-The theoretical physics and digital signal processing mathematics of **Time Dilation DAW (v4.0)** are formally documented in the [`math/`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math) suite:
+The theoretical physics and digital signal processing mathematics of **Time Dilation DAW (v0.0.1)** are formally documented in the [`math/`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math) suite:
 
 1. **[`01_relativistic_time_dilation.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/01_relativistic_time_dilation.tex)** — Lorentz Velocity Dilation, Schwarzschild Gravitational Redshift Event Horizons, & Coordinate Time Integration $\tau(t) = \int_0^t \gamma(t') dt'$.
 2. **[`02_dsp_interpolation_and_resampling.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/02_dsp_interpolation_and_resampling.tex)** — Hermite 4-Point 3rd-Order Cubic Spline Interpolation Matrix \& Varispeed Sub-Sample Resampling.
@@ -146,7 +146,9 @@ The theoretical physics and digital signal processing mathematics of **Time Dila
 9. **[`09_granular_synthesis_math.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/09_granular_synthesis_math.tex)** — Gabor Granular Synthesis, Hanning/Gaussian Window Envelopes, Poisson Grain Distributions, \& Overlap-Add (OLA).
 10. **[`10_reverb_fdn_matrices.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/10_reverb_fdn_matrices.tex)** — Multi-Channel Feedback Delay Network (FDN) Reverb Unitary Householder Matrices \& Prime Delay Selection.
 11. **[`11_spectrometer_fft_log_analysis.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/11_spectrometer_fft_log_analysis.tex)** — 32-Band Logarithmic Frequency Spectrum Estimation \& 2D Phase Space Parametric State Trajectories.
-12. **[`future_lookahead_causality.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/future_lookahead_causality.tex)** — Relativistic Future Lookahead, Global Causality Horizon Offset Engine, \& Smoothed Time Dilation.
+12. **[`12_arc_peak_limiter_math.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/12_arc_peak_limiter_math.tex)** ([PDF](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/12_arc_peak_limiter_math.pdf)) — Auto Release Control (ARC) Dynamic Peak Limiting at -1.5 dBFS \& Adaptive Gain Smoothing.
+13. **[`13_lorentz_time_signal_composition.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/13_lorentz_time_signal_composition.tex)** ([PDF](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/13_lorentz_time_signal_composition.pdf)) — Relativistic Lorentz Velocity Composition Law, Dynamic Telemetry Auto-Scaling, \& Dual-Time Phase Space Mapping.
+14. **[`future_lookahead_causality.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/future_lookahead_causality.tex)** — Relativistic Future Lookahead, Global Causality Horizon Offset Engine, \& Smoothed Time Dilation.
 
 ---
 

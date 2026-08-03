@@ -2553,8 +2553,16 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
             g.fillRect (bx, meterY + (meterH - barH), meterW - 1.0f, barH);
         };
 
-        drawBar (meterX + 1.0f, rmsL);
-        drawBar (meterX + meterW + 1.0f, rmsR);
+        drawBar (meterX, rmsL);
+        drawBar (meterX + meterW, rmsR);
+
+        if (outNode->isRecordingActive())
+        {
+            g.setColour (juce::Colours::red.withAlpha (0.9f));
+            g.fillEllipse (graphX + 6.0f, graphY + 6.0f, 8.0f, 8.0f);
+            g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
+            g.drawText ("REC (/tmp)", graphX + 16.0f, graphY + 4.0f, 60.0f, 12.0f, juce::Justification::centredLeft);
+        }
     }
 
     // Title Text in Sci-Fi Oxanium Font (No Truncation)

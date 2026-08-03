@@ -361,6 +361,7 @@ class OutNode : public RelativisticNode
 {
 public:
     OutNode (int id);
+    ~OutNode() override;
     void process (int numSamples) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
@@ -376,6 +377,11 @@ public:
     const std::vector<float>& getScopeR() const { return scopeBufferR; }
     int getScopeWriteIndex() const { return scopeWriteIdx; }
 
+    bool isRecordingActive() const { return isRecording; }
+    std::string getLastRecordFilePath() const { return lastRecordFilePath; }
+    void startRecording();
+    void stopRecording();
+
 private:
     float rmsL = 0.0f;
     float rmsR = 0.0f;
@@ -385,6 +391,11 @@ private:
     std::vector<float> scopeBufferL;
     std::vector<float> scopeBufferR;
     int scopeWriteIdx = 0;
+
+    juce::CriticalSection recordLock;
+    bool isRecording = false;
+    std::string lastRecordFilePath;
+    std::unique_ptr<juce::AudioFormatWriter> recordWriter;
 };
 
 // 16. [env~] Envelope Follower Node Object

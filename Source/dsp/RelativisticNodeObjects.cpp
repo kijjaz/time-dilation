@@ -1588,6 +1588,51 @@ OutNode::OutNode (int id)
     scopeBufferR.assign (256, 0.0f);
 }
 
+OutNode::~OutNode()
+{
+    stopRecording();
+}
+
+void OutNode::startRecording()
+{
+    const juce::ScopedLock sl (recordLock);
+    if (isRecording) return;
+
+    juce::File tmpDir ("/tmp");
+    if (!tmpDir.exists())
+    {
+        tmpDir = juce::File::getSpecialLocation (juce::File::tempDirectory);
+    }
+    tmpDir.createDirectory();
+
+    juce::String timeStamp = juce::Time::getCurrentTime().formatted ("%Y%m%d_%H%M%S");
+    juce::File recFile = tmpDir.getChildFile ("out_node_" + juce::String (nodeId) + "_" + timeStamp + ".wav");
+
+    juce::WavAudioFormat wavFormat;
+    auto fileStream = recFile.createOutputStream();
+    if (fileStream != nullptr)
+    {
+        recordWriter.reset (wavFormat.createWriterFor (fileStream.release(), currentSampleRate, 2, 16, {}, 0));
+        if (recordWriter != nullptr)
+        {
+            isRecording = true;
+            lastRecordFilePath = recFile.getFullPathName().toStdString();
+        }
+    }
+}
+
+void OutNode::stopRecording()
+{
+    const juce::ScopedLock sl (recordLock);
+    if (!isRecording) return;
+
+    if (recordWriter != nullptr)
+    {
+        recordWriter.reset();
+    }
+    isRecording = false;
+}
+
 void OutNode::process (int numSamples)
 {
     const auto* inL = inlets[1].audioData.getReadPointer (0);
@@ -1627,6 +1672,19 @@ void OutNode::process (int numSamples)
     rmsR = std::sqrt (sumSqR / std::max (1, numSamples));
     peakL = pL;
     peakR = pR;
+
+    // WAV Recording to /tmp
+    if (isRecording)
+    {
+        const juce::ScopedLock sl (recordLock);
+        if (recordWriter != nullptr)
+        {
+            juce::AudioBuffer<float> recBuf (2, numSamples);
+            recBuf.copyFrom (0, 0, outlets[0].audioData, 0, 0, numSamples);
+            recBuf.copyFrom (1, 0, outlets[1].audioData, 0, 0, numSamples);
+            recordWriter->writeFromAudioSampleBuffer (recBuf, 0, numSamples);
+        }
+    }
 }
 
 std::string OutNode::getDefaultFormulaScript() const
@@ -1644,7 +1702,7 @@ std::vector<ParameterInfo> OutNode::getParameterDefs() const
 
 std::vector<std::string> OutNode::getExposedMethods() const
 {
-    return { "Toggle Scope Mode" };
+    return { "Toggle Scope Mode", isRecording ? "Stop WAV Record" : "Start WAV Record" };
 }
 
 void OutNode::invokeMethod (const std::string& methodName)
@@ -1653,6 +1711,11 @@ void OutNode::invokeMethod (const std::string& methodName)
     {
         float current = getParameter ("displayMode", 0.0f);
         setParameter ("displayMode", (current > 0.5f) ? 0.0f : 1.0f);
+    }
+    else if (methodName == "Start WAV Record" || methodName == "Stop WAV Record" || methodName.find ("WAV") != std::string::npos)
+    {
+        if (isRecording) stopRecording();
+        else startRecording();
     }
 }
 

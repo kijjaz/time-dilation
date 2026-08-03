@@ -98,6 +98,9 @@ public:
     }
 
     int addModulationInlet (const std::string& paramKey);
+    bool hasModulationInlet (const std::string& paramKey) const;
+    int getModulationInletIndex (const std::string& paramKey) const;
+    bool removeModulationInlet (const std::string& paramKey);
 
     virtual std::vector<ParameterInfo> getParameterDefs() const;
     virtual std::vector<std::string> getExposedMethods() const;
@@ -174,6 +177,7 @@ public:
 
     int addNode (const std::string& typeName, float x, float y);
     void removeNode (int nodeId);
+    bool removeModulationInlet (int nodeId, const std::string& paramKey);
 
     int addConnection (int srcNodeId, int srcOutletIdx, int destNodeId, int destInletIdx);
     void removeConnection (int connectionId);

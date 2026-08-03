@@ -28,12 +28,12 @@ Use this document to pinpoint exact line numbers before invoking `view_file` or 
 | [ProjectFileManager.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/ProjectFileManager.h) | 30 lines | Audio & DSP Engine |
 | [RelativisticExpressionParser.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticExpressionParser.cpp) | 129 lines | Audio & DSP Engine |
 | [RelativisticExpressionParser.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticExpressionParser.h) | 28 lines | Audio & DSP Engine |
-| [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) | 1455 lines | Audio & DSP Engine |
-| [RelativisticNodeGraph.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h) | 261 lines | Audio & DSP Engine |
-| [RelativisticNodeObjects.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp) | 2963 lines | Audio & DSP Engine |
-| [RelativisticNodeObjects.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h) | 673 lines | Audio & DSP Engine |
+| [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) | 1534 lines | Audio & DSP Engine |
+| [RelativisticNodeGraph.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h) | 265 lines | Audio & DSP Engine |
+| [RelativisticNodeObjects.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp) | 3254 lines | Audio & DSP Engine |
+| [RelativisticNodeObjects.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h) | 772 lines | Audio & DSP Engine |
 | [RelativisticSequencers.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.cpp) | 1040 lines | Audio & DSP Engine |
-| [RelativisticSequencers.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h) | 171 lines | Audio & DSP Engine |
+| [RelativisticSequencers.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h) | 175 lines | Audio & DSP Engine |
 | [RelativisticTimeline.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp) | 294 lines | Audio & DSP Engine |
 | [RelativisticTimeline.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h) | 141 lines | Audio & DSP Engine |
 | [RetrogradeAudioBuffer.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RetrogradeAudioBuffer.h) | 89 lines | Audio & DSP Engine |
@@ -58,8 +58,8 @@ Use this document to pinpoint exact line numbers before invoking `view_file` or 
 | [ModularDataflowCanvas.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/ModularDataflowCanvas.h) | 63 lines | GUI & Visual Elements |
 | [PianoRollComponent.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/PianoRollComponent.cpp) | 98 lines | GUI & Visual Elements |
 | [PianoRollComponent.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/PianoRollComponent.h) | 42 lines | GUI & Visual Elements |
-| [RelativisticCanvasComponent.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp) | 2911 lines | GUI & Visual Elements |
-| [RelativisticCanvasComponent.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h) | 203 lines | GUI & Visual Elements |
+| [RelativisticCanvasComponent.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp) | 3262 lines | GUI & Visual Elements |
+| [RelativisticCanvasComponent.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h) | 221 lines | GUI & Visual Elements |
 | [RelativisticDAWWorkstation.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticDAWWorkstation.cpp) | 401 lines | GUI & Visual Elements |
 | [RelativisticDAWWorkstation.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticDAWWorkstation.h) | 82 lines | GUI & Visual Elements |
 | [RelativisticStudioComponent.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticStudioComponent.cpp) | 128 lines | GUI & Visual Elements |
@@ -222,7 +222,7 @@ _No major top-level class or method symbols detected._
 | :--- | :--- | :--- |
 | [13](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticExpressionParser.h#L13) | `RelativisticExpressionParser` | CLASS |
 
-### [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) (1455 lines)
+### [RelativisticNodeGraph.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp) (1534 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
@@ -231,47 +231,49 @@ _No major top-level class or method symbols detected._
 | [97](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L97) | `RelativisticNode::addInlet` | METHOD |
 | [107](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L107) | `RelativisticNode::addOutlet` | METHOD |
 | [117](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L117) | `RelativisticNode::addModulationInlet` | METHOD |
-| [180](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L180) | `RelativisticNode::invokeMethod` | METHOD |
-| [189](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L189) | `RelativisticNode::ensureBufferSize` | METHOD |
-| [210](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L210) | `RelativisticNode::prepare` | METHOD |
-| [239](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L239) | `RelativisticNode::loadFromValueTree` | METHOD |
-| [263](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L263) | `RelativisticNode::parseLabelArguments` | METHOD |
-| [287](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L287) | `RelativisticNodeGraph::isValidObjectType` | METHOD |
-| [303](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L303) | `RelativisticNodeGraph::RelativisticNodeGraph` | METHOD |
-| [308](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L308) | `RelativisticNodeGraph::prepare` | METHOD |
-| [326](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L326) | `RelativisticNodeGraph::addNode` | METHOD |
-| [408](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L408) | `RelativisticNodeGraph::removeNode` | METHOD |
-| [420](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L420) | `RelativisticNodeGraph::addConnection` | METHOD |
-| [435](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L435) | `RelativisticNodeGraph::removeConnection` | METHOD |
-| [443](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L443) | `RelativisticNodeGraph::detectFeedbackLoops` | METHOD |
-| [489](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L489) | `RelativisticNodeGraph::getNodeById` | METHOD |
-| [498](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L498) | `RelativisticNodeGraph::clearGraph` | METHOD |
-| [506](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L506) | `RelativisticNodeGraph::createDefaultPatch` | METHOD |
-| [511](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L511) | `RelativisticNodeGraph::loadTimeWarpExamplePatch` | METHOD |
-| [551](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L551) | `RelativisticNodeGraph::loadTimeRetroExamplePatch` | METHOD |
-| [594](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L594) | `RelativisticNodeGraph::loadTimeStasisExamplePatch` | METHOD |
-| [641](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L641) | `RelativisticNodeGraph::loadTimeSingularityExamplePatch` | METHOD |
-| [677](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L677) | `RelativisticNodeGraph::loadTimeQuantizeExamplePatch` | METHOD |
-| [719](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L719) | `RelativisticNodeGraph::loadTimeTransportExamplePatch` | METHOD |
-| [758](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L758) | `RelativisticNodeGraph::loadTableExamplePatch` | METHOD |
-| [791](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L791) | `RelativisticNodeGraph::loadFutureBassDrumExamplePatch` | METHOD |
-| [834](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L834) | `RelativisticNodeGraph::loadRhythmicTimeWarpingExamplePatch` | METHOD |
-| [874](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L874) | `RelativisticNodeGraph::loadSoundPitchWarpingExamplePatch` | METHOD |
-| [914](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L914) | `RelativisticNodeGraph::pushUndoState` | METHOD |
-| [928](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L928) | `RelativisticNodeGraph::undo` | METHOD |
-| [939](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L939) | `RelativisticNodeGraph::redo` | METHOD |
-| [950](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L950) | `RelativisticNodeGraph::copyNodes` | METHOD |
-| [983](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L983) | `RelativisticNodeGraph::pasteNodes` | METHOD |
-| [1032](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1032) | `RelativisticNodeGraph::duplicateNodes` | METHOD |
-| [1038](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1038) | `RelativisticNodeGraph::cutNodes` | METHOD |
-| [1075](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1075) | `RelativisticNodeGraph::loadFromValueTree` | METHOD |
-| [1134](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1134) | `RelativisticNodeGraph::saveProjectToFile` | METHOD |
-| [1145](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1145) | `RelativisticNodeGraph::loadProjectFromFile` | METHOD |
-| [1224](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1224) | `RelativisticNodeGraph::propagateTimeDilationHierarchy` | METHOD |
-| [1262](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1262) | `RelativisticNodeGraph::propagateSignals` | METHOD |
-| [1313](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1313) | `RelativisticNodeGraph::process` | METHOD |
+| [140](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L140) | `RelativisticNode::removeModulationInlet` | METHOD |
+| [215](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L215) | `RelativisticNode::invokeMethod` | METHOD |
+| [224](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L224) | `RelativisticNode::ensureBufferSize` | METHOD |
+| [245](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L245) | `RelativisticNode::prepare` | METHOD |
+| [274](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L274) | `RelativisticNode::loadFromValueTree` | METHOD |
+| [298](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L298) | `RelativisticNode::parseLabelArguments` | METHOD |
+| [322](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L322) | `RelativisticNodeGraph::isValidObjectType` | METHOD |
+| [339](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L339) | `RelativisticNodeGraph::RelativisticNodeGraph` | METHOD |
+| [344](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L344) | `RelativisticNodeGraph::prepare` | METHOD |
+| [362](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L362) | `RelativisticNodeGraph::addNode` | METHOD |
+| [450](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L450) | `RelativisticNodeGraph::removeNode` | METHOD |
+| [462](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L462) | `RelativisticNodeGraph::addConnection` | METHOD |
+| [477](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L477) | `RelativisticNodeGraph::removeConnection` | METHOD |
+| [485](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L485) | `RelativisticNodeGraph::removeModulationInlet` | METHOD |
+| [522](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L522) | `RelativisticNodeGraph::detectFeedbackLoops` | METHOD |
+| [568](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L568) | `RelativisticNodeGraph::getNodeById` | METHOD |
+| [577](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L577) | `RelativisticNodeGraph::clearGraph` | METHOD |
+| [585](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L585) | `RelativisticNodeGraph::createDefaultPatch` | METHOD |
+| [590](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L590) | `RelativisticNodeGraph::loadTimeWarpExamplePatch` | METHOD |
+| [630](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L630) | `RelativisticNodeGraph::loadTimeRetroExamplePatch` | METHOD |
+| [673](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L673) | `RelativisticNodeGraph::loadTimeStasisExamplePatch` | METHOD |
+| [720](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L720) | `RelativisticNodeGraph::loadTimeSingularityExamplePatch` | METHOD |
+| [756](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L756) | `RelativisticNodeGraph::loadTimeQuantizeExamplePatch` | METHOD |
+| [798](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L798) | `RelativisticNodeGraph::loadTimeTransportExamplePatch` | METHOD |
+| [837](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L837) | `RelativisticNodeGraph::loadTableExamplePatch` | METHOD |
+| [870](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L870) | `RelativisticNodeGraph::loadFutureBassDrumExamplePatch` | METHOD |
+| [913](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L913) | `RelativisticNodeGraph::loadRhythmicTimeWarpingExamplePatch` | METHOD |
+| [953](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L953) | `RelativisticNodeGraph::loadSoundPitchWarpingExamplePatch` | METHOD |
+| [993](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L993) | `RelativisticNodeGraph::pushUndoState` | METHOD |
+| [1007](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1007) | `RelativisticNodeGraph::undo` | METHOD |
+| [1018](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1018) | `RelativisticNodeGraph::redo` | METHOD |
+| [1029](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1029) | `RelativisticNodeGraph::copyNodes` | METHOD |
+| [1062](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1062) | `RelativisticNodeGraph::pasteNodes` | METHOD |
+| [1111](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1111) | `RelativisticNodeGraph::duplicateNodes` | METHOD |
+| [1117](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1117) | `RelativisticNodeGraph::cutNodes` | METHOD |
+| [1154](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1154) | `RelativisticNodeGraph::loadFromValueTree` | METHOD |
+| [1213](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1213) | `RelativisticNodeGraph::saveProjectToFile` | METHOD |
+| [1224](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1224) | `RelativisticNodeGraph::loadProjectFromFile` | METHOD |
+| [1303](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1303) | `RelativisticNodeGraph::propagateTimeDilationHierarchy` | METHOD |
+| [1341](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1341) | `RelativisticNodeGraph::propagateSignals` | METHOD |
+| [1392](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.cpp#L1392) | `RelativisticNodeGraph::process` | METHOD |
 
-### [RelativisticNodeGraph.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h) (261 lines)
+### [RelativisticNodeGraph.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h) (265 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
@@ -282,9 +284,9 @@ _No major top-level class or method symbols detected._
 | [37](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h#L37) | `PatchConnection` | CLASS |
 | [49](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h#L49) | `ParameterInfo` | CLASS |
 | [60](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h#L60) | `RelativisticNode` | CLASS |
-| [151](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h#L151) | `RelativisticNodeGraph` | CLASS |
+| [154](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeGraph.h#L154) | `RelativisticNodeGraph` | CLASS |
 
-### [RelativisticNodeObjects.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp) (2963 lines)
+### [RelativisticNodeObjects.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp) (3254 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
@@ -312,140 +314,159 @@ _No major top-level class or method symbols detected._
 | [318](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L318) | `TimeTransportNode::invokeMethod` | METHOD |
 | [343](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L343) | `4e. [time.scope] Relativistic Time Monitor & Telemetry Visualizer Object` | SECTION |
 | [344](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L344) | `TimeScopeNode::TimeScopeNode` | METHOD |
-| [356](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L356) | `TimeScopeNode::process` | METHOD |
-| [393](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L393) | `5. [osc~]` | SECTION |
-| [394](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L394) | `OscNode::OscNode` | METHOD |
-| [451](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L451) | `OscNode::process` | METHOD |
-| [559](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L559) | `OscNode::invokeMethod` | METHOD |
-| [577](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L577) | `5b. [mtof] MIDI Note to Frequency Converter Node Object` | SECTION |
-| [578](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L578) | `MtofNode::MtofNode` | METHOD |
-| [586](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L586) | `MtofNode::process` | METHOD |
-| [607](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L607) | `5c. [ftom] Frequency to MIDI Note Converter Node Object` | SECTION |
-| [608](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L608) | `FtomNode::FtomNode` | METHOD |
-| [616](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L616) | `FtomNode::process` | METHOD |
-| [637](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L637) | `5d. [note] Algorithmic MIDI Note Generator Node Object` | SECTION |
-| [638](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L638) | `NoteGenNode::NoteGenNode` | METHOD |
-| [652](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L652) | `NoteGenNode::process` | METHOD |
-| [681](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L681) | `6. [phasor~]` | SECTION |
-| [682](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L682) | `PhasorNode::PhasorNode` | METHOD |
-| [692](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L692) | `PhasorNode::process` | METHOD |
-| [712](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L712) | `7. [sampler~]` | SECTION |
-| [713](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L713) | `SamplerNode::SamplerNode` | METHOD |
-| [757](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L757) | `SamplerNode::generateSynthSample` | METHOD |
-| [801](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L801) | `SamplerNode::loadAudioFile` | METHOD |
-| [817](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L817) | `SamplerNode::process` | METHOD |
-| [897](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L897) | `SamplerNode::invokeMethod` | METHOD |
-| [917](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L917) | `8. [filter~]` | SECTION |
-| [918](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L918) | `FilterNode::FilterNode` | METHOD |
-| [930](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L930) | `FilterNode::process` | METHOD |
-| [954](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L954) | `9. [delay~]` | SECTION |
-| [955](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L955) | `DelayNode::DelayNode` | METHOD |
-| [967](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L967) | `DelayNode::prepare` | METHOD |
-| [974](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L974) | `DelayNode::process` | METHOD |
-| [1170](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1170) | `DacNode::DacNode` | METHOD |
-| [1177](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1177) | `DacNode::process` | METHOD |
-| [1181](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1181) | `ExprNode::ExprNode` | METHOD |
-| [1189](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1189) | `ExprNode::process` | METHOD |
-| [1214](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1214) | `ExprAudioNode::ExprAudioNode` | METHOD |
-| [1222](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1222) | `ExprAudioNode::process` | METHOD |
-| [1241](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1241) | `FexprAudioNode::FexprAudioNode` | METHOD |
-| [1248](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1248) | `FexprAudioNode::process` | METHOD |
-| [1261](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1261) | `14. [gain~] Audio Signal Scaler Node Object` | SECTION |
-| [1262](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1262) | `GainNode::GainNode` | METHOD |
-| [1276](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1276) | `GainNode::prepare` | METHOD |
-| [1285](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1285) | `GainNode::process` | METHOD |
-| [1353](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1353) | `11b. [number] Control Number Box Object` | SECTION |
-| [1354](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1354) | `NumberNode::NumberNode` | METHOD |
-| [1362](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1362) | `NumberNode::process` | METHOD |
-| [1383](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1383) | `11c. [bang] Control Trigger Pulse Object` | SECTION |
-| [1384](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1384) | `BangNode::BangNode` | METHOD |
-| [1392](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1392) | `BangNode::triggerBang` | METHOD |
-| [1397](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1397) | `BangNode::process` | METHOD |
-| [1426](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1426) | `BangNode::invokeMethod` | METHOD |
-| [1431](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1431) | `11d. [bang~] Audio Rate Impulse Spike Object` | SECTION |
-| [1432](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1432) | `BangAudioNode::BangAudioNode` | METHOD |
-| [1440](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1440) | `BangAudioNode::triggerBang` | METHOD |
-| [1445](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1445) | `BangAudioNode::process` | METHOD |
-| [1473](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1473) | `BangAudioNode::invokeMethod` | METHOD |
-| [1478](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1478) | `11e. [counter] Smart Value Counter Object` | SECTION |
-| [1479](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1479) | `CounterNode::CounterNode` | METHOD |
-| [1497](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1497) | `CounterNode::process` | METHOD |
-| [1558](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1558) | `CounterNode::invokeMethod` | METHOD |
-| [1573](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1573) | `15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering` | SECTION |
-| [1574](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1574) | `OutNode::OutNode` | METHOD |
-| [1596](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1596) | `OutNode::startRecording` | METHOD |
-| [1624](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1624) | `OutNode::stopRecording` | METHOD |
-| [1636](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1636) | `OutNode::process` | METHOD |
-| [1708](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1708) | `OutNode::invokeMethod` | METHOD |
-| [1722](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1722) | `16. [env~] Envelope Follower Node Object` | SECTION |
-| [1723](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1723) | `EnvFollowerNode::EnvFollowerNode` | METHOD |
-| [1734](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1734) | `EnvFollowerNode::process` | METHOD |
-| [1768](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1768) | `17. [tap] Control Signal Wireless Tap Object` | SECTION |
-| [1769](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1769) | `TapControlNode::TapControlNode` | METHOD |
-| [1776](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1776) | `TapControlNode::process` | METHOD |
-| [1793](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1793) | `18. [tap~] Audio Signal Wireless Tap Object` | SECTION |
-| [1794](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1794) | `TapAudioNode::TapAudioNode` | METHOD |
-| [1801](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1801) | `TapAudioNode::process` | METHOD |
-| [1824](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1824) | `19. [v] Value Storage Control Node Object` | SECTION |
-| [1825](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1825) | `ValueNode::ValueNode` | METHOD |
-| [1833](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1833) | `ValueNode::process` | METHOD |
-| [1858](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1858) | `20. [z~] 1-Sample Feedback Delay Node Object` | SECTION |
-| [1859](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1859) | `OneSampleDelayNode::OneSampleDelayNode` | METHOD |
-| [1866](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1866) | `OneSampleDelayNode::process` | METHOD |
-| [1888](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1888) | `21. [snapshot~] Audio-to-Control Snapshot Node Object` | SECTION |
-| [1889](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1889) | `SnapshotNode::SnapshotNode` | METHOD |
-| [1896](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1896) | `SnapshotNode::process` | METHOD |
-| [1915](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1915) | `AddMathNode::AddMathNode` | METHOD |
-| [1923](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1923) | `AddMathNode::process` | METHOD |
-| [1950](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1950) | `MulMathNode::MulMathNode` | METHOD |
-| [1958](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1958) | `MulMathNode::process` | METHOD |
-| [1986](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1986) | `24. [table] Pure Data-Style Named Float Buffer Table Object` | SECTION |
-| [1987](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1987) | `TableNode::TableNode` | METHOD |
-| [1999](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1999) | `TableNode::resize` | METHOD |
-| [2040](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2040) | `TableNode::writeSample` | METHOD |
-| [2050](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2050) | `TableNode::writeSampleNormalized` | METHOD |
-| [2058](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2058) | `TableNode::normalize` | METHOD |
-| [2078](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2078) | `TableNode::generatePreset` | METHOD |
-| [2120](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2120) | `TableNode::process` | METHOD |
-| [2144](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2144) | `TableNode::invokeMethod` | METHOD |
-| [2155](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2155) | `25. [tabwrite~] Sound & Data Recorder Node Object` | SECTION |
-| [2156](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2156) | `TabWriteNode::TabWriteNode` | METHOD |
-| [2165](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2165) | `TabWriteNode::process` | METHOD |
-| [2210](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2210) | `26. [tabread~] Table Reader Node Object` | SECTION |
-| [2211](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2211) | `TabReadNode::TabReadNode` | METHOD |
-| [2218](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2218) | `TabReadNode::process` | METHOD |
-| [2248](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2248) | `27. [tabosc4~] 4-Point Hermite Wavetable Oscillator Node Object` | SECTION |
-| [2249](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2249) | `TabOscNode::TabOscNode` | METHOD |
-| [2259](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2259) | `TabOscNode::process` | METHOD |
-| [2306](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2306) | `28. [svfilter~] Multi-Mode State Variable Filter Node Object` | SECTION |
-| [2307](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2307) | `SvFilterNode::SvFilterNode` | METHOD |
-| [2324](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2324) | `SvFilterNode::process` | METHOD |
-| [2387](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2387) | `29. [drive~] Non-Linear Tube Saturation & Overdrive Node Object` | SECTION |
-| [2388](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2388) | `DriveNode::DriveNode` | METHOD |
-| [2400](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2400) | `DriveNode::process` | METHOD |
-| [2434](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2434) | `30. [reverb~] High-Density Stereo Reverb Node Object` | SECTION |
-| [2435](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2435) | `ReverbNode::ReverbNode` | METHOD |
-| [2449](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2449) | `ReverbNode::prepare` | METHOD |
-| [2455](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2455) | `ReverbNode::process` | METHOD |
-| [2500](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2500) | `31. [crush~] Bit-Crusher & Downsampler Node Object` | SECTION |
-| [2501](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2501) | `CrushNode::CrushNode` | METHOD |
-| [2512](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2512) | `CrushNode::process` | METHOD |
-| [2556](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2556) | `32. [adsr~] 4-Stage ADSR Envelope Generator Node Object` | SECTION |
-| [2557](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2557) | `AdsrNode::AdsrNode` | METHOD |
-| [2569](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2569) | `AdsrNode::prepare` | METHOD |
-| [2575](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2575) | `AdsrNode::process` | METHOD |
-| [2613](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2613) | `4e. [time.future~] Future Lookahead Causality Offset Object` | SECTION |
-| [2614](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2614) | `TimeFutureNode::TimeFutureNode` | METHOD |
-| [2631](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2631) | `TimeFutureNode::process` | METHOD |
-| [2672](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2672) | `TimeFutureNode::invokeMethod` | METHOD |
-| [2691](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2691) | `33. [fbdrum~] / [drum~] Future Bass Drum Synthesizer Node Object Implementation` | SECTION |
-| [2692](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2692) | `FutureBassDrumNode::FutureBassDrumNode` | METHOD |
-| [2715](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2715) | `FutureBassDrumNode::prepare` | METHOD |
-| [2724](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2724) | `FutureBassDrumNode::triggerNote` | METHOD |
-| [2769](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2769) | `FutureBassDrumNode::process` | METHOD |
-| [2951](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2951) | `FutureBassDrumNode::invokeMethod` | METHOD |
+| [357](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L357) | `TimeScopeNode::process` | METHOD |
+| [404](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L404) | `4f. [time.xy] 2D Time & Control Signal XY Oscilloscope Plot Object` | SECTION |
+| [405](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L405) | `TimeXYNode::TimeXYNode` | METHOD |
+| [417](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L417) | `TimeXYNode::process` | METHOD |
+| [455](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L455) | `4g. [spectrometer~] Live Audio Spectrum Visualizer (Logo Gradient Palette)` | SECTION |
+| [456](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L456) | `SpectrometerAudioNode::SpectrometerAudioNode` | METHOD |
+| [468](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L468) | `SpectrometerAudioNode::prepare` | METHOD |
+| [475](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L475) | `SpectrometerAudioNode::process` | METHOD |
+| [515](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L515) | `5. [osc~]` | SECTION |
+| [516](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L516) | `OscNode::OscNode` | METHOD |
+| [573](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L573) | `OscNode::process` | METHOD |
+| [681](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L681) | `OscNode::invokeMethod` | METHOD |
+| [699](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L699) | `5b. [mtof] MIDI Note to Frequency Converter Node Object` | SECTION |
+| [700](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L700) | `MtofNode::MtofNode` | METHOD |
+| [708](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L708) | `MtofNode::process` | METHOD |
+| [729](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L729) | `5c. [ftom] Frequency to MIDI Note Converter Node Object` | SECTION |
+| [730](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L730) | `FtomNode::FtomNode` | METHOD |
+| [738](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L738) | `FtomNode::process` | METHOD |
+| [759](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L759) | `5d. [note] Algorithmic MIDI Note Generator Node Object` | SECTION |
+| [760](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L760) | `NoteGenNode::NoteGenNode` | METHOD |
+| [774](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L774) | `NoteGenNode::process` | METHOD |
+| [803](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L803) | `6. [phasor~]` | SECTION |
+| [804](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L804) | `PhasorNode::PhasorNode` | METHOD |
+| [814](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L814) | `PhasorNode::process` | METHOD |
+| [834](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L834) | `7. [sampler~]` | SECTION |
+| [835](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L835) | `SamplerNode::SamplerNode` | METHOD |
+| [879](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L879) | `SamplerNode::generateSynthSample` | METHOD |
+| [923](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L923) | `SamplerNode::loadAudioFile` | METHOD |
+| [939](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L939) | `SamplerNode::process` | METHOD |
+| [1019](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1019) | `SamplerNode::invokeMethod` | METHOD |
+| [1039](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1039) | `8. [filter~]` | SECTION |
+| [1040](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1040) | `FilterNode::FilterNode` | METHOD |
+| [1052](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1052) | `FilterNode::process` | METHOD |
+| [1076](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1076) | `9. [delay~]` | SECTION |
+| [1077](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1077) | `DelayNode::DelayNode` | METHOD |
+| [1089](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1089) | `DelayNode::prepare` | METHOD |
+| [1096](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1096) | `DelayNode::process` | METHOD |
+| [1292](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1292) | `DacNode::DacNode` | METHOD |
+| [1299](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1299) | `DacNode::process` | METHOD |
+| [1303](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1303) | `ExprNode::ExprNode` | METHOD |
+| [1311](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1311) | `ExprNode::process` | METHOD |
+| [1336](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1336) | `ExprAudioNode::ExprAudioNode` | METHOD |
+| [1344](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1344) | `ExprAudioNode::process` | METHOD |
+| [1363](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1363) | `FexprAudioNode::FexprAudioNode` | METHOD |
+| [1370](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1370) | `FexprAudioNode::process` | METHOD |
+| [1383](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1383) | `14. [gain~] Audio Signal Scaler Node Object` | SECTION |
+| [1384](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1384) | `GainNode::GainNode` | METHOD |
+| [1398](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1398) | `GainNode::prepare` | METHOD |
+| [1407](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1407) | `GainNode::process` | METHOD |
+| [1475](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1475) | `11b. [number] Control Number Box Object` | SECTION |
+| [1476](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1476) | `NumberNode::NumberNode` | METHOD |
+| [1485](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1485) | `NumberNode::process` | METHOD |
+| [1505](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1505) | `11c. [bang] Control Trigger Pulse Object` | SECTION |
+| [1506](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1506) | `BangNode::BangNode` | METHOD |
+| [1514](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1514) | `BangNode::triggerBang` | METHOD |
+| [1519](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1519) | `BangNode::process` | METHOD |
+| [1548](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1548) | `BangNode::invokeMethod` | METHOD |
+| [1553](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1553) | `11d. [bang~] Audio Rate Impulse Spike Object` | SECTION |
+| [1554](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1554) | `BangAudioNode::BangAudioNode` | METHOD |
+| [1562](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1562) | `BangAudioNode::triggerBang` | METHOD |
+| [1567](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1567) | `BangAudioNode::process` | METHOD |
+| [1595](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1595) | `BangAudioNode::invokeMethod` | METHOD |
+| [1600](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1600) | `11e. [counter] Smart Value Counter Object` | SECTION |
+| [1601](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1601) | `CounterNode::CounterNode` | METHOD |
+| [1620](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1620) | `CounterNode::process` | METHOD |
+| [1680](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1680) | `CounterNode::invokeMethod` | METHOD |
+| [1695](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1695) | `15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering` | SECTION |
+| [1696](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1696) | `OutNode::OutNode` | METHOD |
+| [1718](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1718) | `OutNode::startRecording` | METHOD |
+| [1746](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1746) | `OutNode::stopRecording` | METHOD |
+| [1758](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1758) | `OutNode::process` | METHOD |
+| [1830](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1830) | `OutNode::invokeMethod` | METHOD |
+| [1844](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1844) | `16. [env~] Envelope Follower Node Object` | SECTION |
+| [1845](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1845) | `EnvFollowerNode::EnvFollowerNode` | METHOD |
+| [1856](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1856) | `EnvFollowerNode::process` | METHOD |
+| [1890](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1890) | `17. [tap] Control Signal Wireless Tap Object` | SECTION |
+| [1891](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1891) | `TapControlNode::TapControlNode` | METHOD |
+| [1898](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1898) | `TapControlNode::process` | METHOD |
+| [1915](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1915) | `18. [tap~] Audio Signal Wireless Tap Object` | SECTION |
+| [1916](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1916) | `TapAudioNode::TapAudioNode` | METHOD |
+| [1923](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1923) | `TapAudioNode::process` | METHOD |
+| [1946](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1946) | `19. [v] Value Storage Control Node Object` | SECTION |
+| [1947](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1947) | `ValueNode::ValueNode` | METHOD |
+| [1955](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1955) | `ValueNode::process` | METHOD |
+| [1980](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1980) | `20. [z~] 1-Sample Feedback Delay Node Object` | SECTION |
+| [1981](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1981) | `OneSampleDelayNode::OneSampleDelayNode` | METHOD |
+| [1988](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L1988) | `OneSampleDelayNode::process` | METHOD |
+| [2010](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2010) | `21. [snapshot~] Audio-to-Control Snapshot Node Object` | SECTION |
+| [2011](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2011) | `SnapshotNode::SnapshotNode` | METHOD |
+| [2018](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2018) | `SnapshotNode::process` | METHOD |
+| [2037](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2037) | `AddMathNode::AddMathNode` | METHOD |
+| [2047](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2047) | `AddMathNode::parseLabelArguments` | METHOD |
+| [2058](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2058) | `AddMathNode::process` | METHOD |
+| [2095](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2095) | `MulMathNode::MulMathNode` | METHOD |
+| [2105](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2105) | `MulMathNode::parseLabelArguments` | METHOD |
+| [2116](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2116) | `MulMathNode::process` | METHOD |
+| [2152](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2152) | `24. [table] Pure Data-Style Named Float Buffer Table Object` | SECTION |
+| [2153](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2153) | `TableNode::TableNode` | METHOD |
+| [2165](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2165) | `TableNode::resize` | METHOD |
+| [2206](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2206) | `TableNode::writeSample` | METHOD |
+| [2216](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2216) | `TableNode::writeSampleNormalized` | METHOD |
+| [2224](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2224) | `TableNode::normalize` | METHOD |
+| [2244](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2244) | `TableNode::generatePreset` | METHOD |
+| [2286](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2286) | `TableNode::process` | METHOD |
+| [2310](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2310) | `TableNode::invokeMethod` | METHOD |
+| [2321](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2321) | `25. [tabwrite~] Sound & Data Recorder Node Object` | SECTION |
+| [2322](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2322) | `TabWriteNode::TabWriteNode` | METHOD |
+| [2331](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2331) | `TabWriteNode::process` | METHOD |
+| [2376](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2376) | `26. [tabread~] Table Reader Node Object` | SECTION |
+| [2377](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2377) | `TabReadNode::TabReadNode` | METHOD |
+| [2384](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2384) | `TabReadNode::process` | METHOD |
+| [2414](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2414) | `27. [tabosc4~] 4-Point Hermite Wavetable Oscillator Node Object` | SECTION |
+| [2415](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2415) | `TabOscNode::TabOscNode` | METHOD |
+| [2425](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2425) | `TabOscNode::process` | METHOD |
+| [2472](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2472) | `28. [svfilter~] Multi-Mode State Variable Filter Node Object` | SECTION |
+| [2473](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2473) | `SvFilterNode::SvFilterNode` | METHOD |
+| [2490](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2490) | `SvFilterNode::process` | METHOD |
+| [2553](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2553) | `29. [drive~] Non-Linear Tube Saturation & Overdrive Node Object` | SECTION |
+| [2554](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2554) | `DriveNode::DriveNode` | METHOD |
+| [2566](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2566) | `DriveNode::process` | METHOD |
+| [2600](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2600) | `30. [reverb~] High-Density Stereo Reverb Node Object` | SECTION |
+| [2601](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2601) | `ReverbNode::ReverbNode` | METHOD |
+| [2615](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2615) | `ReverbNode::prepare` | METHOD |
+| [2621](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2621) | `ReverbNode::process` | METHOD |
+| [2666](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2666) | `31. [crush~] Bit-Crusher & Downsampler Node Object` | SECTION |
+| [2667](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2667) | `CrushNode::CrushNode` | METHOD |
+| [2678](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2678) | `CrushNode::process` | METHOD |
+| [2722](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2722) | `32. [adsr~] 4-Stage ADSR Envelope Generator Node Object` | SECTION |
+| [2723](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2723) | `AdsrNode::AdsrNode` | METHOD |
+| [2735](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2735) | `AdsrNode::prepare` | METHOD |
+| [2741](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2741) | `AdsrNode::process` | METHOD |
+| [2779](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2779) | `4e. [time.future~] Future Lookahead Causality Offset Object` | SECTION |
+| [2780](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2780) | `TimeFutureNode::TimeFutureNode` | METHOD |
+| [2797](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2797) | `TimeFutureNode::process` | METHOD |
+| [2838](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2838) | `TimeFutureNode::invokeMethod` | METHOD |
+| [2857](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2857) | `33. [fbdrum~] / [drum~] Future Bass Drum Synthesizer Node Object Implementation` | SECTION |
+| [2858](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2858) | `FutureBassDrumNode::FutureBassDrumNode` | METHOD |
+| [2881](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2881) | `FutureBassDrumNode::prepare` | METHOD |
+| [2890](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2890) | `FutureBassDrumNode::triggerNote` | METHOD |
+| [2935](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L2935) | `FutureBassDrumNode::process` | METHOD |
+| [3117](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3117) | `FutureBassDrumNode::invokeMethod` | METHOD |
+| [3129](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3129) | `52. [meter~] Audio Peak & RMS Level VU Meter Object` | SECTION |
+| [3131](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3131) | `VuMeterAudioNode::VuMeterAudioNode` | METHOD |
+| [3140](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3140) | `VuMeterAudioNode::process` | METHOD |
+| [3174](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3174) | `53. [number~] Audio-Rate Sample Monitor Object` | SECTION |
+| [3176](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3176) | `NumberAudioNode::NumberAudioNode` | METHOD |
+| [3184](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3184) | `NumberAudioNode::process` | METHOD |
+| [3205](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3205) | `54. [print] Control & Signal Data Logger Node Object` | SECTION |
+| [3207](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3207) | `PrintMonitorNode::PrintMonitorNode` | METHOD |
+| [3215](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3215) | `PrintMonitorNode::process` | METHOD |
+| [3246](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.cpp#L3246) | `PrintMonitorNode::clearLog` | METHOD |
 
-### [RelativisticNodeObjects.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h) (673 lines)
+### [RelativisticNodeObjects.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h) (772 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
@@ -467,77 +488,88 @@ _No major top-level class or method symbols detected._
 | [87](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L87) | `TimeTransportNode` | CLASS |
 | [107](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L107) | `4e. [time.scope] Relativistic Time Monitor & Telemetry Visualizer Object` | SECTION |
 | [108](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L108) | `TimeScopeNode` | CLASS |
-| [124](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L124) | `5. [osc~] PolyBLEP & Wavetable Polyphonic Synthesizer Oscillator Object` | SECTION |
-| [125](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L125) | `OscNode` | CLASS |
-| [135](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L135) | `Voice` | CLASS |
-| [151](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L151) | `5b. [mtof] MIDI Note to Frequency (Hz) Converter Node Object` | SECTION |
-| [152](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L152) | `MtofNode` | CLASS |
-| [161](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L161) | `5c. [ftom] Frequency (Hz) to MIDI Note Converter Node Object` | SECTION |
-| [162](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L162) | `FtomNode` | CLASS |
-| [171](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L171) | `5d. [note] Algorithmic MIDI Note Generator Node Object` | SECTION |
-| [172](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L172) | `NoteGenNode` | CLASS |
-| [181](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L181) | `6. [phasor~] Dilated Sawtooth Ramp Generator Object` | SECTION |
-| [182](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L182) | `PhasorNode` | CLASS |
-| [193](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L193) | `7. [sampler~] Advanced Hermite Varispeed & Granular Audio Sampler Object` | SECTION |
-| [194](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L194) | `SamplerNode` | CLASS |
-| [215](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L215) | `8. [filter~] 24dB Moog Resonant Lowpass Filter Object` | SECTION |
-| [216](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L216) | `FilterNode` | CLASS |
-| [228](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L228) | `9. [delay~] Delay Line Object` | SECTION |
-| [229](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L229) | `DelayNode` | CLASS |
-| [242](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L242) | `10. [dac~] Audio Master Output DAC Object` | SECTION |
-| [243](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L243) | `DacNode` | CLASS |
-| [252](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L252) | `11. [expr] Pure Data-style Control Expression Object` | SECTION |
-| [253](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L253) | `ExprNode` | CLASS |
-| [262](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L262) | `11b. [number] Control Number Box Object` | SECTION |
-| [263](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L263) | `NumberNode` | CLASS |
-| [272](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L272) | `11c. [bang] Control Trigger Pulse Object` | SECTION |
-| [273](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L273) | `BangNode` | CLASS |
-| [287](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L287) | `11d. [bang~] Audio Rate Impulse Spike Object` | SECTION |
-| [288](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L288) | `BangAudioNode` | CLASS |
-| [302](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L302) | `11e. [counter] Smart Value Counter Object` | SECTION |
-| [303](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L303) | `CounterNode` | CLASS |
-| [320](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L320) | `12. [expr~] Pure Data-style Audio Signal Expression Object` | SECTION |
-| [321](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L321) | `ExprAudioNode` | CLASS |
-| [330](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L330) | `13. [fexpr~] Pure Data-style Filter / Recurrent Audio Expression Object` | SECTION |
-| [331](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L331) | `FexprAudioNode` | CLASS |
-| [343](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L343) | `14. [gain~] Audio Signal Scaler Node Object` | SECTION |
-| [344](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L344) | `GainNode` | CLASS |
-| [359](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L359) | `15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering` | SECTION |
-| [360](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L360) | `OutNode` | CLASS |
-| [401](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L401) | `16. [env~] Envelope Follower Node Object` | SECTION |
-| [402](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L402) | `EnvFollowerNode` | CLASS |
-| [413](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L413) | `17. [tap] Control Signal Wireless Tap Object` | SECTION |
-| [414](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L414) | `TapControlNode` | CLASS |
-| [423](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L423) | `18. [tap~] Audio Signal Wireless Tap Object` | SECTION |
-| [424](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L424) | `TapAudioNode` | CLASS |
-| [433](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L433) | `19. [v] Value Storage Control Node Object` | SECTION |
-| [434](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L434) | `ValueNode` | CLASS |
-| [445](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L445) | `20. [z~] 1-Sample Feedback Delay Node Object` | SECTION |
-| [446](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L446) | `OneSampleDelayNode` | CLASS |
-| [458](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L458) | `21. [snapshot~] Audio-to-Control Snapshot Node Object` | SECTION |
-| [459](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L459) | `SnapshotNode` | CLASS |
-| [469](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L469) | `AddMathNode` | CLASS |
-| [479](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L479) | `MulMathNode` | CLASS |
-| [488](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L488) | `24. [table] Relativistic Named Float Buffer Table Object` | SECTION |
-| [489](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L489) | `TableNode` | CLASS |
-| [521](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L521) | `25. [tabwrite~] Sound & Data Recorder Node Object` | SECTION |
-| [522](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L522) | `TabWriteNode` | CLASS |
-| [534](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L534) | `26. [tabread~] Table Reader Node Object` | SECTION |
-| [535](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L535) | `TabReadNode` | CLASS |
-| [544](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L544) | `27. [tabosc4~] 4-Point Hermite Wavetable Oscillator Node Object` | SECTION |
-| [545](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L545) | `TabOscNode` | CLASS |
-| [556](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L556) | `28. [svfilter~] Multi-Mode State Variable Filter Node Object` | SECTION |
-| [557](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L557) | `SvFilterNode` | CLASS |
-| [569](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L569) | `29. [drive~] Non-Linear Tube Saturation & Overdrive Node Object` | SECTION |
-| [570](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L570) | `DriveNode` | CLASS |
-| [579](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L579) | `30. [reverb~] High-Density Stereo Reverb Node Object` | SECTION |
-| [580](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L580) | `ReverbNode` | CLASS |
-| [593](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L593) | `31. [crush~] Bit-Crusher & Downsampler Node Object` | SECTION |
-| [594](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L594) | `CrushNode` | CLASS |
-| [607](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L607) | `32. [adsr~] 4-Stage ADSR Envelope Generator Node Object` | SECTION |
-| [608](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L608) | `AdsrNode` | CLASS |
-| [622](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L622) | `33. [fbdrum~] / [drum~] Future Bass Drum Synthesizer Node Object` | SECTION |
-| [623](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L623) | `FutureBassDrumNode` | CLASS |
+| [127](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L127) | `Point2D` | CLASS |
+| [129](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L129) | `4f. [time.xy] 2D Time & Control Signal XY Oscilloscope Plot Object` | SECTION |
+| [130](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L130) | `TimeXYNode` | CLASS |
+| [145](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L145) | `4g. [spectrometer~] Live Audio Spectrum Visualizer (Logo Gradient Palette)` | SECTION |
+| [146](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L146) | `SpectrometerAudioNode` | CLASS |
+| [165](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L165) | `5. [osc~] PolyBLEP & Wavetable Polyphonic Synthesizer Oscillator Object` | SECTION |
+| [166](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L166) | `OscNode` | CLASS |
+| [176](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L176) | `Voice` | CLASS |
+| [192](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L192) | `5b. [mtof] MIDI Note to Frequency (Hz) Converter Node Object` | SECTION |
+| [193](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L193) | `MtofNode` | CLASS |
+| [202](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L202) | `5c. [ftom] Frequency (Hz) to MIDI Note Converter Node Object` | SECTION |
+| [203](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L203) | `FtomNode` | CLASS |
+| [212](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L212) | `5d. [note] Algorithmic MIDI Note Generator Node Object` | SECTION |
+| [213](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L213) | `NoteGenNode` | CLASS |
+| [222](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L222) | `6. [phasor~] Dilated Sawtooth Ramp Generator Object` | SECTION |
+| [223](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L223) | `PhasorNode` | CLASS |
+| [234](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L234) | `7. [sampler~] Advanced Hermite Varispeed & Granular Audio Sampler Object` | SECTION |
+| [235](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L235) | `SamplerNode` | CLASS |
+| [256](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L256) | `8. [filter~] 24dB Moog Resonant Lowpass Filter Object` | SECTION |
+| [257](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L257) | `FilterNode` | CLASS |
+| [269](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L269) | `9. [delay~] Delay Line Object` | SECTION |
+| [270](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L270) | `DelayNode` | CLASS |
+| [283](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L283) | `10. [dac~] Audio Master Output DAC Object` | SECTION |
+| [284](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L284) | `DacNode` | CLASS |
+| [293](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L293) | `11. [expr] Pure Data-style Control Expression Object` | SECTION |
+| [294](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L294) | `ExprNode` | CLASS |
+| [303](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L303) | `11b. [number] Control Number Box Object` | SECTION |
+| [304](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L304) | `NumberNode` | CLASS |
+| [313](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L313) | `11c. [bang] Control Trigger Pulse Object` | SECTION |
+| [314](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L314) | `BangNode` | CLASS |
+| [328](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L328) | `11d. [bang~] Audio Rate Impulse Spike Object` | SECTION |
+| [329](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L329) | `BangAudioNode` | CLASS |
+| [343](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L343) | `11e. [counter] Smart Value Counter Object` | SECTION |
+| [344](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L344) | `CounterNode` | CLASS |
+| [361](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L361) | `12. [expr~] Pure Data-style Audio Signal Expression Object` | SECTION |
+| [362](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L362) | `ExprAudioNode` | CLASS |
+| [371](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L371) | `13. [fexpr~] Pure Data-style Filter / Recurrent Audio Expression Object` | SECTION |
+| [372](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L372) | `FexprAudioNode` | CLASS |
+| [384](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L384) | `14. [gain~] Audio Signal Scaler Node Object` | SECTION |
+| [385](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L385) | `GainNode` | CLASS |
+| [400](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L400) | `15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering` | SECTION |
+| [401](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L401) | `OutNode` | CLASS |
+| [442](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L442) | `16. [env~] Envelope Follower Node Object` | SECTION |
+| [443](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L443) | `EnvFollowerNode` | CLASS |
+| [454](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L454) | `17. [tap] Control Signal Wireless Tap Object` | SECTION |
+| [455](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L455) | `TapControlNode` | CLASS |
+| [464](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L464) | `18. [tap~] Audio Signal Wireless Tap Object` | SECTION |
+| [465](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L465) | `TapAudioNode` | CLASS |
+| [474](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L474) | `19. [v] Value Storage Control Node Object` | SECTION |
+| [475](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L475) | `ValueNode` | CLASS |
+| [486](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L486) | `20. [z~] 1-Sample Feedback Delay Node Object` | SECTION |
+| [487](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L487) | `OneSampleDelayNode` | CLASS |
+| [499](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L499) | `21. [snapshot~] Audio-to-Control Snapshot Node Object` | SECTION |
+| [500](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L500) | `SnapshotNode` | CLASS |
+| [510](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L510) | `AddMathNode` | CLASS |
+| [521](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L521) | `MulMathNode` | CLASS |
+| [531](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L531) | `24. [table] Relativistic Named Float Buffer Table Object` | SECTION |
+| [532](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L532) | `TableNode` | CLASS |
+| [564](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L564) | `25. [tabwrite~] Sound & Data Recorder Node Object` | SECTION |
+| [565](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L565) | `TabWriteNode` | CLASS |
+| [577](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L577) | `26. [tabread~] Table Reader Node Object` | SECTION |
+| [578](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L578) | `TabReadNode` | CLASS |
+| [587](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L587) | `27. [tabosc4~] 4-Point Hermite Wavetable Oscillator Node Object` | SECTION |
+| [588](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L588) | `TabOscNode` | CLASS |
+| [599](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L599) | `28. [svfilter~] Multi-Mode State Variable Filter Node Object` | SECTION |
+| [600](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L600) | `SvFilterNode` | CLASS |
+| [612](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L612) | `29. [drive~] Non-Linear Tube Saturation & Overdrive Node Object` | SECTION |
+| [613](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L613) | `DriveNode` | CLASS |
+| [622](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L622) | `30. [reverb~] High-Density Stereo Reverb Node Object` | SECTION |
+| [623](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L623) | `ReverbNode` | CLASS |
+| [636](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L636) | `31. [crush~] Bit-Crusher & Downsampler Node Object` | SECTION |
+| [637](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L637) | `CrushNode` | CLASS |
+| [650](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L650) | `32. [adsr~] 4-Stage ADSR Envelope Generator Node Object` | SECTION |
+| [651](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L651) | `AdsrNode` | CLASS |
+| [665](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L665) | `33. [fbdrum~] / [drum~] Future Bass Drum Synthesizer Node Object` | SECTION |
+| [666](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L666) | `FutureBassDrumNode` | CLASS |
+| [717](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L717) | `52. [meter~] Audio Peak & RMS Level VU Meter Object` | SECTION |
+| [719](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L719) | `VuMeterAudioNode` | CLASS |
+| [736](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L736) | `53. [number~] Audio-Rate Sample Monitor Object` | SECTION |
+| [738](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L738) | `NumberAudioNode` | CLASS |
+| [753](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L753) | `54. [print] Control & Signal Data Logger Node Object` | SECTION |
+| [755](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h#L755) | `PrintMonitorNode` | CLASS |
 
 ### [RelativisticSequencers.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.cpp) (1040 lines)
 
@@ -572,22 +604,22 @@ _No major top-level class or method symbols detected._
 | [913](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.cpp#L913) | `DrumSequencerNode::process` | METHOD |
 | [1029](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.cpp#L1029) | `DrumSequencerNode::invokeMethod` | METHOD |
 
-### [RelativisticSequencers.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h) (171 lines)
+### [RelativisticSequencers.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h) (175 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
 | [11](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L11) | `1. [seq] / [step] Step Sequencer Node` | SECTION |
 | [13](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L13) | `StepSequencerNode` | CLASS |
-| [38](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L38) | `2. [euclid] Euclidean Rhythm Generator` | SECTION |
-| [40](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L40) | `EuclideanSequencerNode` | CLASS |
-| [68](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L68) | `3. [markov] Generative Markov Chain Sequencer` | SECTION |
-| [70](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L70) | `MarkovSequencerNode` | CLASS |
-| [92](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L92) | `4. [tidal] TidalCycles-Style Mini-Notation Sequencer` | SECTION |
-| [94](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L94) | `TidalEvent` | CLASS |
-| [108](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L108) | `TidalPatternSequencerNode` | CLASS |
-| [134](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L134) | `5. [drumseq] Multi-Track Future Bass Drum Sequencer` | SECTION |
-| [136](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L136) | `DrumStep` | CLASS |
-| [148](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L148) | `DrumSequencerNode` | CLASS |
+| [42](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L42) | `2. [euclid] Euclidean Rhythm Generator` | SECTION |
+| [44](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L44) | `EuclideanSequencerNode` | CLASS |
+| [72](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L72) | `3. [markov] Generative Markov Chain Sequencer` | SECTION |
+| [74](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L74) | `MarkovSequencerNode` | CLASS |
+| [96](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L96) | `4. [tidal] TidalCycles-Style Mini-Notation Sequencer` | SECTION |
+| [98](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L98) | `TidalEvent` | CLASS |
+| [112](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L112) | `TidalPatternSequencerNode` | CLASS |
+| [138](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L138) | `5. [drumseq] Multi-Track Future Bass Drum Sequencer` | SECTION |
+| [140](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L140) | `DrumStep` | CLASS |
+| [152](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L152) | `DrumSequencerNode` | CLASS |
 
 ### [RelativisticTimeline.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp) (294 lines)
 
@@ -827,44 +859,47 @@ _No major top-level class or method symbols detected._
 | [9](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/PianoRollComponent.h#L9) | `PianoRollNote` | CLASS |
 | [17](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/PianoRollComponent.h#L17) | `PianoRollComponent` | CLASS |
 
-### [RelativisticCanvasComponent.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp) (2911 lines)
+### [RelativisticCanvasComponent.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp) (3262 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
 | [13](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L13) | `RelativisticLookAndFeel::RelativisticLookAndFeel` | METHOD |
 | [91](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L91) | `RelativisticCanvasComponent::RelativisticCanvasComponent` | METHOD |
-| [374](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L374) | `RelativisticCanvasComponent::showHelpDialog` | METHOD |
-| [379](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L379) | `RelativisticCanvasComponent::showMenuFile` | METHOD |
-| [424](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L424) | `RelativisticCanvasComponent::showMenuEdit` | METHOD |
-| [456](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L456) | `RelativisticCanvasComponent::showMenuView` | METHOD |
-| [518](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L518) | `RelativisticCanvasComponent::showMenuObjects` | METHOD |
-| [659](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L659) | `RelativisticCanvasComponent::showMenuAudio` | METHOD |
-| [764](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L764) | `RelativisticCanvasComponent::showMenuHelp` | METHOD |
-| [907](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L907) | `RelativisticCanvasComponent::initObjectCatalog` | METHOD |
-| [979](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L979) | `RelativisticCanvasComponent::spawnInlineObjectEditor` | METHOD |
-| [1046](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1046) | `RelativisticCanvasComponent::destroyDraftObjectEditor` | METHOD |
-| [1059](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1059) | `RelativisticCanvasComponent::updateAutocompleteFilter` | METHOD |
-| [1087](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1087) | `RelativisticCanvasComponent::commitDraftObject` | METHOD |
-| [1137](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1137) | `RelativisticCanvasComponent::showObjectSearchMenu` | METHOD |
-| [1259](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1259) | `RelativisticCanvasComponent::rebuildInspector` | METHOD |
-| [1365](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1365) | `RelativisticCanvasComponent::keyPressed` | METHOD |
-| [1628](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1628) | `RelativisticCanvasComponent::timerCallback` | METHOD |
-| [1694](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1694) | `RelativisticCanvasComponent::setZoomLevel` | METHOD |
-| [1712](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1712) | `RelativisticCanvasComponent::zoomIn` | METHOD |
-| [1717](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1717) | `RelativisticCanvasComponent::zoomOut` | METHOD |
-| [1722](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1722) | `RelativisticCanvasComponent::resetZoom` | METHOD |
-| [1728](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1728) | `RelativisticCanvasComponent::mouseWheelMove` | METHOD |
-| [1743](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1743) | `RelativisticCanvasComponent::mouseDown` | METHOD |
-| [1914](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1914) | `RelativisticCanvasComponent::mouseDoubleClick` | METHOD |
-| [1961](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1961) | `RelativisticCanvasComponent::mouseDrag` | METHOD |
-| [2069](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2069) | `RelativisticCanvasComponent::mouseUp` | METHOD |
-| [2107](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2107) | `RelativisticCanvasComponent::mouseMove` | METHOD |
-| [2190](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2190) | `RelativisticCanvasComponent::drawCable` | METHOD |
-| [2256](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2256) | `RelativisticCanvasComponent::drawNode` | METHOD |
-| [2631](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2631) | `RelativisticCanvasComponent::paint` | METHOD |
-| [2809](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2809) | `RelativisticCanvasComponent::resized` | METHOD |
+| [359](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L359) | `RelativisticCanvasComponent::showHelpDialog` | METHOD |
+| [364](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L364) | `RelativisticCanvasComponent::savePatchAs` | METHOD |
+| [383](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L383) | `RelativisticCanvasComponent::savePatch` | METHOD |
+| [395](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L395) | `RelativisticCanvasComponent::loadPatch` | METHOD |
+| [413](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L413) | `RelativisticCanvasComponent::showMenuFile` | METHOD |
+| [468](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L468) | `RelativisticCanvasComponent::showMenuEdit` | METHOD |
+| [500](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L500) | `RelativisticCanvasComponent::showMenuView` | METHOD |
+| [562](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L562) | `RelativisticCanvasComponent::showMenuObjects` | METHOD |
+| [703](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L703) | `RelativisticCanvasComponent::showMenuAudio` | METHOD |
+| [808](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L808) | `RelativisticCanvasComponent::showMenuHelp` | METHOD |
+| [951](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L951) | `RelativisticCanvasComponent::initObjectCatalog` | METHOD |
+| [1027](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1027) | `RelativisticCanvasComponent::spawnInlineObjectEditor` | METHOD |
+| [1094](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1094) | `RelativisticCanvasComponent::destroyDraftObjectEditor` | METHOD |
+| [1107](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1107) | `RelativisticCanvasComponent::updateAutocompleteFilter` | METHOD |
+| [1135](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1135) | `RelativisticCanvasComponent::commitDraftObject` | METHOD |
+| [1190](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1190) | `RelativisticCanvasComponent::showObjectSearchMenu` | METHOD |
+| [1312](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1312) | `RelativisticCanvasComponent::rebuildInspector` | METHOD |
+| [1533](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1533) | `RelativisticCanvasComponent::keyPressed` | METHOD |
+| [1787](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1787) | `RelativisticCanvasComponent::timerCallback` | METHOD |
+| [1879](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1879) | `RelativisticCanvasComponent::setZoomLevel` | METHOD |
+| [1897](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1897) | `RelativisticCanvasComponent::zoomIn` | METHOD |
+| [1902](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1902) | `RelativisticCanvasComponent::zoomOut` | METHOD |
+| [1907](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1907) | `RelativisticCanvasComponent::resetZoom` | METHOD |
+| [1913](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1913) | `RelativisticCanvasComponent::mouseWheelMove` | METHOD |
+| [1928](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L1928) | `RelativisticCanvasComponent::mouseDown` | METHOD |
+| [2141](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2141) | `RelativisticCanvasComponent::mouseDoubleClick` | METHOD |
+| [2206](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2206) | `RelativisticCanvasComponent::mouseDrag` | METHOD |
+| [2314](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2314) | `RelativisticCanvasComponent::mouseUp` | METHOD |
+| [2352](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2352) | `RelativisticCanvasComponent::mouseMove` | METHOD |
+| [2435](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2435) | `RelativisticCanvasComponent::drawCable` | METHOD |
+| [2501](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2501) | `RelativisticCanvasComponent::drawNode` | METHOD |
+| [2922](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L2922) | `RelativisticCanvasComponent::paint` | METHOD |
+| [3100](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.cpp#L3100) | `RelativisticCanvasComponent::resized` | METHOD |
 
-### [RelativisticCanvasComponent.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h) (203 lines)
+### [RelativisticCanvasComponent.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h) (221 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
@@ -873,6 +908,7 @@ _No major top-level class or method symbols detected._
 | [73](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h#L73) | `HoveredPortInfo` | CLASS |
 | [146](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h#L146) | `AutocompleteItem` | CLASS |
 | [174](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h#L174) | `InspectorPropertyRow` | CLASS |
+| [184](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticCanvasComponent.h#L184) | `InspectorConnectionRow` | CLASS |
 
 ### [RelativisticDAWWorkstation.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/gui/RelativisticDAWWorkstation.cpp) (401 lines)
 

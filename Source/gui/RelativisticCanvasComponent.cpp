@@ -207,25 +207,10 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
     };
 
     addAndMakeVisible (btnSavePatch);
-    btnSavePatch.onClick = [this] {
-        auto desktop = juce::File::getSpecialLocation (juce::File::userDesktopDirectory);
-        auto patchFile = desktop.getChildFile ("MyRelativisticPatch.relpatch");
-        if (nodeGraph.saveProjectToFile (patchFile))
-        {
-            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, "PATCH SAVED", "Saved patch file to: " + patchFile.getFullPathName());
-        }
-    };
+    btnSavePatch.onClick = [this] { savePatch(); };
 
     addAndMakeVisible (btnLoadPatch);
-    btnLoadPatch.onClick = [this] {
-        auto desktop = juce::File::getSpecialLocation (juce::File::userDesktopDirectory);
-        auto patchFile = desktop.getChildFile ("MyRelativisticPatch.relpatch");
-        if (nodeGraph.loadProjectFromFile (patchFile))
-        {
-            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, "PATCH LOADED", "Loaded patch file from: " + patchFile.getFullPathName());
-            repaint();
-        }
-    };
+    btnLoadPatch.onClick = [this] { loadPatch(); };
 
     // Dual Inspector Tab Switches
     addAndMakeVisible (inspectorTitleLabel);
@@ -376,6 +361,55 @@ void RelativisticCanvasComponent::showHelpDialog (const juce::String& topic, con
     juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, topic, content);
 }
 
+void RelativisticCanvasComponent::savePatchAs()
+{
+    auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project File As...",
+                                                   juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                                   "*.tdaw;*.tdawproj");
+    fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
+        [this, fc] (const juce::FileChooser& chooser) {
+            auto result = chooser.getResult();
+            if (result != juce::File())
+            {
+                if (result.getFileExtension().isEmpty())
+                    result = result.withFileExtension ("tdaw");
+
+                ProjectFileManager::getInstance().saveProjectBundle (result, nodeGraph);
+                currentProjectFile = result;
+            }
+        });
+}
+
+void RelativisticCanvasComponent::savePatch()
+{
+    if (currentProjectFile.existsAsFile())
+    {
+        ProjectFileManager::getInstance().saveProjectBundle (currentProjectFile, nodeGraph);
+    }
+    else
+    {
+        savePatchAs();
+    }
+}
+
+void RelativisticCanvasComponent::loadPatch()
+{
+    auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project File...",
+                                                   juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                                   "*.tdaw;*.tdawproj;project.xml");
+    fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectDirectories,
+        [this, fc] (const juce::FileChooser& chooser) {
+            auto result = chooser.getResult();
+            if (result != juce::File())
+            {
+                ProjectFileManager::getInstance().loadProjectBundle (result, nodeGraph);
+                currentProjectFile = result;
+                rebuildInspector();
+                repaint();
+            }
+        });
+}
+
 void RelativisticCanvasComponent::showMenuFile()
 {
     juce::PopupMenu m;
@@ -397,6 +431,8 @@ void RelativisticCanvasComponent::showMenuFile()
             if (result == 1)
             {
                 nodeGraph.clearGraph();
+                currentProjectFile = juce::File();
+                rebuildInspector();
                 repaint();
             }
             else if (result == 5)
@@ -406,9 +442,17 @@ void RelativisticCanvasComponent::showMenuFile()
                         appInstance->anotherInstanceStarted ("");
                 });
             }
-            else if (result == 2 || result == 3 || result == 4)
+            else if (result == 2)
             {
-                btnSavePatch.triggerClick();
+                loadPatch();
+            }
+            else if (result == 3)
+            {
+                savePatch();
+            }
+            else if (result == 4)
+            {
+                savePatchAs();
             }
             else if (result == 10)
             {
@@ -916,9 +960,13 @@ void RelativisticCanvasComponent::initObjectCatalog()
         { "time.transport", "Relativistic Master Transport Hub (BPM Clock)", "TIME" },
         { "time.metro~", "Dilated Metronome Pulse Spiker", "TIME" },
         { "time.scope", "Relativistic Time & Telemetry Visualizer Monitor", "TIME" },
+        { "time.xy", "2D Time Signal XY Vector Oscilloscope Plot", "TIME" },
         { "time.future~", "Future Lookahead Causality Offset Engine", "TIME" },
 
         // Audio & DSP Generators & Processors
+        { "spectrometer~", "Live Audio Spectrum Visualizer (Logo Gradient)", "DSP" },
+        { "spectrum~", "Audio Frequency Spectrometer Visualizer", "DSP" },
+        { "fft~", "Fast Fourier Transform Audio Analyzer", "DSP" },
         { "osc~", "Sine/Saw/Square Varispeed Oscillator", "DSP" },
         { "phasor~", "Linear Ramp Audio Phase Generator", "DSP" },
         { "sampler~", "Varispeed Audio Sampler & Loop Player", "DSP" },
@@ -1099,6 +1147,11 @@ void RelativisticCanvasComponent::commitDraftObject()
     juce::StringArray tokens;
     tokens.addTokens (fullText, " ", "");
     std::string typeToken = tokens[0].toStdString();
+
+    if (selectedAutocompleteIdx >= 0 && selectedAutocompleteIdx < static_cast<int>(filteredAutocompleteItems.size()))
+    {
+        typeToken = filteredAutocompleteItems[selectedAutocompleteIdx].typeName;
+    }
 
     if (!RelativisticNodeGraph::isValidObjectType (typeToken))
     {
@@ -1288,8 +1341,10 @@ void RelativisticCanvasComponent::rebuildInspector()
 
         row.slider = std::make_unique<juce::Slider>();
         row.slider->setSliderStyle (juce::Slider::LinearHorizontal);
-        row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 55, 18);
-        row.slider->setRange (def.minValue, def.maxValue, 0.1);
+        row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 65, 18);
+        float minR = std::min (-99999.0f, def.minValue);
+        float maxR = std::max (99999.0f, def.maxValue);
+        row.slider->setRange (minR, maxR, 0.01);
         row.slider->setValue (def.value);
         row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
             auto n = nodeGraph.getNodeById (primaryId);
@@ -1311,15 +1366,21 @@ void RelativisticCanvasComponent::rebuildInspector()
         };
         addAndMakeVisible (*row.exprEditor);
 
-        row.btnModInlet = std::make_unique<juce::TextButton> (def.modInletIdx >= 0 ? "[MODDED]" : "+ MOD INLET");
-        row.btnModInlet->onClick = [this, primaryId, paramKey] {
-            auto n = nodeGraph.getNodeById (primaryId);
-            if (n)
+        bool hasMod = node->hasModulationInlet (paramKey);
+        row.btnModInlet = std::make_unique<juce::TextButton> (hasMod ? "[- REMOVE MOD]" : "+ MOD INLET");
+        row.btnModInlet->setColour (juce::TextButton::buttonColourId, hasMod ? juce::Colour (0xff991b1b) : juce::Colour (0xff0e7490));
+        row.btnModInlet->onClick = [this, primaryId, paramKey, hasMod] {
+            if (hasMod)
             {
-                n->addModulationInlet (paramKey);
-                rebuildInspector();
-                repaint();
+                nodeGraph.removeModulationInlet (primaryId, paramKey);
             }
+            else
+            {
+                auto n = nodeGraph.getNodeById (primaryId);
+                if (n) n->addModulationInlet (paramKey);
+            }
+            rebuildInspector();
+            repaint();
         };
         addAndMakeVisible (*row.btnModInlet);
 
@@ -1359,6 +1420,113 @@ void RelativisticCanvasComponent::rebuildInspector()
         methodButtons.push_back (std::move (btn));
     }
 
+    // Populate INCOMING and OUTGOING connection sections
+    connectionRows.clear();
+
+    incomingSectionHeader = std::make_unique<juce::Label>();
+    incomingSectionHeader->setText ("INCOMING CONNECTIONS (FROM):", juce::dontSendNotification);
+    incomingSectionHeader->setFont (juce::FontOptions (12.0f, juce::Font::bold));
+    incomingSectionHeader->setColour (juce::Label::textColourId, juce::Colour (0xff06b6d4));
+    addAndMakeVisible (*incomingSectionHeader);
+
+    outgoingSectionHeader = std::make_unique<juce::Label>();
+    outgoingSectionHeader->setText ("OUTGOING CONNECTIONS (TO):", juce::dontSendNotification);
+    outgoingSectionHeader->setFont (juce::FontOptions (12.0f, juce::Font::bold));
+    outgoingSectionHeader->setColour (juce::Label::textColourId, juce::Colour (0xff8b5cf6));
+    addAndMakeVisible (*outgoingSectionHeader);
+
+    int incCount = 0;
+    for (const auto& conn : nodeGraph.getConnections())
+    {
+        if (conn.destNodeId == primaryId)
+        {
+            incCount++;
+            InspectorConnectionRow r;
+            r.connectionId = conn.id;
+            r.isIncoming = true;
+
+            auto srcNode = nodeGraph.getNodeById (conn.sourceNodeId);
+            std::string srcName = srcNode ? srcNode->getLabel() : "node";
+            std::string inPortName = (conn.destInletIdx >= 0 && conn.destInletIdx < static_cast<int>(node->getInlets().size())) ? node->getInlets()[conn.destInletIdx].name : std::to_string(conn.destInletIdx);
+
+            r.label = std::make_unique<juce::Label>();
+            r.label->setText ("FROM [" + srcName + "] out" + std::to_string(conn.sourceOutletIdx) + " -> in" + std::to_string(conn.destInletIdx) + " (" + inPortName + ")", juce::dontSendNotification);
+            r.label->setFont (juce::FontOptions (11.0f));
+            addAndMakeVisible (*r.label);
+
+            int cid = conn.id;
+            r.btnRemoveWire = std::make_unique<juce::TextButton> ("[REMOVE]");
+            r.btnRemoveWire->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff991b1b));
+            r.btnRemoveWire->onClick = [this, cid] {
+                nodeGraph.pushUndoState();
+                nodeGraph.removeConnection (cid);
+                rebuildInspector();
+                repaint();
+            };
+            addAndMakeVisible (*r.btnRemoveWire);
+
+            connectionRows.push_back (std::move (r));
+        }
+    }
+
+    if (incCount == 0)
+    {
+        InspectorConnectionRow r;
+        r.label = std::make_unique<juce::Label>();
+        r.label->setText (" (No incoming connections)", juce::dontSendNotification);
+        r.label->setFont (juce::FontOptions (10.5f, juce::Font::italic));
+        r.label->setColour (juce::Label::textColourId, juce::Colours::grey);
+        addAndMakeVisible (*r.label);
+        r.isIncoming = true;
+        connectionRows.push_back (std::move (r));
+    }
+
+    int outCount = 0;
+    for (const auto& conn : nodeGraph.getConnections())
+    {
+        if (conn.sourceNodeId == primaryId)
+        {
+            outCount++;
+            InspectorConnectionRow r;
+            r.connectionId = conn.id;
+            r.isIncoming = false;
+
+            auto destNode = nodeGraph.getNodeById (conn.destNodeId);
+            std::string destName = destNode ? destNode->getLabel() : "node";
+            std::string outPortName = (conn.sourceOutletIdx >= 0 && conn.sourceOutletIdx < static_cast<int>(node->getOutlets().size())) ? node->getOutlets()[conn.sourceOutletIdx].name : std::to_string(conn.sourceOutletIdx);
+
+            r.label = std::make_unique<juce::Label>();
+            r.label->setText ("TO [" + destName + "] out" + std::to_string(conn.sourceOutletIdx) + " (" + outPortName + ") -> in" + std::to_string(conn.destInletIdx), juce::dontSendNotification);
+            r.label->setFont (juce::FontOptions (11.0f));
+            addAndMakeVisible (*r.label);
+
+            int cid = conn.id;
+            r.btnRemoveWire = std::make_unique<juce::TextButton> ("[REMOVE]");
+            r.btnRemoveWire->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff991b1b));
+            r.btnRemoveWire->onClick = [this, cid] {
+                nodeGraph.pushUndoState();
+                nodeGraph.removeConnection (cid);
+                rebuildInspector();
+                repaint();
+            };
+            addAndMakeVisible (*r.btnRemoveWire);
+
+            connectionRows.push_back (std::move (r));
+        }
+    }
+
+    if (outCount == 0)
+    {
+        InspectorConnectionRow r;
+        r.label = std::make_unique<juce::Label>();
+        r.label->setText (" (No outgoing connections)", juce::dontSendNotification);
+        r.label->setFont (juce::FontOptions (10.5f, juce::Font::italic));
+        r.label->setColour (juce::Label::textColourId, juce::Colours::grey);
+        addAndMakeVisible (*r.label);
+        r.isIncoming = false;
+        connectionRows.push_back (std::move (r));
+    }
+
     resized();
 }
 
@@ -1377,6 +1545,11 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
             if (!filteredAutocompleteItems.empty())
             {
                 selectedAutocompleteIdx = (selectedAutocompleteIdx + 1) % static_cast<int>(filteredAutocompleteItems.size());
+                if (draftObjectEditor && selectedAutocompleteIdx >= 0 && selectedAutocompleteIdx < static_cast<int>(filteredAutocompleteItems.size()))
+                {
+                    draftObjectEditor->setText (filteredAutocompleteItems[selectedAutocompleteIdx].typeName + " ");
+                    draftObjectEditor->setCaretPosition (draftObjectEditor->getText().length());
+                }
                 repaint();
                 return true;
             }
@@ -1386,6 +1559,11 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
             if (!filteredAutocompleteItems.empty())
             {
                 selectedAutocompleteIdx = (selectedAutocompleteIdx - 1 + static_cast<int>(filteredAutocompleteItems.size())) % static_cast<int>(filteredAutocompleteItems.size());
+                if (draftObjectEditor && selectedAutocompleteIdx >= 0 && selectedAutocompleteIdx < static_cast<int>(filteredAutocompleteItems.size()))
+                {
+                    draftObjectEditor->setText (filteredAutocompleteItems[selectedAutocompleteIdx].typeName + " ");
+                    draftObjectEditor->setCaretPosition (draftObjectEditor->getText().length());
+                }
                 repaint();
                 return true;
             }
@@ -1526,39 +1704,20 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
         return true;
     }
 
-    // Save Project Bundle (Cmd+S / Ctrl+S)
+    // Save Project File (Cmd+Shift+S for Save As, Cmd+S for Save)
     if (isCmdOrCtrl && (key.getKeyCode() == 'S' || key.getKeyCode() == 's'))
     {
-        auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project Bundle",
-                                                       juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                       "*.tdaw;*.tdawproj");
-        fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectDirectories,
-            [this, fc] (const juce::FileChooser& chooser) {
-                auto result = chooser.getResult();
-                if (result != juce::File())
-                {
-                    ProjectFileManager::getInstance().saveProjectBundle (result, nodeGraph);
-                }
-            });
+        if (key.getModifiers().isShiftDown())
+            savePatchAs();
+        else
+            savePatch();
         return true;
     }
 
-    // Open Project Bundle (Cmd+O / Ctrl+O)
+    // Open Project File (Cmd+O / Ctrl+O)
     if (isCmdOrCtrl && (key.getKeyCode() == 'O' || key.getKeyCode() == 'o'))
     {
-        auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project Bundle",
-                                                       juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                       "*.tdaw;*.tdawproj;project.xml");
-        fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectDirectories,
-            [this, fc] (const juce::FileChooser& chooser) {
-                auto result = chooser.getResult();
-                if (result != juce::File())
-                {
-                    ProjectFileManager::getInstance().loadProjectBundle (result, nodeGraph);
-                    rebuildInspector();
-                    repaint();
-                }
-            });
+        loadPatch();
         return true;
     }
 
@@ -1630,16 +1789,26 @@ void RelativisticCanvasComponent::timerCallback()
     double hzSec = nodeGraph.getCurrentCausalityHorizonSec();
     btnHorizonReadout.setButtonText ("HORIZON: +" + juce::String (hzSec, 3) + "s");
     repaint();
-}
-
-float RelativisticCanvasComponent::getNodeWidth (const RelativisticNode& node) const
+}float RelativisticCanvasComponent::getNodeWidth (const RelativisticNode& node) const
 {
     if (node.getTypeName() == "time.scope" || node.getTypeName() == "time.display" || node.getTypeName() == "time.monitor")
         return 190.0f;
+    if (node.getTypeName() == "time.xy" || node.getTypeName() == "xy" || node.getTypeName() == "xy~" || node.getTypeName() == "plot.xy")
+        return 190.0f;
+    if (node.getTypeName() == "spectrometer~" || node.getTypeName() == "spectrum~" || node.getTypeName() == "fft~")
+        return 220.0f;
     if (node.getTypeName() == "table")
         return 180.0f;
     if (node.getTypeName() == "out~" || node.getTypeName() == "out")
         return 210.0f;
+    if (node.getTypeName() == "seq" || node.getTypeName() == "step")
+        return 240.0f;
+    if (node.getTypeName() == "meter~" || node.getTypeName() == "vu~")
+        return 160.0f;
+    if (node.getTypeName() == "number~" || node.getTypeName() == "num~")
+        return 130.0f;
+    if (node.getTypeName() == "print" || node.getTypeName() == "monitor")
+        return 220.0f;
 
     juce::Font labelFont = FontManager::getInstance().getOxaniumFont (14.0f, true);
     juce::Font portFont = FontManager::getInstance().getOxaniumFont (9.5f, false);
@@ -1649,16 +1818,18 @@ float RelativisticCanvasComponent::getNodeWidth (const RelativisticNode& node) c
     float inletsTotalW = 0.0f;
     for (const auto& in : node.getInlets())
     {
-        inletsTotalW += std::max (48.0f, static_cast<float>(portFont.getStringWidth (in.name)) + 12.0f);
+        float w = static_cast<float>(in.name.length()) * 7.5f + 16.0f;
+        inletsTotalW += std::max (60.0f, w);
     }
 
     float outletsTotalW = 0.0f;
     for (const auto& out : node.getOutlets())
     {
-        outletsTotalW += std::max (48.0f, static_cast<float>(portFont.getStringWidth (out.name)) + 12.0f);
+        float w = static_cast<float>(out.name.length()) * 7.5f + 16.0f;
+        outletsTotalW += std::max (60.0f, w);
     }
 
-    float portsW = std::max (inletsTotalW, outletsTotalW) + 24.0f;
+    float portsW = std::max (inletsTotalW, outletsTotalW) + 32.0f;
 
     return std::max ({ 160.0f, textW, portsW });
 }
@@ -1666,12 +1837,26 @@ float RelativisticCanvasComponent::getNodeWidth (const RelativisticNode& node) c
 float RelativisticCanvasComponent::getNodeHeight (const RelativisticNode& node) const
 {
     if (node.getTypeName() == "time.scope" || node.getTypeName() == "time.display" || node.getTypeName() == "time.monitor")
-        return 80.0f;
+        return 110.0f;
+    if (node.getTypeName() == "time.xy" || node.getTypeName() == "xy" || node.getTypeName() == "xy~" || node.getTypeName() == "plot.xy")
+        return 110.0f;
+    if (node.getTypeName() == "spectrometer~" || node.getTypeName() == "spectrum~" || node.getTypeName() == "fft~")
+        return 110.0f;
     if (node.getTypeName() == "table")
         return 75.0f;
     if (node.getTypeName() == "out~" || node.getTypeName() == "out")
         return 100.0f;
+    if (node.getTypeName() == "seq" || node.getTypeName() == "step")
+        return 90.0f;
+    if (node.getTypeName() == "meter~" || node.getTypeName() == "vu~")
+        return 70.0f;
+    if (node.getTypeName() == "number~" || node.getTypeName() == "num~")
+        return 55.0f;
+    if (node.getTypeName() == "print" || node.getTypeName() == "monitor")
+        return 110.0f;
     return 52.0f;
+}
+
 }
 
 juce::Point<float> RelativisticCanvasComponent::getInletPos (const RelativisticNode& node, int idx) const
@@ -1743,10 +1928,31 @@ void RelativisticCanvasComponent::mouseWheelMove (const juce::MouseEvent& e, con
 void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
 {
     grabKeyboardFocus();
-    const float nodeW = 150.0f;
-    const float nodeH = 44.0f;
     juce::Point<float> mousePos = e.position;
     bool isShift = e.mods.isShiftDown();
+
+    // Autocomplete Popup Item Mouse Click Selection
+    if (isEditingDraftObject && draftObjectEditor)
+    {
+        float popupX = draftObjectEditor->getX();
+        float popupY = draftObjectEditor->getY() + draftObjectEditor->getHeight() + 4.0f;
+        float popupW = std::max (220.0f, static_cast<float>(draftObjectEditor->getWidth()));
+        int maxShow = std::min (6, static_cast<int>(filteredAutocompleteItems.size()));
+        float popupH = static_cast<float>(maxShow) * 22.0f + 6.0f;
+
+        if (mousePos.x >= popupX && mousePos.x <= popupX + popupW &&
+            mousePos.y >= popupY && mousePos.y <= popupY + popupH)
+        {
+            int clickedIdx = static_cast<int>((mousePos.y - popupY - 3.0f) / 22.0f);
+            if (clickedIdx >= 0 && clickedIdx < maxShow)
+            {
+                selectedAutocompleteIdx = clickedIdx;
+                draftObjectEditor->setText (filteredAutocompleteItems[clickedIdx].typeName + " ");
+                commitDraftObject();
+                return;
+            }
+        }
+    }
 
     // 0. Check Table Node Waveform Graph Click / Drag
     for (const auto& node : nodeGraph.getNodes())
@@ -1800,6 +2006,27 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
     }
 
     // 1. Check Outlet Click (Cable Creation)
+    static auto getDistanceToBezier = [] (juce::Point<float> p1, juce::Point<float> p2, juce::Point<float> mousePos) -> float
+    {
+        float dy = std::max (30.0f, std::abs (p2.y - p1.y) * 0.5f);
+        juce::Point<float> cp1 = { p1.x, p1.y + dy };
+        juce::Point<float> cp2 = { p2.x, p2.y - dy };
+
+        float minDist = 99999.0f;
+        const int numSamples = 24;
+        for (int i = 0; i <= numSamples; ++i)
+        {
+            float t = static_cast<float>(i) / static_cast<float>(numSamples);
+            float u = 1.0f - t;
+            float x = u*u*u*p1.x + 3.0f*u*u*t*cp1.x + 3.0f*u*t*t*cp2.x + t*t*t*p2.x;
+            float y = u*u*u*p1.y + 3.0f*u*u*t*cp1.y + 3.0f*u*t*t*cp2.y + t*t*t*p2.y;
+
+            float dist = mousePos.getDistanceFrom ({ x, y });
+            if (dist < minDist) minDist = dist;
+        }
+        return minDist;
+    };
+
     for (const auto& node : nodeGraph.getNodes())
     {
         for (size_t i = 0; i < node->getOutlets().size(); ++i)
@@ -1841,12 +2068,12 @@ void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
                 return;
             }
 
-            float distToLine = std::abs ((p2.y - p1.y) * mousePos.x - (p2.x - p1.x) * mousePos.y + p2.x * p1.y - p2.y * p1.x) /
-                               std::max (1.0f, p1.getDistanceFrom (p2));
-            if (distToLine < 10.0f && mousePos.x >= std::min (p1.x, p2.x) - 10.0f && mousePos.x <= std::max (p1.x, p2.x) + 10.0f)
+            float distToCurve = getDistanceToBezier (p1, p2, mousePos);
+            if (distToCurve < 14.0f)
             {
                 selectedConnectionId = conn.id;
                 selectedNodeIds.clear();
+                rebuildInspector();
                 repaint();
                 return;
             }
@@ -1942,6 +2169,24 @@ void RelativisticCanvasComponent::mouseDoubleClick (const juce::MouseEvent& e)
                 }), true);
                 return;
             }
+            if (auto seqNode = std::dynamic_pointer_cast<StepSequencerNode> (node))
+            {
+                auto alert = std::make_unique<juce::AlertWindow> ("EDIT SEQUENCER PATTERN", "Enter space-separated MIDI notes or pitches for [seq]:", juce::AlertWindow::QuestionIcon);
+                alert->addTextEditor ("patStr", juce::String (seqNode->getPatternString()), "Pattern Notes:");
+                alert->addButton ("OK", 1);
+                alert->addButton ("Cancel", 0);
+                alert->enterModalState (true, juce::ModalCallbackFunction::create ([this, seqNode, a = alert.get()] (int res) {
+                    if (res == 1)
+                    {
+                        std::string pat = a->getTextEditorContents ("patStr").toStdString();
+                        seqNode->setPatternString (pat);
+                        rebuildInspector();
+                        repaint();
+                    }
+                }), true);
+                return;
+            }
+
 
             selectedNodeIds.clear();
             selectedNodeIds.insert (node->getId());
@@ -2356,20 +2601,47 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         double tSec = timeScope->getMonitoredTimeSec();
 
         // 1. Text Telemetry Display
-        g.setColour (juce::Colour (0xff06b6d4)); // Cyan
+        g.setColour (juce::Colour (0xff06b6d4));
         g.setFont (FontManager::getInstance().getOxaniumFont (11.0f, true));
-        juce::String gammaStr = juce::String::formatted ("γ: %+.2fx (%d%%)", gamma, static_cast<int>(gamma * 100.0f));
+        juce::String gammaStr = juce::String::formatted (juce::CharPointer_UTF8 ("\xce\xb3: %+.2fx (%d%%)"), gamma, static_cast<int>(gamma * 100.0f));
         g.drawText (gammaStr, x + 10.0f, y + 20.0f, w - 16.0f, 15.0f, juce::Justification::centredLeft);
 
-        g.setColour (juce::Colour (0xfff59e0b)); // Gold
+        g.setColour (juce::Colour (0xfff59e0b));
         juce::String timeStr = juce::String::formatted ("t_loc: %.3fs", tSec);
         g.drawText (timeStr, x + 10.0f, y + 35.0f, w - 16.0f, 15.0f, juce::Justification::centredLeft);
 
-        // 2. Kinetic Relativistic Speed Gauge Bar
+        // Live Signal History Waveform Trace Box
+        float graphX = x + 8.0f;
+        float graphY = y + 52.0f;
+        float graphW = w - 16.0f;
+        float graphH = 32.0f;
+
+        g.setColour (juce::Colour (0xff070a12));
+        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 2.0f);
+        g.setColour (juce::Colour (0xff1e293b));
+        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 2.0f, 1.0f);
+
+        const auto& hist = timeScope->getSignalHistory();
+        if (!hist.empty())
+        {
+            juce::Path p;
+            float midY = graphY + graphH * 0.5f;
+            for (size_t i = 0; i < hist.size(); ++i)
+            {
+                float px = graphX + (static_cast<float>(i) / static_cast<float>(hist.size() - 1)) * graphW;
+                float py = midY - std::clamp (hist[i], -2.0f, 2.0f) * (graphH * 0.4f);
+                if (i == 0) p.startNewSubPath (px, py);
+                else p.lineTo (px, py);
+            }
+            g.setColour (juce::Colour (0xff06b6d4));
+            g.strokePath (p, juce::PathStrokeType (1.2f));
+        }
+
+        // Kinetic Relativistic Speed Gauge Bar
         float gx = x + 8.0f;
-        float gy = y + 52.0f;
+        float gy = y + 88.0f;
         float gw = w - 16.0f;
-        float gh = 15.0f;
+        float gh = 12.0f;
 
         g.setColour (juce::Colour (0xff070a12));
         g.fillRoundedRectangle (gx, gy, gw, gh, 2.0f);
@@ -2382,18 +2654,37 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
 
         if (gamma > 0.001f)
         {
-            g.setColour (juce::Colour (0xff06b6d4)); // Forward: Cyber Cyan
+            g.setColour (juce::Colour (0xff06b6d4));
             g.fillRect (midX, gy + 2.0f, barLen, gh - 4.0f);
         }
         else if (gamma < -0.001f)
         {
-            g.setColour (juce::Colour (0xfff59e0b)); // Retrograde: Relativistic Gold
+            g.setColour (juce::Colour (0xfff59e0b));
             g.fillRect (midX + barLen, gy + 2.0f, -barLen, gh - 4.0f);
         }
         else
         {
-            g.setColour (juce::Colour (0xff8b5cf6)); // Stasis: Royal Violet
+            g.setColour (juce::Colour (0xff8b5cf6));
             g.fillRect (midX - 3.0f, gy + 2.0f, 6.0f, gh - 4.0f);
+        }
+    }
+
+                // Logo Color Palette: Royal Violet -> Cyber Cyan -> Relativistic Gold
+                float pos = static_cast<float>(b) / static_cast<float>(bands.size() - 1);
+                juce::Colour barCol;
+                if (pos < 0.4f)
+                    barCol = juce::Colour (0xff8b5cf6).interpolatedWith (juce::Colour (0xff06b6d4), pos / 0.4f);
+                else
+                    barCol = juce::Colour (0xff06b6d4).interpolatedWith (juce::Colour (0xfff59e0b), (pos - 0.4f) / 0.6f);
+
+                g.setColour (barCol);
+                g.fillRect (bx + 0.5f, by, std::max (1.0f, barW - 1.0f), bh);
+
+                // Peak cap dot
+                float py = gy + gh - 2.0f - normP * (gh - 4.0f);
+                g.setColour (juce::Colour (0xfff59e0b));
+                g.fillRect (bx + 0.5f, py - 1.5f, std::max (1.0f, barW - 1.0f), 2.0f);
+            }
         }
     }
 
@@ -2878,6 +3169,58 @@ void RelativisticCanvasComponent::resized()
             }
         }
 
+        // Layout Incoming Connections
+        if (incomingSectionHeader)
+        {
+            incomingSectionHeader->setBounds (inspectorX + 15, rowY + 5, inspectorW - 30, 20);
+            incomingSectionHeader->setVisible (true);
+            rowY += 28.0f;
+        }
+
+        for (auto& cRow : connectionRows)
+        {
+            if (cRow.isIncoming)
+            {
+                if (cRow.label)
+                {
+                    cRow.label->setBounds (inspectorX + 15, rowY, cRow.btnRemoveWire ? (inspectorW - 105) : (inspectorW - 30), 22);
+                    cRow.label->setVisible (true);
+                }
+                if (cRow.btnRemoveWire)
+                {
+                    cRow.btnRemoveWire->setBounds (inspectorX + inspectorW - 85, rowY, 70, 22);
+                    cRow.btnRemoveWire->setVisible (true);
+                }
+                rowY += 25.0f;
+            }
+        }
+
+        // Layout Outgoing Connections
+        if (outgoingSectionHeader)
+        {
+            outgoingSectionHeader->setBounds (inspectorX + 15, rowY + 5, inspectorW - 30, 20);
+            outgoingSectionHeader->setVisible (true);
+            rowY += 28.0f;
+        }
+
+        for (auto& cRow : connectionRows)
+        {
+            if (!cRow.isIncoming)
+            {
+                if (cRow.label)
+                {
+                    cRow.label->setBounds (inspectorX + 15, rowY, cRow.btnRemoveWire ? (inspectorW - 105) : (inspectorW - 30), 22);
+                    cRow.label->setVisible (true);
+                }
+                if (cRow.btnRemoveWire)
+                {
+                    cRow.btnRemoveWire->setBounds (inspectorX + inspectorW - 85, rowY, 70, 22);
+                    cRow.btnRemoveWire->setVisible (true);
+                }
+                rowY += 25.0f;
+            }
+        }
+
         btnInsertTapDropdown.setVisible (false);
         formulaEditor.setVisible (false);
         btnApplyFormula.setVisible (false);
@@ -2896,6 +3239,14 @@ void RelativisticCanvasComponent::resized()
         for (auto& mBtn : methodButtons)
         {
             if (mBtn) mBtn->setVisible (false);
+        }
+
+        if (incomingSectionHeader) incomingSectionHeader->setVisible (false);
+        if (outgoingSectionHeader) outgoingSectionHeader->setVisible (false);
+        for (auto& cRow : connectionRows)
+        {
+            if (cRow.label) cRow.label->setVisible (false);
+            if (cRow.btnRemoveWire) cRow.btnRemoveWire->setVisible (false);
         }
 
         btnInsertTapDropdown.setBounds (inspectorX + 15, inspectorTop + 45, inspectorW - 30, 26);

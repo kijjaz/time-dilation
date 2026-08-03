@@ -125,6 +125,41 @@ int RelativisticNode::addModulationInlet (const std::string& paramKey)
     return inletIdx;
 }
 
+bool RelativisticNode::hasModulationInlet (const std::string& paramKey) const
+{
+    auto it = paramModInlets.find (paramKey);
+    return (it != paramModInlets.end() && it->second >= 0);
+}
+
+int RelativisticNode::getModulationInletIndex (const std::string& paramKey) const
+{
+    auto it = paramModInlets.find (paramKey);
+    return (it != paramModInlets.end()) ? it->second : -1;
+}
+
+bool RelativisticNode::removeModulationInlet (const std::string& paramKey)
+{
+    auto it = paramModInlets.find (paramKey);
+    if (it == paramModInlets.end()) return false;
+
+    int inletIdx = it->second;
+    paramModInlets.erase (it);
+
+    if (inletIdx >= 0 && inletIdx < static_cast<int>(inlets.size()))
+    {
+        inlets.erase (inlets.begin() + static_cast<size_t>(inletIdx));
+
+        for (auto& kv : paramModInlets)
+        {
+            if (kv.second > inletIdx)
+            {
+                kv.second -= 1;
+            }
+        }
+    }
+    return true;
+}
+
 float RelativisticNode::getModulatedParamValue (const std::string& paramKey, float defaultVal, int sampleIdx) const
 {
     float baseVal = getParameter (paramKey, defaultVal);
@@ -289,6 +324,7 @@ bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
     static const std::set<std::string> validTypes = {
         "time.warp~", "time.retro~", "time.quantize~", "time.metro~", "time.stasis~",
         "time.singularity~", "time.transport", "time.scope", "time.display", "time.monitor",
+        "time.xy", "xy", "xy~", "plot.xy", "spectrometer~", "spectrum~", "fft~",
         "time.future~", "future~", "osc~", "phasor~", "sampler~", "filter~", "delay~",
         "dac~", "expr", "expr~", "fexpr~", "gain~", "out~", "out", "env~", "tap", "tap~",
         "v", "msg", "message", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
@@ -337,6 +373,8 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "time.singularity~") node = std::make_shared<TimeSingularityNode> (id);
     else if (typeName == "time.transport")node = std::make_shared<TimeTransportNode> (id);
     else if (typeName == "time.scope" || typeName == "time.display" || typeName == "time.monitor") node = std::make_shared<TimeScopeNode> (id);
+    else if (typeName == "time.xy" || typeName == "xy" || typeName == "xy~" || typeName == "plot.xy") node = std::make_shared<TimeXYNode> (id);
+    else if (typeName == "spectrometer~" || typeName == "spectrum~" || typeName == "fft~") node = std::make_shared<SpectrometerAudioNode> (id);
     else if (typeName == "osc~")           node = std::make_shared<OscNode> (id);
     else if (typeName == "phasor~")        node = std::make_shared<PhasorNode> (id);
     else if (typeName == "sampler~")       node = std::make_shared<SamplerNode> (id);
@@ -368,6 +406,9 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "mtof" || typeName == "midi2freq") node = std::make_shared<MtofNode> (id);
     else if (typeName == "ftom")           node = std::make_shared<FtomNode> (id);
     else if (typeName == "number" || typeName == "num" || typeName == "nb" || typeName == "display" || typeName == "number.display") node = std::make_shared<NumberNode> (id);
+    else if (typeName == "meter~" || typeName == "vu~") node = std::make_shared<VuMeterAudioNode> (id);
+    else if (typeName == "number~" || typeName == "num~") node = std::make_shared<NumberAudioNode> (id);
+    else if (typeName == "print" || typeName == "monitor") node = std::make_shared<PrintMonitorNode> (id);
     else if (typeName == "bang" || typeName == "b") node = std::make_shared<BangNode> (id);
     else if (typeName == "bang~" || typeName == "b~") node = std::make_shared<BangAudioNode> (id);
     else if (typeName == "counter" || typeName == "cnt") node = std::make_shared<CounterNode> (id);
@@ -381,6 +422,7 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "drumseq" || typeName == "drumstep") node = std::make_shared<DrumSequencerNode> (id);
     else if (typeName == "timeline" || typeName == "arrangement") node = std::make_shared<TimelineNode> (id);
     else                                   node = std::make_shared<OscNode> (id);
+
 
     node->setParentGraph (this);
     node->setPosition (x, y);
@@ -438,6 +480,43 @@ void RelativisticNodeGraph::removeConnection (int connectionId)
     connections.erase (std::remove_if (connections.begin(), connections.end(),
         [connectionId] (const PatchConnection& c) { return c.id == connectionId; }), connections.end());
     detectFeedbackLoops();
+}
+
+bool RelativisticNodeGraph::removeModulationInlet (int nodeId, const std::string& paramKey)
+{
+    const juce::ScopedLock lock (processLock);
+    auto node = getNodeById (nodeId);
+    if (!node) return false;
+
+    int inletIdx = node->getModulationInletIndex (paramKey);
+    if (inletIdx < 0) return false;
+
+    pushUndoState();
+
+    std::vector<int> toRemove;
+    for (const auto& c : connections)
+    {
+        if (c.destNodeId == nodeId && c.destInletIdx == inletIdx)
+        {
+            toRemove.push_back (c.id);
+        }
+    }
+    for (int cid : toRemove)
+    {
+        removeConnection (cid);
+    }
+
+    for (auto& c : connections)
+    {
+        if (c.destNodeId == nodeId && c.destInletIdx > inletIdx)
+        {
+            c.destInletIdx -= 1;
+        }
+    }
+
+    bool res = node->removeModulationInlet (paramKey);
+    detectFeedbackLoops();
+    return res;
 }
 
 void RelativisticNodeGraph::detectFeedbackLoops()

@@ -25,6 +25,10 @@ public:
     std::string getPatternString() const { return patternString; }
     void setLabel (const std::string& l) override;
 
+    int getCurrentStep() const { return currentStep; }
+    const std::vector<float>& getStepValues() const { return stepValues; }
+
+
 private:
     std::string patternString = "60 62 64 65 67 69 71 72";
     std::vector<float> stepValues;

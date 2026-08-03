@@ -181,13 +181,31 @@ private:
         std::unique_ptr<juce::TextButton> btnTapValue;
     };
 
+    struct InspectorConnectionRow
+    {
+        int connectionId = 0;
+        bool isIncoming = false;
+        std::unique_ptr<juce::Label> label;
+        std::unique_ptr<juce::TextButton> btnRemoveWire;
+    };
+
     std::vector<InspectorPropertyRow> propertyRows;
     std::vector<std::unique_ptr<juce::TextButton>> methodButtons;
+    std::vector<InspectorConnectionRow> connectionRows;
+    std::unique_ptr<juce::Label> incomingSectionHeader;
+    std::unique_ptr<juce::Label> outgoingSectionHeader;
+
     juce::TextButton btnInsertTapDropdown { "TAP SIGNAL POINT" };
 
     juce::TextEditor inlineLabelEditor;
     juce::TextEditor formulaEditor;
     juce::TextButton btnApplyFormula { "APPLY C++ / MATH FORMULA" };
+
+    juce::File currentProjectFile;
+
+    void savePatchAs();
+    void savePatch();
+    void loadPatch();
 
     void rebuildInspector();
 

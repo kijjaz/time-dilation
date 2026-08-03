@@ -115,10 +115,51 @@ public:
 
     float getMonitoredGamma() const { return monitoredGamma; }
     double getMonitoredTimeSec() const { return monitoredTimeSec; }
+    const std::vector<float>& getSignalHistory() const { return signalHistory; }
 
 private:
     float monitoredGamma = 1.0f;
     double monitoredTimeSec = 0.0;
+    std::vector<float> signalHistory;
+    size_t historyWritePos = 0;
+};
+
+struct Point2D { float x = 0.0f; float y = 0.0f; };
+
+// 4f. [time.xy] 2D Time & Control Signal XY Oscilloscope Plot Object
+class TimeXYNode : public RelativisticNode
+{
+public:
+    TimeXYNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    const std::vector<Point2D>& getPointHistory() const { return pointHistory; }
+
+private:
+    std::vector<Point2D> pointHistory;
+    size_t writePos = 0;
+};
+
+// 4g. [spectrometer~] Live Audio Spectrum Visualizer (Logo Gradient Palette)
+class SpectrometerAudioNode : public RelativisticNode
+{
+public:
+    SpectrometerAudioNode (int id);
+    void prepare (double sampleRate, int samplesPerBlock) override;
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    const std::vector<float>& getBands() const { return bands; }
+    const std::vector<float>& getPeaks() const { return peaks; }
+
+private:
+    static constexpr size_t numBands = 32;
+    std::vector<float> bands;
+    std::vector<float> peaks;
+    std::vector<float> bandFilters;
 };
 
 // 5. [osc~] PolyBLEP & Wavetable Polyphonic Synthesizer Oscillator Object
@@ -471,6 +512,7 @@ class AddMathNode : public RelativisticNode
 public:
     AddMathNode (int id);
     void process (int numSamples) override;
+    void parseLabelArguments (const std::string& label) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
 };
@@ -481,6 +523,7 @@ class MulMathNode : public RelativisticNode
 public:
     MulMathNode (int id);
     void process (int numSamples) override;
+    void parseLabelArguments (const std::string& label) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
 };
@@ -668,6 +711,62 @@ private:
 
     float lastTrigState = 0.0f;
     float lastNoteValue = 0.0f;
+};
+
+// ----------------------------------------------------
+// 52. [meter~] Audio Peak & RMS Level VU Meter Object
+// ----------------------------------------------------
+class VuMeterAudioNode : public RelativisticNode
+{
+public:
+    VuMeterAudioNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    float getPeakLevelDb() const { return peakLevelDb.load(); }
+    float getRmsLevelDb() const { return rmsLevelDb.load(); }
+
+private:
+    std::atomic<float> peakLevelDb { -100.0f };
+    std::atomic<float> rmsLevelDb { -100.0f };
+};
+
+// ----------------------------------------------------
+// 53. [number~] Audio-Rate Sample Monitor Object
+// ----------------------------------------------------
+class NumberAudioNode : public RelativisticNode
+{
+public:
+    NumberAudioNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    float getCurrentSampleValue() const { return currentSampleValue.load(); }
+
+private:
+    std::atomic<float> currentSampleValue { 0.0f };
+};
+
+// ----------------------------------------------------
+// 54. [print] Control & Signal Data Logger Node Object
+// ----------------------------------------------------
+class PrintMonitorNode : public RelativisticNode
+{
+public:
+    PrintMonitorNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    std::vector<std::string> getLogHistory() const;
+    void clearLog();
+
+private:
+    float lastLoggedValue = -999999.0f;
+    std::vector<std::string> logHistory;
+    mutable std::mutex logMutex;
 };
 
 } // namespace time_dilation

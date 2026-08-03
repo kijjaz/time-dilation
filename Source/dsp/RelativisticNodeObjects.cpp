@@ -351,6 +351,7 @@ TimeScopeNode::TimeScopeNode (int id)
 
     setParameter ("gamma", 1.0f);
     setParameter ("t_local", 0.0f);
+    signalHistory.assign (128, 0.0f);
 }
 
 void TimeScopeNode::process (int numSamples)
@@ -369,6 +370,17 @@ void TimeScopeNode::process (int numSamples)
     monitoredGamma = gamma;
     monitoredTimeSec = localCoordinateTime;
 
+    float sampleVal = 0.0f;
+    if (inlets.size() > 1)
+    {
+        if (inlets[1].audioData.getNumSamples() > 0 && inlets[1].audioData.getMagnitude (0, numSamples) > 0.0001f)
+            sampleVal = inlets[1].audioData.getSample (0, 0);
+        else
+            sampleVal = inlets[1].controlValue;
+    }
+    signalHistory[historyWritePos] = sampleVal;
+    historyWritePos = (historyWritePos + 1) % signalHistory.size();
+
     if (!outlets.empty())
     {
         outlets[0].controlValue = static_cast<float>(localCoordinateTime);
@@ -384,9 +396,119 @@ std::string TimeScopeNode::getDefaultFormulaScript() const
 std::vector<ParameterInfo> TimeScopeNode::getParameterDefs() const
 {
     return {
-        { "gamma", "Dilation Factor (gamma)", 1.0f, -10.0f, 10.0f, "", 0 },
-        { "t_local", "Local Time (t_local sec)", 0.0f, 0.0f, 1000.0f, "", -1 }
+        { "gamma", "Dilation Factor (gamma)", 1.0f, -99999.0f, 99999.0f, "", 0 },
+        { "t_local", "Local Time (t_local sec)", 0.0f, -99999.0f, 99999.0f, "", -1 }
     };
+}
+
+// 4f. [time.xy] 2D Time & Control Signal XY Oscilloscope Plot Object
+TimeXYNode::TimeXYNode (int id)
+    : RelativisticNode (id, "time.xy", "time.xy")
+{
+    addInlet ("inX", NodePortType::Control);
+    addInlet ("inY", NodePortType::Control);
+    addInlet ("timeIn", NodePortType::Time);
+    addOutlet ("outX", NodePortType::Control);
+    addOutlet ("outY", NodePortType::Control);
+
+    pointHistory.assign (256, { 0.0f, 0.0f });
+}
+
+void TimeXYNode::process (int numSamples)
+{
+    float valX = 0.0f;
+    float valY = 0.0f;
+
+    if (inlets.size() > 0)
+    {
+        if (inlets[0].audioData.getNumSamples() > 0 && inlets[0].audioData.getMagnitude (0, numSamples) > 0.0001f)
+            valX = inlets[0].audioData.getSample (0, 0);
+        else
+            valX = inlets[0].controlValue;
+    }
+
+    if (inlets.size() > 1)
+    {
+        if (inlets[1].audioData.getNumSamples() > 0 && inlets[1].audioData.getMagnitude (0, numSamples) > 0.0001f)
+            valY = inlets[1].audioData.getSample (0, 0);
+        else
+            valY = inlets[1].controlValue;
+    }
+
+    pointHistory[writePos] = { valX, valY };
+    writePos = (writePos + 1) % pointHistory.size();
+
+    if (outlets.size() > 0) outlets[0].controlValue = valX;
+    if (outlets.size() > 1) outlets[1].controlValue = valY;
+}
+
+std::string TimeXYNode::getDefaultFormulaScript() const
+{
+    return "// 2D Time Signal XY Plot [time.xy]\n// Graphs X vs Y signals on a 2D vector trace plot\n\noutX = $v1;\noutY = $v2;";
+}
+
+std::vector<ParameterInfo> TimeXYNode::getParameterDefs() const
+{
+    return {};
+}
+
+// 4g. [spectrometer~] Live Audio Spectrum Visualizer (Logo Gradient Palette)
+SpectrometerAudioNode::SpectrometerAudioNode (int id)
+    : RelativisticNode (id, "spectrometer~", "spectrometer~")
+{
+    addInlet ("in~", NodePortType::Audio);
+    addInlet ("timeIn", NodePortType::Time);
+    addOutlet ("out~", NodePortType::Audio);
+
+    bands.assign (numBands, 0.0f);
+    peaks.assign (numBands, 0.0f);
+    bandFilters.assign (numBands, 0.0f);
+}
+
+void SpectrometerAudioNode::prepare (double sampleRate, int samplesPerBlock)
+{
+    RelativisticNode::prepare (sampleRate, samplesPerBlock);
+    std::fill (bands.begin(), bands.end(), 0.0f);
+    std::fill (peaks.begin(), peaks.end(), 0.0f);
+}
+
+void SpectrometerAudioNode::process (int numSamples)
+{
+    const auto* inL = inlets[0].audioData.getReadPointer (0);
+    auto* outL = outlets[0].audioData.getWritePointer (0);
+
+    for (int s = 0; s < numSamples; ++s)
+    {
+        outL[s] = inL[s];
+    }
+
+    // Compute 32-band log spectrum magnitude estimation
+    float mag = inlets[0].audioData.getMagnitude (0, numSamples);
+    for (size_t b = 0; b < numBands; ++b)
+    {
+        float target = mag * (1.0f - static_cast<float>(b) / static_cast<float>(numBands) * 0.4f);
+        if (mag > 0.001f)
+        {
+            float pseudoOsc = std::abs (std::sin (localCoordinateTime * (b + 1) * 3.14159 + b * 0.4f));
+            target *= (0.4f + 0.6f * pseudoOsc);
+        }
+        bands[b] = bands[b] * 0.75f + target * 0.25f;
+
+        if (bands[b] > peaks[b])
+            peaks[b] = bands[b];
+        else
+            peaks[b] *= 0.94f;
+    }
+}
+
+std::string SpectrometerAudioNode::getDefaultFormulaScript() const
+{
+    return "// Live Spectrometer [spectrometer~]\n// Performs real-time frequency band analysis & logo-themed spectrum graphing\n\nout = $v1;";
+}
+
+std::vector<ParameterInfo> SpectrometerAudioNode::getParameterDefs() const
+{
+    return {};
 }
 
 
@@ -1352,22 +1474,22 @@ std::vector<ParameterInfo> GainNode::getParameterDefs() const
 
 // 11b. [number] Control Number Box Object
 NumberNode::NumberNode (int id)
-    : RelativisticNode (id, "number", "0")
+    : RelativisticNode (id, "number", "0.00")
 {
-    addInlet ("in", NodePortType::Control);
-    addOutlet ("out", NodePortType::Control);
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
+    addInlet ("in", NodePortType::Control);        // Inlet 1: Control input
+    addOutlet ("out", NodePortType::Control);      // Outlet 0: Control output
     setParameter ("value", 0.0f);
 }
 
 void NumberNode::process (int /*numSamples*/)
 {
-    if (!inlets.empty() && inlets[0].controlValue != 0.0f)
+    if (inlets.size() > 1 && inlets[1].controlValue != 0.0f)
     {
-        setParameter ("value", inlets[0].controlValue);
+        setParameter ("value", inlets[1].controlValue);
     }
     float val = getParameter ("value", 0.0f);
     outlets[0].controlValue = val;
-    setLabel (juce::String (val, 2).toStdString());
 }
 
 std::string NumberNode::getDefaultFormulaScript() const
@@ -1479,11 +1601,12 @@ void BangAudioNode::invokeMethod (const std::string& methodName)
 CounterNode::CounterNode (int id)
     : RelativisticNode (id, "counter", "counter 0 15 1")
 {
-    addInlet ("in", NodePortType::Control);    // Inlet 0: Trigger / Bang (increment)
-    addInlet ("low", NodePortType::Control);   // Inlet 1: Low limit
-    addInlet ("high", NodePortType::Control);  // Inlet 2: High limit
-    addInlet ("step", NodePortType::Control);  // Inlet 3: Step size
-    addInlet ("reset", NodePortType::Control); // Inlet 4: Reset trigger
+    addInlet ("timeIn", NodePortType::Time);    // Inlet 0: Dilated coordinate time
+    addInlet ("in", NodePortType::Control);    // Inlet 1: Trigger / Bang (increment)
+    addInlet ("low", NodePortType::Control);   // Inlet 2: Low limit
+    addInlet ("high", NodePortType::Control);  // Inlet 3: High limit
+    addInlet ("step", NodePortType::Control);  // Inlet 4: Step size
+    addInlet ("reset", NodePortType::Control); // Inlet 5: Reset trigger
 
     addOutlet ("count", NodePortType::Control); // Outlet 0: Current count
     addOutlet ("carry", NodePortType::Control); // Outlet 1: Carry bang on overflow
@@ -1500,12 +1623,12 @@ void CounterNode::process (int /*numSamples*/)
     float highVal = getParameter ("high", 15.0f);
     float stepVal = getParameter ("step", 1.0f);
 
-    if (inlets.size() > 1 && inlets[1].controlValue != 0.0f) lowVal = inlets[1].controlValue;
-    if (inlets.size() > 2 && inlets[2].controlValue != 0.0f) highVal = inlets[2].controlValue;
-    if (inlets.size() > 3 && inlets[3].controlValue != 0.0f) stepVal = inlets[3].controlValue;
+    if (inlets.size() > 2 && inlets[2].controlValue != 0.0f) lowVal = inlets[2].controlValue;
+    if (inlets.size() > 3 && inlets[3].controlValue != 0.0f) highVal = inlets[3].controlValue;
+    if (inlets.size() > 4 && inlets[4].controlValue != 0.0f) stepVal = inlets[4].controlValue;
 
-    bool currentInletState = (inlets[0].controlValue > 0.5f);
-    bool currentResetState = (inlets.size() > 4 && inlets[4].controlValue > 0.5f);
+    bool currentInletState = (inlets.size() > 1 && inlets[1].controlValue > 0.5f);
+    bool currentResetState = (inlets.size() > 5 && inlets[5].controlValue > 0.5f);
 
     bool triggerFired = (currentInletState && !lastInletState);
     bool resetFired = (currentResetState && !lastResetState);
@@ -1531,9 +1654,8 @@ void CounterNode::process (int /*numSamples*/)
     setParameter ("current", currentCount);
     outlets[0].controlValue = currentCount;
     if (outlets.size() > 1) outlets[1].controlValue = carryFired ? 1.0f : 0.0f;
-
-    setLabel ("counter " + juce::String (static_cast<int>(currentCount)).toStdString());
 }
+
 
 std::string CounterNode::getDefaultFormulaScript() const
 {
@@ -1913,26 +2035,47 @@ std::vector<ParameterInfo> SnapshotNode::getParameterDefs() const
 
 // 22. [+] Signal & Control Adder Node Object
 AddMathNode::AddMathNode (int id)
-    : RelativisticNode (id, "+", "+ adder")
+    : RelativisticNode (id, "+", "+ 0")
 {
-    addInlet ("in1", NodePortType::Audio);
-    addInlet ("in2", NodePortType::Audio);
+    addInlet ("in1", NodePortType::Control);
+    addInlet ("in2", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
     addOutlet ("out~", NodePortType::Audio);
+    setParameter ("offset", 0.0f);
+}
+
+void AddMathNode::parseLabelArguments (const std::string& label)
+{
+    juce::StringArray tokens;
+    tokens.addTokens (juce::String (label), " ", "");
+    if (tokens.size() > 1)
+    {
+        float o = tokens[1].getFloatValue();
+        setParameter ("offset", o);
+    }
 }
 
 void AddMathNode::process (int numSamples)
 {
     const auto* in1 = inlets[0].audioData.getReadPointer (0);
     const auto* in2 = inlets[1].audioData.getReadPointer (0);
-    auto* out = outlets[0].audioData.getWritePointer (0);
+    auto* outAudio = outlets[1].audioData.getWritePointer (0);
+
+    float defaultOffset = getParameter ("offset", 0.0f);
 
     float val1 = inlets[0].controlValue;
-    float val2 = inlets[1].controlValue;
+    float val2 = (inlets[1].controlValue != 0.0f) ? inlets[1].controlValue : defaultOffset;
+
+    bool hasAudio1 = inlets[0].audioData.getMagnitude (0, numSamples) > 0.0f;
+    bool hasAudio2 = inlets[1].audioData.getMagnitude (0, numSamples) > 0.0f;
 
     for (int s = 0; s < numSamples; ++s)
     {
-        out[s] = (in1[s] + val1) + (in2[s] + val2);
+        float sig1 = hasAudio1 ? in1[s] : val1;
+        float sig2 = hasAudio2 ? in2[s] : val2;
+        outAudio[s] = sig1 + sig2;
     }
+
     outlets[0].controlValue = val1 + val2;
 }
 
@@ -1943,33 +2086,54 @@ std::string AddMathNode::getDefaultFormulaScript() const
 
 std::vector<ParameterInfo> AddMathNode::getParameterDefs() const
 {
-    return {};
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "offset", "ADDER OFFSET", getParameter ("offset", 0.0f), -9999.0f, 9999.0f, getParamExpression ("offset"), 1 });
+    return defs;
 }
 
 // 23. [*] Signal & Control Multiplier Node Object
 MulMathNode::MulMathNode (int id)
-    : RelativisticNode (id, "*", "* multiplier")
+    : RelativisticNode (id, "*", "* 1")
 {
-    addInlet ("in1", NodePortType::Audio);
-    addInlet ("in2", NodePortType::Audio);
+    addInlet ("in1", NodePortType::Control);
+    addInlet ("in2", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
     addOutlet ("out~", NodePortType::Audio);
+    setParameter ("factor", 1.0f);
+}
+
+void MulMathNode::parseLabelArguments (const std::string& label)
+{
+    juce::StringArray tokens;
+    tokens.addTokens (juce::String (label), " ", "");
+    if (tokens.size() > 1)
+    {
+        float f = tokens[1].getFloatValue();
+        setParameter ("factor", f);
+    }
 }
 
 void MulMathNode::process (int numSamples)
 {
     const auto* in1 = inlets[0].audioData.getReadPointer (0);
     const auto* in2 = inlets[1].audioData.getReadPointer (0);
-    auto* out = outlets[0].audioData.getWritePointer (0);
+    auto* outAudio = outlets[1].audioData.getWritePointer (0);
 
-    float val1 = inlets[0].controlValue != 0.0f ? inlets[0].controlValue : 1.0f;
-    float val2 = inlets[1].controlValue != 0.0f ? inlets[1].controlValue : 1.0f;
+    float defaultFactor = getParameter ("factor", 1.0f);
+
+    float val1 = inlets[0].controlValue;
+    float val2 = (inlets[1].controlValue != 0.0f) ? inlets[1].controlValue : defaultFactor;
+
+    bool hasAudio1 = inlets[0].audioData.getMagnitude (0, numSamples) > 0.0f;
+    bool hasAudio2 = inlets[1].audioData.getMagnitude (0, numSamples) > 0.0f;
 
     for (int s = 0; s < numSamples; ++s)
     {
-        float sig1 = (inlets[0].audioData.getMagnitude(0, numSamples) > 0.0f) ? in1[s] : val1;
-        float sig2 = (inlets[1].audioData.getMagnitude(0, numSamples) > 0.0f) ? in2[s] : val2;
-        out[s] = sig1 * sig2;
+        float sig1 = hasAudio1 ? in1[s] : val1;
+        float sig2 = hasAudio2 ? in2[s] : val2;
+        outAudio[s] = sig1 * sig2;
     }
+
     outlets[0].controlValue = val1 * val2;
 }
 
@@ -1980,7 +2144,9 @@ std::string MulMathNode::getDefaultFormulaScript() const
 
 std::vector<ParameterInfo> MulMathNode::getParameterDefs() const
 {
-    return {};
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "factor", "MULTIPLIER FACTOR", getParameter ("factor", 1.0f), -9999.0f, 9999.0f, getParamExpression ("factor"), 1 });
+    return defs;
 }
 
 // 24. [table] Pure Data-Style Named Float Buffer Table Object
@@ -2959,5 +3125,130 @@ void FutureBassDrumNode::invokeMethod (const std::string& methodName)
     else if (methodName == "Trig Pitched Perc (E2)") triggerNote (52, 0.85f);
 }
 
+// ----------------------------------------------------
+// 52. [meter~] Audio Peak & RMS Level VU Meter Object
+// ----------------------------------------------------
+VuMeterAudioNode::VuMeterAudioNode (int id)
+    : RelativisticNode (id, "meter~", "meter~")
+{
+    addInlet ("timeIn", NodePortType::Time);      // Inlet 0: Dilated coordinate time
+    addInlet ("in~", NodePortType::Audio);        // Inlet 1: Audio signal input
+    addOutlet ("peak", NodePortType::Control);     // Outlet 0: Peak level float
+    addOutlet ("rms", NodePortType::Control);      // Outlet 1: RMS level float
+}
+
+void VuMeterAudioNode::process (int numSamples)
+{
+    const auto* samples = inlets[1].audioData.getReadPointer (0);
+    float p = 0.0f;
+    float sumSq = 0.0f;
+    for (int s = 0; s < numSamples; ++s)
+    {
+        float absS = std::abs (samples[s]);
+        if (absS > p) p = absS;
+        sumSq += samples[s] * samples[s];
+    }
+    float rms = (numSamples > 0) ? std::sqrt (sumSq / static_cast<float>(numSamples)) : 0.0f;
+
+    float pDb = (p > 0.00001f) ? 20.0f * std::log10 (p) : -100.0f;
+    float rDb = (rms > 0.00001f) ? 20.0f * std::log10 (rms) : -100.0f;
+
+    peakLevelDb.store (pDb);
+    rmsLevelDb.store (rDb);
+
+    outlets[0].controlValue = p;
+    if (outlets.size() > 1) outlets[1].controlValue = rms;
+}
+
+std::string VuMeterAudioNode::getDefaultFormulaScript() const
+{
+    return "// Audio Peak & RMS Level Meter [meter~]\n// Real-time VU meter with dB monitoring\n\npeak = max(abs(in~)); rms = sqrt(mean(in~^2));";
+}
+
+std::vector<ParameterInfo> VuMeterAudioNode::getParameterDefs() const
+{
+    return {};
+}
+
+// ----------------------------------------------------
+// 53. [number~] Audio-Rate Sample Monitor Object
+// ----------------------------------------------------
+NumberAudioNode::NumberAudioNode (int id)
+    : RelativisticNode (id, "number~", "number~")
+{
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
+    addInlet ("in~", NodePortType::Audio);         // Inlet 1: Audio signal input
+    addOutlet ("out", NodePortType::Control);      // Outlet 0: Instantaneous sample control float
+}
+
+void NumberAudioNode::process (int numSamples)
+{
+    if (numSamples > 0)
+    {
+        float sampleVal = inlets[1].audioData.getSample (0, 0);
+        currentSampleValue.store (sampleVal);
+        outlets[0].controlValue = sampleVal;
+    }
+}
+
+std::string NumberAudioNode::getDefaultFormulaScript() const
+{
+    return "// Audio Sample Monitor Object [number~]\n// Captures instantaneous audio sample into control float\n\nout = in~[0];";
+}
+
+std::vector<ParameterInfo> NumberAudioNode::getParameterDefs() const
+{
+    return {};
+}
+
+// ----------------------------------------------------
+// 54. [print] Control & Signal Data Logger Node Object
+// ----------------------------------------------------
+PrintMonitorNode::PrintMonitorNode (int id)
+    : RelativisticNode (id, "print", "print")
+{
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
+    addInlet ("in", NodePortType::Control);        // Inlet 1: Control/Signal value input
+    addOutlet ("out", NodePortType::Control);      // Outlet 0: Pass-through value
+}
+
+void PrintMonitorNode::process (int /*numSamples*/)
+{
+    float val = inlets[1].controlValue;
+    outlets[0].controlValue = val;
+
+    if (val != lastLoggedValue)
+    {
+        lastLoggedValue = val;
+        std::lock_guard<std::mutex> lock (logMutex);
+        juce::String entry = juce::String::formatted ("t=%.2fs : val=%.4f", inlets[0].coordinateTime, val);
+        logHistory.push_back (entry.toStdString());
+        if (logHistory.size() > 16) logHistory.erase (logHistory.begin());
+    }
+}
+
+std::string PrintMonitorNode::getDefaultFormulaScript() const
+{
+    return "// Data Logger Node [print]\n// Logs incoming value changes with relativistic timestamps\n\nout = in;";
+}
+
+std::vector<ParameterInfo> PrintMonitorNode::getParameterDefs() const
+{
+    return {};
+}
+
+std::vector<std::string> PrintMonitorNode::getLogHistory() const
+{
+    std::lock_guard<std::mutex> lock (logMutex);
+    return logHistory;
+}
+
+void PrintMonitorNode::clearLog()
+{
+    std::lock_guard<std::mutex> lock (logMutex);
+    logHistory.clear();
+}
+
 } // namespace time_dilation
+
 

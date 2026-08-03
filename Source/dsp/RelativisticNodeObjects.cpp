@@ -703,26 +703,29 @@ MtofNode::MtofNode (int id)
     addInlet ("note", NodePortType::Control);
     addOutlet ("freq", NodePortType::Control);
     setParameter ("note", 69.0f);
+    setParameter ("offset", 0.0f);
 }
 
 void MtofNode::process (int /*numSamples*/)
 {
     float note = inlets[0].controlValue;
     if (note <= 0.0f) note = getParameter ("note", 69.0f);
+    float offset = getModulatedParamValue ("offset", 0.0f);
 
-    float freq = 440.0f * std::pow (2.0f, (note - 69.0f) / 12.0f);
+    float freq = 440.0f * std::pow (2.0f, (note + offset - 69.0f) / 12.0f);
     outlets[0].controlValue = freq;
 }
 
 std::string MtofNode::getDefaultFormulaScript() const
 {
-    return "// MIDI Note to Frequency [mtof]\n// Hz = 440.0 * pow(2.0, (note - 69.0) / 12.0)\n\nfreq = 440.0 * pow(2.0, (note - 69.0) / 12.0);";
+    return "// MIDI Note to Frequency [mtof]\n// Hz = 440.0 * pow(2.0, (note + offset - 69.0) / 12.0)\n\nfreq = 440.0 * pow(2.0, (note + offset - 69.0) / 12.0);";
 }
 
 std::vector<ParameterInfo> MtofNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
     defs.push_back ({ "note", "MIDI NOTE NUMBER (0..127)", getParameter ("note", 69.0f), 0.0f, 127.0f, getParamExpression ("note"), 0 });
+    defs.push_back ({ "offset", "TRANSPOSE OFFSET (semitones)", getParameter ("offset", 0.0f), -48.0f, 48.0f, getParamExpression ("offset"), -1 });
     return defs;
 }
 
@@ -733,26 +736,29 @@ FtomNode::FtomNode (int id)
     addInlet ("freq", NodePortType::Control);
     addOutlet ("note", NodePortType::Control);
     setParameter ("freq", 440.0f);
+    setParameter ("offset", 0.0f);
 }
 
 void FtomNode::process (int /*numSamples*/)
 {
     float freq = inlets[0].controlValue;
     if (freq <= 0.0f) freq = getParameter ("freq", 440.0f);
+    float offset = getModulatedParamValue ("offset", 0.0f);
 
-    float note = 69.0f + 12.0f * (std::log (std::max (0.001f, freq) / 440.0f) / std::log (2.0f));
+    float note = 69.0f + 12.0f * (std::log (std::max (0.001f, freq) / 440.0f) / std::log (2.0f)) + offset;
     outlets[0].controlValue = note;
 }
 
 std::string FtomNode::getDefaultFormulaScript() const
 {
-    return "// Frequency to MIDI Note [ftom]\n// Note = 69.0 + 12.0 * log2(freq / 440.0)\n\nnote = 69.0 + 12.0 * log2(max(0.001, freq) / 440.0);";
+    return "// Frequency to MIDI Note [ftom]\n// Note = 69.0 + 12.0 * log2(freq / 440.0) + offset\n\nnote = 69.0 + 12.0 * log2(max(0.001, freq) / 440.0) + offset;";
 }
 
 std::vector<ParameterInfo> FtomNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
     defs.push_back ({ "freq", "FREQUENCY (Hz)", getParameter ("freq", 440.0f), 1.0f, 20000.0f, getParamExpression ("freq"), 0 });
+    defs.push_back ({ "offset", "TRANSPOSE OFFSET (semitones)", getParameter ("offset", 0.0f), -48.0f, 48.0f, getParamExpression ("offset"), -1 });
     return defs;
 }
 

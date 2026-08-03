@@ -1325,9 +1325,12 @@ void RelativisticCanvasComponent::commitDraftObject()
     tokens.addTokens (fullText, " ", "");
     std::string typeToken = tokens[0].toStdString();
 
-    if (selectedAutocompleteIdx >= 0 && selectedAutocompleteIdx < static_cast<int>(filteredAutocompleteItems.size()))
+    if (!RelativisticNodeGraph::isValidObjectType (typeToken))
     {
-        typeToken = filteredAutocompleteItems[selectedAutocompleteIdx].typeName;
+        if (selectedAutocompleteIdx >= 0 && selectedAutocompleteIdx < static_cast<int>(filteredAutocompleteItems.size()))
+        {
+            typeToken = filteredAutocompleteItems[selectedAutocompleteIdx].typeName;
+        }
     }
 
     if (!RelativisticNodeGraph::isValidObjectType (typeToken))
@@ -1350,7 +1353,7 @@ void RelativisticCanvasComponent::commitDraftObject()
     auto n = nodeGraph.getNodeById (newId);
     if (n)
     {
-        if (fullText.length() > typeToken.length())
+        if (fullText.length() > juce::String (typeToken).length())
         {
             n->setLabel (fullText.toStdString());
             n->parseLabelArguments (fullText.toStdString());

@@ -61,6 +61,7 @@ StepSequencerNode::StepSequencerNode (int id)
     setParameter ("playMode", 0.0f);   // 0: Fwd, 1: Rev, 2: PingPong, 3: Random, 4: BrownWalk
     setParameter ("scaleMode", 0.0f);  // 0: Off, 1: Major, 2: Minor, 3: Pentatonic
     setParameter ("rootNote", 0.0f);   // 0: C, 1: C# ...
+    setParameter ("offset", 0.0f);     // Transposition offset
 
     setPatternString (patternString);
 }
@@ -163,7 +164,8 @@ void StepSequencerNode::process (int numSamples)
     }
 
     int safeStepIdx = currentStep % static_cast<int>(stepValues.size());
-    float currentPitch = stepValues[safeStepIdx];
+    float offset = getModulatedParamValue ("offset", 0.0f);
+    float currentPitch = stepValues[safeStepIdx] + offset;
 
     outlets[0].controlValue = currentPitch;
     outlets[2].controlValue = (stepProgress < getParameter ("gateLength", 0.5f)) ? 1.0f : 0.0f;
@@ -173,7 +175,7 @@ void StepSequencerNode::process (int numSamples)
 
 std::string StepSequencerNode::getDefaultFormulaScript() const
 {
-    return "// Relativistic Step Sequencer [seq]\n// Outputs pitch, audio gate pulse, and step index\n\npitch = step_pattern[step];";
+    return "// Relativistic Step Sequencer [seq]\n// Outputs pitch, audio gate pulse, and step index\n\npitch = step_pattern[step] + offset;";
 }
 
 std::vector<ParameterInfo> StepSequencerNode::getParameterDefs() const
@@ -184,6 +186,7 @@ std::vector<ParameterInfo> StepSequencerNode::getParameterDefs() const
     defs.push_back ({ "gateLength", "GATE LENGTH DURATION", getParameter ("gateLength", 0.5f), 0.05f, 1.0f, getParamExpression ("gateLength"), -1 });
     defs.push_back ({ "playMode", "PLAYHEAD DIRECTION", getParameter ("playMode", 0.0f), 0.0f, 4.0f, getParamExpression ("playMode"), -1 });
     defs.push_back ({ "scaleMode", "SCALE QUANTIZER", getParameter ("scaleMode", 0.0f), 0.0f, 10.0f, getParamExpression ("scaleMode"), -1 });
+    defs.push_back ({ "offset", "PITCH TRANSPOSE OFFSET", getParameter ("offset", 0.0f), -48.0f, 48.0f, getParamExpression ("offset"), -1 });
     return defs;
 }
 

@@ -43,4 +43,32 @@ c_3 &= \frac{1}{2}(y_3 - y_0) + \frac{3}{2}(y_1 - y_2)
 \subsection{Matrix Representation}
 The Hermite interpolation polynomial can be expressed in compact matrix vector form:
 \begin{equation}
-y(\alpha) = \begin{bmatrix} 1 & \alp
+y(\alpha) = \begin{bmatrix} 1 & \alpha & \alpha^2 & \alpha^3 \end{bmatrix}
+\begin{bmatrix}
+0 & 1 & 0 & 0 \\
+-\frac{1}{2} & 0 & \frac{1}{2} & 0 \\
+1 & -\frac{5}{2} & 2 & -\frac{1}{2} \\
+-\frac{1}{2} & \frac{3}{2} & -\frac{3}{2} & \frac{1}{2}
+\end{bmatrix}
+\begin{bmatrix}
+y_0 \\ y_1 \\ y_2 \\ y_3
+\end{bmatrix}
+\end{equation}
+
+\section{Linear Interpolation \& Nearest Neighbor}
+\subsection{Linear Interpolation (2-Point)}
+For computationally lightweight playback:
+\begin{equation}
+y(\alpha) = (1 - \alpha) y_1 + \alpha y_2
+\end{equation}
+
+\subsection{Nearest Neighbor (Zero-Order Hold)}
+For intentionally quantized glitch sound design:
+\begin{equation}
+y(\alpha) = y_{\lfloor \alpha + 0.5 \rfloor + i}
+\end{equation}
+
+\section{Spectral Error \& Aliasing Suppression}
+Hermite 4-point cubic interpolation provides $O(\Delta x^3)$ local truncation error accuracy, attenuating high-frequency spectral imaging foldback by more than $60\,\text{dB}$ across the audible range compared to linear interpolation.
+
+\end{document}

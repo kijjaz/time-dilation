@@ -57,6 +57,153 @@ struct ParameterInfo
     int modInletIdx = -1; // -1 if not patched as modulation inlet
 };
 
+// Fractional Hermite 4-Point Delay Line for Audio Node Time Dilation
+class AudioTimeDelayLine
+{
+public:
+    AudioTimeDelayLine() = default;
+
+    void prepare (double sampleRate, int numChannels, double maxDelaySeconds = 10.0)
+    {
+        fs = sampleRate;
+        int maxSamples = static_cast<int>(sampleRate * maxDelaySeconds) + 32;
+        buffer.setSize (numChannels, maxSamples);
+        buffer.clear();
+        writePos = 0;
+    }
+
+    void writeSample (int ch, float sample)
+    {
+        if (ch >= buffer.getNumChannels() || buffer.getNumSamples() <= 0) return;
+        buffer.setSample (ch, writePos, sample);
+    }
+
+    void advanceWritePos()
+    {
+        int maxS = buffer.getNumSamples();
+        if (maxS > 0)
+            writePos = (writePos + 1) % maxS;
+    }
+
+    float readHermite (int ch, double delaySamples) const
+    {
+        int numS = buffer.getNumSamples();
+        if (numS <= 0 || ch >= buffer.getNumChannels()) return 0.0f;
+
+        double rPos = static_cast<double>(writePos) - delaySamples;
+        while (rPos < 0.0) rPos += numS;
+        while (rPos >= numS) rPos -= numS;
+
+        int i1 = static_cast<int>(rPos);
+        double f = rPos - i1;
+
+        int i0 = (i1 - 1 + numS) % numS;
+        int i2 = (i1 + 1) % numS;
+        int i3 = (i1 + 2) % numS;
+
+        const float* d = buffer.getReadPointer (ch);
+        float y0 = d[i0], y1 = d[i1], y2 = d[i2], y3 = d[i3];
+
+        float c0 = y1;
+        float c1 = 0.5f * (y2 - y0);
+        float c2 = y0 - 2.5f * y1 + 2.0f * y2 - 0.5f * y3;
+        float c3 = 0.5f * (y3 - y0) + 1.5f * (y1 - y2);
+
+        return c0 + static_cast<float>(f) * (c1 + static_cast<float>(f) * (c2 + static_cast<float>(f) * c3));
+    }
+
+    int getBufferSamples() const { return buffer.getNumSamples(); }
+    int getWritePos() const { return writePos; }
+    const juce::AudioBuffer<float>& getBuffer() const { return buffer; }
+
+private:
+    juce::AudioBuffer<float> buffer;
+    int writePos = 0;
+    double fs = 44100.0;
+};
+
+// Time-Stamped Control Message Structure
+struct ControlMessage
+{
+    double targetTau = 0.0;
+    float value = 0.0f;
+    std::string textMessage;
+    bool isBang = false;
+    int portIndex = 0;
+};
+
+// Time-Stamped Control Message Pipe for Control Node Time Dilation
+class ControlMessagePipe
+{
+public:
+    ControlMessagePipe() = default;
+
+    void clear()
+    {
+        messages.clear();
+        history.clear();
+    }
+
+    void pushMessage (double targetTau, float val, const std::string& msg = "", bool bang = false, int port = 0)
+    {
+        ControlMessage m;
+        m.targetTau = targetTau;
+        m.value = val;
+        m.textMessage = msg;
+        m.isBang = bang;
+        m.portIndex = port;
+        messages.push_back (m);
+    }
+
+    std::vector<ControlMessage> popPendingMessages (double currentTau)
+    {
+        std::vector<ControlMessage> pending;
+        auto it = messages.begin();
+        while (it != messages.end())
+        {
+            if (it->targetTau <= currentTau)
+            {
+                pending.push_back (*it);
+                history.push_back (*it);
+                it = messages.erase (it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+        return pending;
+    }
+
+    std::vector<ControlMessage> popRetrogradeMessages (double currentTau)
+    {
+        std::vector<ControlMessage> pending;
+        auto it = history.rbegin();
+        while (it != history.rend())
+        {
+            if (it->targetTau >= currentTau)
+            {
+                pending.push_back (*it);
+                messages.push_back (*it);
+                it = decltype(it)(history.erase ((it + 1).base()));
+            }
+            else
+            {
+                ++it;
+            }
+        }
+        return pending;
+    }
+
+    size_t getPendingCount() const { return messages.size(); }
+    size_t getHistoryCount() const { return history.size(); }
+    const std::vector<ControlMessage>& getMessages() const { return messages; }
+
+private:
+    std::vector<ControlMessage> messages;
+    std::vector<ControlMessage> history;
+};
+
 class RelativisticNode
 {
 public:
@@ -123,6 +270,15 @@ public:
     double updateCoordinateTime (int numSamples);
     double getLocalCoordinateTime() const { return localCoordinateTime; }
 
+    bool isAudioNode() const;
+    bool isControlNode() const;
+
+    AudioTimeDelayLine& getAudioDelayLine() { return audioDelayLine; }
+    ControlMessagePipe& getControlMessagePipe() { return controlMessagePipe; }
+
+    void processAudioTimeDelay (juce::AudioBuffer<float>& buffer, double effectiveGamma);
+    void processControlTimePipe (double currentTau, double effectiveGamma);
+
     virtual void parseLabelArguments (const std::string& label);
 
 protected:
@@ -133,6 +289,10 @@ protected:
     float posY = 100.0f;
     double localCoordinateTime = 0.0;
     mutable double smoothedGamma = 1.0;
+    double readDelayOffset = 0.0;
+
+    AudioTimeDelayLine audioDelayLine;
+    ControlMessagePipe controlMessagePipe;
 
     const RelativisticNodeGraph* parentGraph = nullptr;
 

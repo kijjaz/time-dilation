@@ -127,4 +127,10 @@ target_link_libraries(TimeDilationDAW_App PRIVATE
 if (MSVC)
     target_compile_options(TimeDilationDAW_App PRIVATE /W4 /fp:fast)
 else()
-    target_compile_options(TimeDilationDAW_App PRIVATE -Wall -Wextra -ffast-math 
+    target_compile_options(TimeDilationDAW_App PRIVATE -Wall -Wextra -ffast-math -O3)
+endif()
+
+juce_generate_juce_header(TimeDilationDAW_App)
+set_target_properties(TimeDilationDAW_App PROPERTIES MACOSX_BUNDLE TRUE)
+
+

@@ -2,6 +2,7 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "VersionInfo.h"
 
 #include <iostream>
 #include <iomanip>
@@ -177,7 +178,7 @@ public:
     TimeDilationApplication() {}
 
     const juce::String getApplicationName() override { return "Time Dilation DAW"; }
-    const juce::String getApplicationVersion() override { return "0.0.1"; }
+    const juce::String getApplicationVersion() override { return APP_SHORT_VERSION_STRING; }
     bool moreThanOneInstanceAllowed() override { return true; }
 
     static TimeDilationApplication* getInstance()

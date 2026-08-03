@@ -923,4 +923,22 @@ private:
     int writeHead = 0;
 };
 
+// ----------------------------------------------------
+// 69. [print] / [monitor] Signal Logger & Inspector Node
+// ----------------------------------------------------
+class PrintMonitorNode : public RelativisticNode
+{
+public:
+    PrintMonitorNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getLogHistory() const;
+    void clearLog();
+private:
+    mutable std::mutex logMutex;
+    std::vector<std::string> logHistory;
+    float lastLoggedValue = -99999.0f;
+};
+
 } // namespace time_dilation

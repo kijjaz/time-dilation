@@ -1,0 +1,9 @@
+#pragma once
+
+#define APP_VERSION_MAJOR 0
+#define APP_VERSION_MINOR 0
+#define APP_VERSION_PATCH 1
+#define APP_BUILD_NUMBER 55
+#define APP_GIT_HASH "805c6b4"
+#define APP_VERSION_STRING "v0.0.1 (Build 55 • 805c6b4)"
+#define APP_SHORT_VERSION_STRING "0.0.1+b55"

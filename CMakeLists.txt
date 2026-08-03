@@ -5,6 +5,44 @@ project(TimeDilationDAW VERSION 0.0.1 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Automated Production Versioning (Git Commit Count + Short Hash)
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-list --count HEAD
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_VARIABLE APP_BUILD_NUMBER
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_VARIABLE APP_GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+endif()
+
+if(NOT APP_BUILD_NUMBER)
+    set(APP_BUILD_NUMBER "1")
+endif()
+
+if(NOT APP_GIT_HASH)
+    set(APP_GIT_HASH "dev")
+endif()
+
+set(APP_VERSION_MAJOR 0)
+set(APP_VERSION_MINOR 0)
+set(APP_VERSION_PATCH 1)
+set(APP_VERSION_STRING "v0.0.1 (Build ${APP_BUILD_NUMBER} • ${APP_GIT_HASH})")
+set(APP_SHORT_VERSION_STRING "0.0.1+b${APP_BUILD_NUMBER}")
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/VersionInfo.h.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/VersionInfo.h"
+    @ONLY
+)
 
 include(FetchContent)
 

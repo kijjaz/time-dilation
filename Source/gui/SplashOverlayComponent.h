@@ -3,6 +3,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <BinaryData.h>
 #include "FontManager.h"
+#include "../VersionInfo.h"
 
 namespace time_dilation
 {

@@ -5,6 +5,7 @@
 #include "TimelineEditorComponent.h"
 #include "ProjectFileManager.h"
 #include "FontManager.h"
+#include "../VersionInfo.h"
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <BinaryData.h>
 
@@ -1196,7 +1197,7 @@ void RelativisticCanvasComponent::showMenuHelp()
             else if (result == 7)
             {
                 showHelpDialog ("About Time Dilation DAW",
-                    "Time Dilation DAW (Version 0.0.1)\n"
+                    "Time Dilation DAW (" + juce::String (APP_VERSION_STRING) + ")\n"
                     "Producer: Kijjaz\n\n"
                     "A state-of-the-art Relativistic Modular Workstation unifying top-down visual patching with bottom-up authentic C++ / DSP math expression coding.");
             }
@@ -3267,7 +3268,7 @@ void RelativisticCanvasComponent::mouseUp (const juce::MouseEvent& e)
                         {
                             nodeGraph.pushUndoState();
                             nodeGraph.addConnection (cableSrcNodeId, cableSrcOutletIdx, node->getId(), static_cast<int>(i));
-                            showNotificationBanner ("Connected " + srcNode->getNodeTypeName() + " -> " + node->getNodeTypeName(), false);
+                            showNotificationBanner ("Connected " + srcNode->getTypeName() + " -> " + node->getTypeName(), false);
                         }
                     }
                     break;

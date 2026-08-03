@@ -248,10 +248,11 @@ def create_time_dilation_logo_v10():
     # SVG Header - SOLID OBSIDIAN BLACK BACKGROUND (#070a12)
     svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%">
     <defs>
-        <radialGradient id="bgGlow" cx="44%" cy="50%" r="65%">
-            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.6"/>
-            <stop offset="45%" stop-color="#090310" stop-opacity="0.3"/>
-            <stop offset="100%" stop-color="#070a12" stop-opacity="1.0"/>
+        <radialGradient id="bgGlow" cx="50%" cy="50%" r="45%">
+            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.5"/>
+            <stop offset="40%" stop-color="#090310" stop-opacity="0.2"/>
+            <stop offset="80%" stop-color="#070a12" stop-opacity="0.0"/>
+            <stop offset="100%" stop-color="#070a12" stop-opacity="0.0"/>
         </radialGradient>
 
         <radialGradient id="singularityGlow" cx="50%" cy="50%" r="50%">

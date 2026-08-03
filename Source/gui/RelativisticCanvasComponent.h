@@ -242,6 +242,12 @@ private:
     juce::TextButton btnNavFitView   { "FIT ALL" };
     juce::TextButton btnNavTidy      { "TIDY" };
 
+    bool isDebugMode = false;
+    juce::TextButton btnToggleDebugMode { "DEBUG: OFF" };
+
+    void drawDebugOverlay (juce::Graphics& g) const;
+    void drawNodeDebugOverlay (juce::Graphics& g, const RelativisticNode& node) const;
+
     void panCanvas (float dx, float dy);
     void fitAllNodesInView();
 

@@ -144,6 +144,18 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
         if (nodeGraph.redo()) repaint();
     };
 
+    addAndMakeVisible (btnToggleDebugMode);
+    btnToggleDebugMode.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1e293b));
+    btnToggleDebugMode.setColour (juce::TextButton::textColourOffId, juce::Colour (0xfff59e0b));
+    btnToggleDebugMode.onClick = [this] {
+        isDebugMode = !isDebugMode;
+        btnToggleDebugMode.setButtonText (isDebugMode ? "DEBUG: ON" : "DEBUG: OFF");
+        btnToggleDebugMode.setColour (juce::TextButton::buttonColourId, isDebugMode ? juce::Colour (0xff6d28d9) : juce::Colour (0xff1e293b));
+        btnToggleDebugMode.setColour (juce::TextButton::textColourOffId, isDebugMode ? juce::Colour (0xff38bdf8) : juce::Colour (0xfff59e0b));
+        rebuildInspector();
+        repaint();
+    };
+
     addAndMakeVisible (btnDuplicate);
     btnDuplicate.setButtonText ("DUP (Cmd-D)");
     btnDuplicate.onClick = [this] {
@@ -783,10 +795,13 @@ void RelativisticCanvasComponent::showMenuView()
     m.addSeparator();
     m.addItem (1, "Recenter Canvas View & Reset Zoom", true);
     m.addItem (109, "Fit All Nodes in View", true);
+    m.addSeparator();
+    m.addItem (500, "Debug Overlay Mode (Inspect All Nodes & Telemetry)", true, isDebugMode);
 
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&btnMenuView),
         [this] (int result) {
-            if (result == 1) { panX = 0.0f; panY = 0.0f; resetZoom(); }
+            if (result == 500) { btnToggleDebugMode.triggerClick(); }
+            else if (result == 1) { panX = 0.0f; panY = 0.0f; resetZoom(); }
             else if (result == 109) { fitAllNodesInView(); }
             else if (result == 2) { showGrid = !showGrid; }
             else if (result == 3) { snapToGrid = !snapToGrid; }
@@ -1685,19 +1700,29 @@ void RelativisticCanvasComponent::rebuildInspector()
         {
             row.slider = std::make_unique<juce::Slider>();
             row.slider->setSliderStyle (juce::Slider::LinearHorizontal);
-            row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 65, 18);
+            row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 75, 20);
+            row.slider->setTextBoxIsEditable (true);
+
+            float minR = def.minValue;
+            float maxR = def.maxValue;
+            if (minR >= maxR) { minR = 0.0f; maxR = 1.0f; }
+
             if (def.type == ParameterType::Integer || def.isInteger)
             {
-                row.slider->setRange (def.minValue, def.maxValue, 1.0);
+                row.slider->setRange (minR, maxR, 1.0);
                 row.slider->setNumDecimalPlacesToDisplay (0);
             }
             else
             {
-                float minR = std::min (-99999.0f, def.minValue);
-                float maxR = std::max (99999.0f, def.maxValue);
-                row.slider->setRange (minR, maxR, 0.01);
+                row.slider->setRange (minR, maxR, 0.001);
+                row.slider->setNumDecimalPlacesToDisplay (3);
+                if (paramKey == "frequency" || paramKey == "cutoff" || paramKey == "lfoSpeed" || paramKey == "centerFreq")
+                {
+                    row.slider->setSkewFactorFromMidPoint (std::sqrt (std::max (1.0f, minR) * maxR));
+                }
             }
-            row.slider->setValue (def.value);
+
+            row.slider->setValue (def.value, juce::dontSendNotification);
             row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
                 auto n = nodeGraph.getNodeById (primaryId);
                 if (n)
@@ -4067,7 +4092,10 @@ void RelativisticCanvasComponent::paint (juce::Graphics& g)
         for (const auto& node : nodeGraph.getNodes())
         {
             drawNode (g, node);
+            if (isDebugMode) drawNodeDebugOverlay (g, *node);
         }
+
+        if (isDebugMode) drawDebugOverlay (g);
 
         // Draw Rubberband Marquee Selection Box
         if (isMarqueeDragging)
@@ -4204,6 +4232,7 @@ void RelativisticCanvasComponent::resized()
     btnSavePatch.setBounds (getWidth() - 250, 6, 80, 32);
     btnLoadPatch.setBounds (getWidth() - 335, 6, 80, 32);
     btnRemoveCable.setBounds (getWidth() - 410, 6, 70, 32);
+    btnToggleDebugMode.setBounds (getWidth() - 495, 6, 80, 32);
 
     // Bottom Palette Toolbar (Streamlined Pure Data-Style)
     const float paletteY = getHeight() - 48.0f;
@@ -4411,6 +4440,98 @@ void RelativisticCanvasComponent::drawNotificationBanner (juce::Graphics& g) con
     g.setColour (textCol);
     g.drawText ((isNotificationWarning ? "! " : "✓ ") + notificationText,
                 bannerX + 16.0f, bannerY, bannerW - 32.0f, bannerH, juce::Justification::centredLeft);
+}
+
+void RelativisticCanvasComponent::drawDebugOverlay (juce::Graphics& g) const
+{
+    float hudX = 15.0f;
+    float hudY = 55.0f;
+    float hudW = 270.0f;
+
+    juce::StringArray lines;
+    lines.add ("=== SYSTEM DEBUG TELEMETRY HUD ===");
+    lines.add ("Audio Engine: " + juce::String (nodeGraph.isAudioEngineEnabled() ? "ON (ACTIVE)" : "OFF (SAFE)"));
+    lines.add ("Active Nodes: " + juce::String (nodeGraph.getNodes().size()) + "  |  Conns: " + juce::String (nodeGraph.getConnections().size()));
+    lines.add ("Causality Horizon: +" + juce::String (nodeGraph.getCurrentCausalityHorizonSec(), 4) + "s");
+    lines.add ("------------------------------------");
+    lines.add ("GLOBAL VARIABLES:");
+    for (const auto& kv : nodeGraph.getGlobalVariables())
+    {
+        lines.add ("  • $" + juce::String (kv.first) + " = " + juce::String (kv.second, 4));
+    }
+    if (nodeGraph.getGlobalVariables().empty())
+    {
+        lines.add ("  • $bpm = 120.0");
+        lines.add ("  • $t = 0.000s");
+        lines.add ("  • $gamma = 1.000x");
+    }
+
+    float hudH = lines.size() * 15.0f + 10.0f;
+
+    g.setColour (juce::Colour (0xee070a12));
+    g.fillRoundedRectangle (hudX, hudY, hudW, hudH, 6.0f);
+    g.setColour (juce::Colour (0xfff59e0b)); // Relativistic Gold Border
+    g.drawRoundedRectangle (hudX, hudY, hudW, hudH, 6.0f, 1.2f);
+
+    g.setFont (FontManager::getInstance().getOxaniumFont (11.0f, false));
+    float textY = hudY + 5.0f;
+    for (int i = 0; i < lines.size(); ++i)
+    {
+        if (i == 0) g.setColour (juce::Colour (0xfff59e0b));
+        else if (i == 1) g.setColour (nodeGraph.isAudioEngineEnabled() ? juce::Colour (0xff22c55e) : juce::Colour (0xffef4444));
+        else g.setColour (juce::Colour (0xffcbd5e1));
+
+        g.drawText (lines[i], hudX + 8.0f, textY, hudW - 16.0f, 15.0f, juce::Justification::centredLeft);
+        textY += 15.0f;
+    }
+}
+
+void RelativisticCanvasComponent::drawNodeDebugOverlay (juce::Graphics& g, const RelativisticNode& node) const
+{
+    float w = getNodeWidth (node);
+    float h = getNodeHeight (node);
+    float debugY = node.getY() + h + 4.0f;
+
+    juce::Font debugFont = FontManager::getInstance().getOxaniumFont (10.0f, false);
+    g.setFont (debugFont);
+
+    juce::StringArray lines;
+    lines.add ("DEBUG NODE #" + juce::String (node.getId()) + " [" + node.getTypeName() + "]");
+    lines.add ("  • τ (local): " + juce::String (const_cast<RelativisticNode&>(node).updateCoordinateTime (0), 3) + "s");
+    lines.add ("  • γ (eff):   " + juce::String (node.getEffectiveGamma(), 3) + "x");
+
+    // Inlets Telemetry
+    for (size_t i = 0; i < node.getInlets().size(); ++i)
+    {
+        const auto& in = node.getInlets()[i];
+        juce::String valStr;
+        if (in.type == NodePortType::Time) valStr = juce::String (in.timeGamma, 2) + "x (time)";
+        else if (in.type == NodePortType::Audio) valStr = juce::String (in.audioData.getMagnitude (0, std::max (1, in.audioData.getNumSamples())), 3) + " (audio peak)";
+        else valStr = juce::String (in.controlValue, 3) + " (ctrl)";
+        lines.add ("  • in" + juce::String (i) + " (" + juce::String (in.name) + "): " + valStr);
+    }
+
+    // Parameters Telemetry
+    for (const auto& kv : node.getParameters())
+    {
+        lines.add ("  • param [" + juce::String (kv.first) + "]: " + juce::String (kv.second, 3));
+    }
+
+    float boxW = std::max (w, 180.0f);
+    float boxH = lines.size() * 14.0f + 8.0f;
+
+    g.setColour (juce::Colour (0xee090d16)); // Deep Slate Card Fill
+    g.fillRoundedRectangle (node.getX(), debugY, boxW, boxH, 4.0f);
+    g.setColour (juce::Colour (0xff06b6d4)); // Cyber Cyan Stroke
+    g.drawRoundedRectangle (node.getX(), debugY, boxW, boxH, 4.0f, 1.0f);
+
+    float textY = debugY + 4.0f;
+    for (int i = 0; i < lines.size(); ++i)
+    {
+        g.setColour (i == 0 ? juce::Colour (0xff38bdf8) : juce::Colour (0xffcbd5e1));
+        g.drawText (lines[i], node.getX() + 6.0f, textY, boxW - 12.0f, 14.0f, juce::Justification::centredLeft);
+        textY += 14.0f;
+    }
 }
 
 } // namespace time_dilation

@@ -42,3 +42,10 @@ Every new node object added to the engine MUST implement both perspectives:
   - Color accents: Royal Violet (`#8b5cf6`), Cyber Cyan (`#06b6d4`), Relativistic Gold (`#f59e0b`).
   - Selection Halo: Glowing Cyan outline (`#38bdf8`).
 - **Icons**: Draw vector antenna icons, LED meters, and port rings directly using JUCE native C++ graphics vector calls.
+
+---
+
+## 7. Token Optimization & Code Indexing Rule (`CODE_INDEX.md`)
+- **Always Check `CODE_INDEX.md` First**: Before reading or modifying large source files (such as `RelativisticCanvasComponent.cpp` or `RelativisticNodeObjects.cpp`), inspect [`CODE_INDEX.md`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/CODE_INDEX.md) to find the exact line numbers for target classes and methods.
+- **Narrow Range Inspection**: Always specify exact `StartLine` and `EndLine` in `view_file` calls to save context tokens.
+- **Auto-Update Index**: When adding new classes or modifying symbol line numbers significantly, run `python3 scripts/generate_code_index.py` to keep `CODE_INDEX.md` up to date.

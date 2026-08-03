@@ -36,6 +36,31 @@ float TimelineTrack::getDilationAtBeat (double beat) const
     return 1.0f;
 }
 
+void TimelineTrack::addControlPoint (double beat, float val)
+{
+    ControlAutomationPoint pt { beat, val };
+    controlPoints.push_back (pt);
+    std::sort (controlPoints.begin(), controlPoints.end(),
+        [] (const ControlAutomationPoint& a, const ControlAutomationPoint& b) { return a.beat < b.beat; });
+}
+
+float TimelineTrack::getControlAtBeat (double beat) const
+{
+    if (controlPoints.empty()) return 0.0f;
+    if (beat <= controlPoints.front().beat) return controlPoints.front().value;
+    if (beat >= controlPoints.back().beat) return controlPoints.back().value;
+
+    for (size_t i = 0; i < controlPoints.size() - 1; ++i)
+    {
+        if (beat >= controlPoints[i].beat && beat <= controlPoints[i + 1].beat)
+        {
+            double t = (beat - controlPoints[i].beat) / (controlPoints[i + 1].beat - controlPoints[i].beat);
+            return controlPoints[i].value + static_cast<float>(t) * (controlPoints[i + 1].value - controlPoints[i].value);
+        }
+    }
+    return 0.0f;
+}
+
 void TimelineTrack::startRecording (double currentBeat)
 {
     isRecording = true;
@@ -226,7 +251,7 @@ std::vector<ParameterInfo> TimelineNode::getParameterDefs() const
 
 std::vector<std::string> TimelineNode::getExposedMethods() const
 {
-    return { "Add Audio Track", "Add MIDI Track", "Add Dilation Track", "Arm All Tracks", "Clear Tracks" };
+    return { "Add Audio Track", "Add MIDI Track", "Add Dilation Track", "Add Control Automation Track", "Arm All Tracks", "Clear Tracks" };
 }
 
 void TimelineNode::invokeMethod (const std::string& methodName)
@@ -242,6 +267,10 @@ void TimelineNode::invokeMethod (const std::string& methodName)
     else if (methodName == "Add Dilation Track")
     {
         addTrack ("Time Dilation Track", TrackType::TimeDilation);
+    }
+    else if (methodName == "Add Control Automation Track")
+    {
+        addTrack ("Control Automation Track", TrackType::ControlAutomation);
     }
     else if (methodName == "Arm All Tracks")
     {

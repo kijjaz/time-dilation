@@ -532,7 +532,7 @@ void RelativisticCanvasComponent::exportCppScript()
 
                 juce::String code;
                 code << "// ==============================================================================\n";
-                code << "// Time Dilation DAW (v4.0) — Exported C++ Relativistic Audio Graph\n";
+                code << "// Time Dilation DAW (v0.0.1) — Exported C++ Relativistic Audio Graph\n";
                 code << "// Generated Automatically from Active Modular Canvas Graph\n";
                 code << "// ==============================================================================\n\n";
                 code << "#include <JuceHeader.h>\n#include <cmath>\n#include <vector>\n#include <string>\n\n";

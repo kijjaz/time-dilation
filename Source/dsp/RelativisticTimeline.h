@@ -14,7 +14,8 @@ enum class TrackType
 {
     Audio,
     Midi,
-    TimeDilation
+    TimeDilation,
+    ControlAutomation
 };
 
 struct AudioClip
@@ -37,6 +38,12 @@ struct TimeDilationPoint
 {
     double beat = 0.0;
     float gamma = 1.0f;
+};
+
+struct ControlAutomationPoint
+{
+    double beat = 0.0;
+    float value = 0.0f;
 };
 
 class TimelineTrack
@@ -77,6 +84,12 @@ public:
     void addDilationPoint (double beat, float gamma);
     float getDilationAtBeat (double beat) const;
 
+    // Control Value Automation Points
+    std::vector<ControlAutomationPoint>& getControlPoints() { return controlPoints; }
+    const std::vector<ControlAutomationPoint>& getControlPoints() const { return controlPoints; }
+    void addControlPoint (double beat, float val);
+    float getControlAtBeat (double beat) const;
+
     // Recording buffer
     juce::AudioBuffer<float>& getRecordingBuffer() { return recordingBuffer; }
     double getRecordStartBeat() const { return recordStartBeat; }
@@ -95,6 +108,7 @@ private:
     std::vector<AudioClip> audioClips;
     std::vector<MidiNoteEvent> midiNotes;
     std::vector<TimeDilationPoint> dilationPoints;
+    std::vector<ControlAutomationPoint> controlPoints;
 
     juce::AudioBuffer<float> recordingBuffer;
     double recordStartBeat = 0.0;

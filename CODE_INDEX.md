@@ -34,8 +34,8 @@ Use this document to pinpoint exact line numbers before invoking `view_file` or 
 | [RelativisticNodeObjects.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticNodeObjects.h) | 860 lines | Audio & DSP Engine |
 | [RelativisticSequencers.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.cpp) | 1043 lines | Audio & DSP Engine |
 | [RelativisticSequencers.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h) | 175 lines | Audio & DSP Engine |
-| [RelativisticTimeline.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp) | 294 lines | Audio & DSP Engine |
-| [RelativisticTimeline.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h) | 141 lines | Audio & DSP Engine |
+| [RelativisticTimeline.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp) | 323 lines | Audio & DSP Engine |
+| [RelativisticTimeline.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h) | 155 lines | Audio & DSP Engine |
 | [RetrogradeAudioBuffer.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RetrogradeAudioBuffer.h) | 89 lines | Audio & DSP Engine |
 | [TidalBeatEngine.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/TidalBeatEngine.cpp) | 168 lines | Audio & DSP Engine |
 | [TidalBeatEngine.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/TidalBeatEngine.h) | 68 lines | Audio & DSP Engine |
@@ -661,30 +661,32 @@ _No major top-level class or method symbols detected._
 | [140](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L140) | `DrumStep` | CLASS |
 | [152](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticSequencers.h#L152) | `DrumSequencerNode` | CLASS |
 
-### [RelativisticTimeline.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp) (294 lines)
+### [RelativisticTimeline.cpp](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp) (323 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
 | [7](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L7) | `TimelineTrack::TimelineTrack` | METHOD |
 | [14](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L14) | `TimelineTrack::addDilationPoint` | METHOD |
-| [39](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L39) | `TimelineTrack::startRecording` | METHOD |
-| [46](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L46) | `TimelineTrack::stopRecording` | METHOD |
-| [65](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L65) | `TimelineNode::TimelineNode` | METHOD |
-| [98](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L98) | `TimelineNode::addTrack` | METHOD |
-| [104](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L104) | `TimelineNode::removeTrack` | METHOD |
-| [112](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L112) | `TimelineNode::process` | METHOD |
-| [232](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L232) | `TimelineNode::invokeMethod` | METHOD |
-| [274](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L274) | `TimelineNode::loadFromValueTree` | METHOD |
+| [39](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L39) | `TimelineTrack::addControlPoint` | METHOD |
+| [64](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L64) | `TimelineTrack::startRecording` | METHOD |
+| [71](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L71) | `TimelineTrack::stopRecording` | METHOD |
+| [90](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L90) | `TimelineNode::TimelineNode` | METHOD |
+| [123](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L123) | `TimelineNode::addTrack` | METHOD |
+| [129](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L129) | `TimelineNode::removeTrack` | METHOD |
+| [137](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L137) | `TimelineNode::process` | METHOD |
+| [257](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L257) | `TimelineNode::invokeMethod` | METHOD |
+| [303](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.cpp#L303) | `TimelineNode::loadFromValueTree` | METHOD |
 
-### [RelativisticTimeline.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h) (141 lines)
+### [RelativisticTimeline.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h) (155 lines)
 
 | Line | Symbol / Description | Type |
 | :--- | :--- | :--- |
-| [20](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L20) | `AudioClip` | CLASS |
-| [28](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L28) | `MidiNoteEvent` | CLASS |
-| [36](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L36) | `TimeDilationPoint` | CLASS |
-| [42](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L42) | `TimelineTrack` | CLASS |
-| [107](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L107) | `TimelineNode` | CLASS |
+| [21](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L21) | `AudioClip` | CLASS |
+| [29](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L29) | `MidiNoteEvent` | CLASS |
+| [37](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L37) | `TimeDilationPoint` | CLASS |
+| [43](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L43) | `ControlAutomationPoint` | CLASS |
+| [49](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L49) | `TimelineTrack` | CLASS |
+| [121](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RelativisticTimeline.h#L121) | `TimelineNode` | CLASS |
 
 ### [RetrogradeAudioBuffer.h](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/dsp/RetrogradeAudioBuffer.h) (89 lines)
 

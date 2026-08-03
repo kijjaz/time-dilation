@@ -1,5 +1,5 @@
 # Project Guidelines & Architectural Rules for AI Agents
-> **Workspace**: Time Dilation DAW (Version 4.0)  
+> **Workspace**: Time Dilation DAW (Version 0.0.1)  
 > **Target Platform**: macOS (JUCE 7 / C++20 Standalone & Plugin)  
 
 ---

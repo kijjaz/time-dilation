@@ -1,4 +1,4 @@
-# Time Dilation DAW (v4.0)
+# Time Dilation DAW (v0.0.1)
 
 <p align="center">
   <img src="web/logo_banner.png" alt="Time Dilation DAW Logo" width="650"/>

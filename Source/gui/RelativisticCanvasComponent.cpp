@@ -3236,8 +3236,40 @@ void RelativisticCanvasComponent::mouseUp (const juce::MouseEvent& e)
                 auto p = getInletPos (*node, static_cast<int>(i));
                 if (p.getDistanceFrom (mousePos) < 14.0f)
                 {
-                    nodeGraph.pushUndoState();
-                    nodeGraph.addConnection (cableSrcNodeId, cableSrcOutletIdx, node->getId(), static_cast<int>(i));
+                    auto srcNode = nodeGraph.getNodeById (cableSrcNodeId);
+                    if (srcNode && cableSrcOutletIdx < static_cast<int>(srcNode->getOutlets().size()))
+                    {
+                        NodePortType srcType = srcNode->getOutlets()[cableSrcOutletIdx].type;
+                        NodePortType destType = node->getInlets()[i].type;
+
+                        bool isCompatible = (srcType == destType) ||
+                                           (srcType == NodePortType::Time && destType == NodePortType::Control) ||
+                                           (srcType == NodePortType::Control && destType == NodePortType::Time);
+
+                        if (!isCompatible)
+                        {
+                            std::string srcName = (srcType == NodePortType::Audio) ? "Audio~" : (srcType == NodePortType::Time ? "Time" : "Control");
+                            std::string destName = (destType == NodePortType::Audio) ? "Audio~" : (destType == NodePortType::Time ? "Time" : "Control");
+
+                            std::string tip = "";
+                            if (srcType == NodePortType::Audio && destType == NodePortType::Time)
+                                tip = "Use [audio2time~] or [a2t~] to convert Audio~ into Time gamma!";
+                            else if (srcType == NodePortType::Time && destType == NodePortType::Audio)
+                                tip = "Use [time2audio~] or [t2a~] to convert Time gamma into Audio~!";
+                            else if (srcType == NodePortType::Audio && destType == NodePortType::Control)
+                                tip = "Use [env~] or [snapshot~] to convert Audio~ into Control!";
+                            else
+                                tip = "Use converter node!";
+
+                            showNotificationBanner ("Incompatible Port Types (" + srcName + " -> " + destName + "). " + tip, true);
+                        }
+                        else
+                        {
+                            nodeGraph.pushUndoState();
+                            nodeGraph.addConnection (cableSrcNodeId, cableSrcOutletIdx, node->getId(), static_cast<int>(i));
+                            showNotificationBanner ("Connected " + srcNode->getNodeTypeName() + " -> " + node->getNodeTypeName(), false);
+                        }
+                    }
                     break;
                 }
             }
@@ -4039,14 +4071,14 @@ void RelativisticCanvasComponent::paint (juce::Graphics& g)
             float alertW = 220.0f;
             float alertH = 24.0f;
 
-            g.setColour (juce::Colour (0xff450a0a)); // Dark Red pill
+            g.setColour (juce::Colour (0xee7f1d1d));
             g.fillRoundedRectangle (boxX, alertY, alertW, alertH, 4.0f);
-            g.setColour (juce::Colour (0xffef4444)); // Neon Red outline
+            g.setColour (juce::Colour (0xffef4444));
             g.drawRoundedRectangle (boxX, alertY, alertW, alertH, 4.0f, 1.0f);
 
-            g.setColour (juce::Colour (0xfffca5a5)); // Bright Red text
-            g.setFont (FontManager::getInstance().getOxaniumFont (11.5f, true));
-            g.drawText ("! NO SUCH OBJECT AVAILABLE", boxX + 8, alertY, alertW - 16, alertH, juce::Justification::centredLeft);
+            g.setColour (juce::Colour (0xffffffff));
+            g.setFont (juce::FontOptions (10.5f, juce::Font::bold));
+            g.drawText ("UNKNOWN OBJECT TYPE", boxX + 6, alertY, alertW - 12, alertH, juce::Justification::centredLeft);
         }
         else if (draftObjectEditor && draftObjectEditor->hasKeyboardFocus (true) && !filteredAutocompleteItems.empty())
         {
@@ -4260,6 +4292,41 @@ void RelativisticCanvasComponent::resized()
         formulaEditor.setVisible (true);
         btnApplyFormula.setVisible (true);
     }
+}
+
+void RelativisticCanvasComponent::showNotificationBanner (const std::string& text, bool isWarning)
+{
+    notificationText = text;
+    isNotificationWarning = isWarning;
+    notificationExpiryTimeMs = juce::Time::getMillisecondCounter() + 4000;
+    repaint();
+}
+
+void RelativisticCanvasComponent::drawNotificationBanner (juce::Graphics& g) const
+{
+    if (notificationText.empty()) return;
+    uint32_t now = juce::Time::getMillisecondCounter();
+    if (now > notificationExpiryTimeMs) return;
+
+    float bannerW = std::min (640.0f, static_cast<float>(getWidth()) - 40.0f);
+    float bannerH = 38.0f;
+    float bannerX = (static_cast<float>(getWidth()) - bannerW) * 0.5f;
+    float bannerY = 55.0f;
+
+    juce::Colour bgCol = isNotificationWarning ? juce::Colour (0xee7f1d1d) : juce::Colour (0xee065f46);
+    juce::Colour borderCol = isNotificationWarning ? juce::Colour (0xffef4444) : juce::Colour (0xff10b981);
+    juce::Colour textCol = juce::Colour (0xffffffff);
+
+    g.setColour (bgCol);
+    g.fillRoundedRectangle (bannerX, bannerY, bannerW, bannerH, 8.0f);
+    g.setColour (borderCol);
+    g.drawRoundedRectangle (bannerX, bannerY, bannerW, bannerH, 8.0f, 1.5f);
+
+    juce::Font f = FontManager::getInstance().getOxaniumFont (12.5f, true);
+    g.setFont (f);
+    g.setColour (textCol);
+    g.drawText ((isNotificationWarning ? "! " : "✓ ") + notificationText,
+                bannerX + 16.0f, bannerY, bannerW - 32.0f, bannerH, juce::Justification::centredLeft);
 }
 
 } // namespace time_dilation

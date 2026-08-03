@@ -257,6 +257,13 @@ private:
     juce::Point<float> getInletPos (const RelativisticNode& node, int idx) const;
     juce::Point<float> getOutletPos (const RelativisticNode& node, int idx) const;
 
+    void showNotificationBanner (const std::string& text, bool isWarning = false);
+    void drawNotificationBanner (juce::Graphics& g) const;
+
+    std::string notificationText;
+    bool isNotificationWarning = false;
+    uint32_t notificationExpiryTimeMs = 0;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativisticCanvasComponent)
 };
 

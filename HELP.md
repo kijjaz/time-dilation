@@ -116,19 +116,35 @@ A. Time Dilation States:
    - Gamma = 0.0  : Gravitational stasis (time holds perfectly still).
    - Gamma = -1.0 : Retrograde causality (time moves in reverse).
 
-B. Core Relativistic Time Nodes:
-   - [time.warp~]     : Continuous time speed scaler (0.1x to 16.0x).
-   - [time.retro~]    : Temporal reversal engine (-1.0x).
-   - [time.stasis~]   : Gravitational freeze gate.
-   - [time.quantize~] : Snaps continuous gamma to metric grid steps (1/16, 1/8).
-   - [time.metro~]    : Dilated metronome tick generator (outputs gamma LFO).
-   - [time.math~]     : Time Signal Combiner (Add, Lorentz Boost, Min, Max, Mix).
-   - [time.scale~]    : Time Dilation Signal Scaler & Shifter.
-   - [time.filter~]   : Gravitational inertia slew filter (smooths time jumps).
-   - [audio2time~]    : Converts audio waveform amplitude into gamma time signal.
-   - [time2audio~]    : Converts gamma time signal into audible audio stream.
+B. Core Relativistic Time Nodes & Mathematical Suite:
+   - [time.warp~]       : Continuous time speed scaler (0.1x to 16.0x).
+   - [time.retro~]      : Temporal reversal engine (-1.0x).
+   - [time.stasis~]     : Gravitational freeze gate.
+   - [time.quantize~]   : Snaps continuous gamma to metric grid steps (1/16, 1/8).
+   - [time.metro~]      : Dilated metronome tick generator (outputs gamma LFO).
+   - [time.math~]       : Time Signal Combiner (Add, Multiply, Min, Max, Mix).
+   - [time.scale~]      : Time Dilation Signal Scaler & Offset Shifter.
+   - [time.filter~]     : Gravitational inertia slew filter (smooths time jumps).
+   - [time.boost~]      : Relativistic Velocity Boost & Einstein Doppler Factor Scaling.
+   - [time.noise~]      : Relativistic Stochastic Temporal Jitter & Brownian Drift Generator.
+   - [time.samplehold~] : Time Dilation Sample & Hold (samples continuous gamma on trigger).
+   - [time.invert~]     : Reciprocal Time Dilation (1/gamma) for exact time un-warping.
+   - [time.logic~]      : Relativistic Time Comparator & Gate (GreaterThan, Stasis, Max, Min).
+   - [time.delay~]      : Time Dilation Signal Delay Line (Delays gamma signal propagation).
+   - [audio2time~]      : Converts audio waveform amplitude into gamma time signal.
+   - [time2audio~]      : Converts gamma time signal into audible audio stream.
 
-C. Inter-Time Dilation Modulation (Time Objects Modulating Time Objects):
+C. Port Type Compatibility & Conversion Feedback:
+   The workspace enforces signal compatibility between ports:
+   - Time (Purple) <-> Time (Purple) : Direct connection allowed.
+   - Time (Purple) -> Control (Amber) : Direct connection allowed (gamma scalar modulation).
+   - Audio~ (Cyan) -> Time (Purple)   : Requires [audio2time~] or [a2t~] converter!
+   - Time (Purple) -> Audio~ (Cyan)   : Requires [time2audio~] or [t2a~] converter!
+   - Audio~ (Cyan) -> Control (Amber) : Requires [env~] or [snapshot~] converter!
+   
+   If incompatible ports are patched, a notification banner immediately alerts the user with converter tips!
+
+D. Inter-Time Dilation Operations & Cascades:
    Time objects can feed directly into the timeIn (Inlet 0) or modulation inlets
    of other time objects!
    

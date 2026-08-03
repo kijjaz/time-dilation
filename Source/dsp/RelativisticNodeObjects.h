@@ -844,23 +844,83 @@ private:
     double filteredGamma = 1.0;
 };
 // ----------------------------------------------------
-// 62. [print] Control & Signal Data Logger Node Object
+// 63. [time.boost~] Relativistic Velocity Boost & Lorentz Transformer
 // ----------------------------------------------------
-class PrintMonitorNode : public RelativisticNode
+class TimeLorentzBoostNode : public RelativisticNode
 {
 public:
-    PrintMonitorNode (int id);
+    TimeLorentzBoostNode (int id);
     void process (int numSamples) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
+};
 
-    std::vector<std::string> getLogHistory() const;
-    void clearLog();
-
+// ----------------------------------------------------
+// 64. [time.noise~] Relativistic Stochastic Temporal Jitter & Drift Generator
+// ----------------------------------------------------
+class TimeNoiseNode : public RelativisticNode
+{
+public:
+    TimeNoiseNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
 private:
-    float lastLoggedValue = -999999.0f;
-    std::vector<std::string> logHistory;
-    mutable std::mutex logMutex;
+    double randomState = 1.0;
+};
+
+// ----------------------------------------------------
+// 65. [time.samplehold~] Relativistic Time Dilation Sample & Hold
+// ----------------------------------------------------
+class TimeSampleHoldNode : public RelativisticNode
+{
+public:
+    TimeSampleHoldNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+private:
+    double heldGamma = 1.0;
+    float lastTrigState = 0.0f;
+};
+
+// ----------------------------------------------------
+// 66. [time.invert~] Reciprocal Time Dilation & Un-Warping Restitution Node
+// ----------------------------------------------------
+class TimeInvertNode : public RelativisticNode
+{
+public:
+    TimeInvertNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 67. [time.logic~] Relativistic Time Comparator & Gate Node
+// ----------------------------------------------------
+class TimeLogicNode : public RelativisticNode
+{
+public:
+    TimeLogicNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// ----------------------------------------------------
+// 68. [time.delay~] Relativistic Time Signal Delay Line (Time Memory)
+// ----------------------------------------------------
+class TimeDelayNode : public RelativisticNode
+{
+public:
+    TimeDelayNode (int id);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+private:
+    std::vector<double> historyBuffer;
+    int writeHead = 0;
 };
 
 } // namespace time_dilation

@@ -371,6 +371,8 @@ bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
         "number", "num", "nb", "display", "number.display", "bang", "b", "bang~", "b~", "counter", "cnt", "note",
         "slider", "hslider", "vslider", "toggle", "tgl", "audio2time~", "a2t~", "time2audio~", "t2a~",
         "time.math~", "time.combine~", "time.+", "time.-", "time.*", "time.scale~", "time.filter~",
+        "time.boost~", "time.lorenz~", "time.noise~", "time.rand~", "time.samplehold~", "time.sh~",
+        "time.invert~", "time.reciprocal~", "time.logic~", "time.gate~", "time.delay~",
         "seq", "step", "euclid", "markov", "tidal", "tidal~", "fbdrum~", "drum~", "drums~",
         "drumseq", "drumstep", "timeline", "arrangement"
     };
@@ -460,6 +462,12 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "time.math~" || typeName == "time.combine~" || typeName == "time.+" || typeName == "time.-" || typeName == "time.*") node = std::make_shared<TimeMathNode> (id);
     else if (typeName == "time.scale~") node = std::make_shared<TimeScaleNode> (id);
     else if (typeName == "time.filter~") node = std::make_shared<TimeFilterNode> (id);
+    else if (typeName == "time.boost~" || typeName == "time.lorenz~") node = std::make_shared<TimeLorentzBoostNode> (id);
+    else if (typeName == "time.noise~" || typeName == "time.rand~") node = std::make_shared<TimeNoiseNode> (id);
+    else if (typeName == "time.samplehold~" || typeName == "time.sh~") node = std::make_shared<TimeSampleHoldNode> (id);
+    else if (typeName == "time.invert~" || typeName == "time.reciprocal~") node = std::make_shared<TimeInvertNode> (id);
+    else if (typeName == "time.logic~" || typeName == "time.gate~") node = std::make_shared<TimeLogicNode> (id);
+    else if (typeName == "time.delay~") node = std::make_shared<TimeDelayNode> (id);
     else if (typeName == "note")           node = std::make_shared<NoteGenNode> (id);
     else if (typeName == "time.future~" || typeName == "future~") node = std::make_shared<TimeFutureNode> (id);
     else if (typeName == "seq" || typeName == "step") node = std::make_shared<StepSequencerNode> (id);

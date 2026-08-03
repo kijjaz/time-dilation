@@ -3626,6 +3626,224 @@ std::vector<ParameterInfo> TimeFilterNode::getParameterDefs() const
     return defs;
 }
 
+// ----------------------------------------------------
+// 63. [time.boost~] Relativistic Velocity Boost & Lorentz Transformer
+// ----------------------------------------------------
+TimeLorentzBoostNode::TimeLorentzBoostNode (int id)
+    : RelativisticNode (id, "time.boost~", "time.boost~ v/c=0.5")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("velocity", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("velocity", 0.5f);
+}
+
+void TimeLorentzBoostNode::process (int /*numSamples*/)
+{
+    double inGamma = inlets[0].timeGamma;
+    float v_c = std::clamp (getModulatedParamValue ("velocity", 0.5f), -0.999f, 0.999f);
+
+    // Einstein Doppler shift factor: sqrt((1 + v/c) / (1 - v/c))
+    double dopplerFactor = std::sqrt ((1.0 + v_c) / (1.0 - v_c));
+    outlets[0].timeGamma = inGamma * dopplerFactor;
+}
+
+std::string TimeLorentzBoostNode::getDefaultFormulaScript() const
+{
+    return "// Relativistic Velocity Boost [time.boost~]\n// Computes Einstein Doppler Shift factor sqrt((1+v/c)/(1-v/c))\n\ngammaOut = gammaIn * sqrt((1.0 + v_c) / (1.0 - v_c));";
+}
+
+std::vector<ParameterInfo> TimeLorentzBoostNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "velocity", "RELATIVE VELOCITY (v/c)", getParameter ("velocity", 0.5f), -0.999f, 0.999f, getParamExpression ("velocity"), 1, false });
+    return defs;
+}
+
+// ----------------------------------------------------
+// 64. [time.noise~] Relativistic Stochastic Temporal Jitter & Drift Generator
+// ----------------------------------------------------
+TimeNoiseNode::TimeNoiseNode (int id)
+    : RelativisticNode (id, "time.noise~", "time.noise~ drift")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("rate", NodePortType::Control);
+    addInlet ("depth", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("rate", 2.0f);
+    setParameter ("depth", 0.25f);
+}
+
+void TimeNoiseNode::process (int /*numSamples*/)
+{
+    double inGamma = inlets[0].timeGamma;
+    float rate = std::max (0.01f, getModulatedParamValue ("rate", 2.0f));
+    float depth = std::max (0.0f, getModulatedParamValue ("depth", 0.25f));
+
+    // Brownian time drift
+    double step = (randomState * 0.1) * (rate * 0.05);
+    randomState = std::clamp (randomState + (static_cast<double>(rand()) / RAND_MAX - 0.5) * step, -1.0, 1.0);
+
+    double noiseGamma = 1.0 + randomState * depth;
+    outlets[0].timeGamma = std::max (0.0001, inGamma * noiseGamma);
+}
+
+std::string TimeNoiseNode::getDefaultFormulaScript() const
+{
+    return "// Relativistic Stochastic Time Jitter [time.noise~]\n// Generates Brownian temporal quantum drift\n\ngammaOut = gammaIn * (1.0 + brownianDrift * depth);";
+}
+
+std::vector<ParameterInfo> TimeNoiseNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "rate", "JITTER DRIFT RATE (Hz)", getParameter ("rate", 2.0f), 0.01f, 50.0f, getParamExpression ("rate"), 1, false });
+    defs.push_back ({ "depth", "TEMPORAL DRIFT DEPTH", getParameter ("depth", 0.25f), 0.0f, 4.0f, getParamExpression ("depth"), 2, false });
+    return defs;
+}
+
+// ----------------------------------------------------
+// 65. [time.samplehold~] Relativistic Time Dilation Sample & Hold
+// ----------------------------------------------------
+TimeSampleHoldNode::TimeSampleHoldNode (int id)
+    : RelativisticNode (id, "time.samplehold~", "time.samplehold~")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("trigIn", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+}
+
+void TimeSampleHoldNode::process (int /*numSamples*/)
+{
+    double inGamma = inlets[0].timeGamma;
+    float trig = inlets[1].controlValue;
+
+    // Trigger on rising edge (> 0.5)
+    if (trig > 0.5f && lastTrigState <= 0.5f)
+    {
+        heldGamma = inGamma;
+    }
+    lastTrigState = trig;
+    outlets[0].timeGamma = heldGamma;
+}
+
+std::string TimeSampleHoldNode::getDefaultFormulaScript() const
+{
+    return "// Relativistic Time Sample & Hold [time.samplehold~]\n// Samples continuous gamma on clock pulse trigger\n\nif (trig > 0.5 && lastTrig <= 0.5) heldGamma = gammaIn;\ngammaOut = heldGamma;";
+}
+
+std::vector<ParameterInfo> TimeSampleHoldNode::getParameterDefs() const
+{
+    return {};
+}
+
+// ----------------------------------------------------
+// 66. [time.invert~] Reciprocal Time Dilation & Un-Warping Restitution Node
+// ----------------------------------------------------
+TimeInvertNode::TimeInvertNode (int id)
+    : RelativisticNode (id, "time.invert~", "time.invert~ 1/gamma")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addOutlet ("timeOut", NodePortType::Time);
+}
+
+void TimeInvertNode::process (int /*numSamples*/)
+{
+    double inGamma = inlets[0].timeGamma;
+    outlets[0].timeGamma = (std::abs(inGamma) > 1e-6) ? (1.0 / inGamma) : 0.0;
+}
+
+std::string TimeInvertNode::getDefaultFormulaScript() const
+{
+    return "// Reciprocal Time Dilation [time.invert~]\n// Restores time-warped signals back to real-time (1.0 / gamma)\n\ngammaOut = 1.0 / gammaIn;";
+}
+
+std::vector<ParameterInfo> TimeInvertNode::getParameterDefs() const
+{
+    return {};
+}
+
+// ----------------------------------------------------
+// 67. [time.logic~] Relativistic Time Comparator & Gate Node
+// ----------------------------------------------------
+TimeLogicNode::TimeLogicNode (int id)
+    : RelativisticNode (id, "time.logic~", "time.logic~ >")
+{
+    addInlet ("timeInA", NodePortType::Time);
+    addInlet ("timeInB", NodePortType::Time);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("mode", 0.0f); // 0: GreaterThan, 1: StasisCheck, 2: Max, 3: Min
+}
+
+void TimeLogicNode::process (int /*numSamples*/)
+{
+    double gA = inlets[0].timeGamma;
+    double gB = inlets[1].timeGamma;
+    int mode = static_cast<int>(getParameter ("mode", 0.0f));
+
+    if (mode == 0) // GreaterThan
+        outlets[0].timeGamma = (gA > gB) ? gA : 0.0;
+    else if (mode == 1) // StasisCheck (true if gamma A is near zero)
+        outlets[0].timeGamma = (std::abs(gA) < 0.001) ? 1.0 : 0.0;
+    else if (mode == 2) // Max
+        outlets[0].timeGamma = std::max (gA, gB);
+    else // Min
+        outlets[0].timeGamma = std::min (gA, gB);
+}
+
+std::string TimeLogicNode::getDefaultFormulaScript() const
+{
+    return "// Relativistic Time Logic [time.logic~]\n// Compares two time dilation signals (GreaterThan, StasisCheck, Max, Min)\n\ngammaOut = (mode == 0) ? (gA > gB ? gA : 0.0) : max(gA, gB);";
+}
+
+std::vector<ParameterInfo> TimeLogicNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "mode", "COMPARATOR MODE (0:>, 1:Stasis, 2:Max, 3:Min)", getParameter ("mode", 0.0f), 0.0f, 3.0f, getParamExpression ("mode"), -1, false });
+    return defs;
+}
+
+// ----------------------------------------------------
+// 68. [time.delay~] Relativistic Time Signal Delay Line (Time Memory)
+// ----------------------------------------------------
+TimeDelayNode::TimeDelayNode (int id)
+    : RelativisticNode (id, "time.delay~", "time.delay~ 100ms")
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("delayMs", NodePortType::Control);
+    addOutlet ("timeOut", NodePortType::Time);
+
+    setParameter ("delayMs", 100.0f);
+    historyBuffer.resize (44100, 1.0);
+}
+
+void TimeDelayNode::process (int /*numSamples*/)
+{
+    double inGamma = inlets[0].timeGamma;
+    float delayMs = std::clamp (getModulatedParamValue ("delayMs", 100.0f), 1.0f, 1000.0f);
+    int delaySamples = std::clamp (static_cast<int>(delayMs * (currentSampleRate / 1000.0)), 1, static_cast<int>(historyBuffer.size()) - 1);
+
+    historyBuffer[writeHead] = inGamma;
+    int readHead = (writeHead - delaySamples + static_cast<int>(historyBuffer.size())) % static_cast<int>(historyBuffer.size());
+    outlets[0].timeGamma = historyBuffer[readHead];
+
+    writeHead = (writeHead + 1) % static_cast<int>(historyBuffer.size());
+}
+
+std::string TimeDelayNode::getDefaultFormulaScript() const
+{
+    return "// Relativistic Time Dilation Delay [time.delay~]\n// Delays propagation of time dilation signal by N ms\n\ngammaOut = history[writeHead - delaySamples];";
+}
+
+std::vector<ParameterInfo> TimeDelayNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "delayMs", "TIME SIGNAL DELAY (ms)", getParameter ("delayMs", 100.0f), 1.0f, 1000.0f, getParamExpression ("delayMs"), 1, false });
+    return defs;
+}
+
 } // namespace time_dilation
 
 

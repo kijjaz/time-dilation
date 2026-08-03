@@ -999,6 +999,68 @@ void RelativisticNodeGraph::loadSoundPitchWarpingExamplePatch()
     detectFeedbackLoops();
 }
 
+void RelativisticNodeGraph::loadRelativisticTimeModulationExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nMetro   = addNode ("time.metro~", 80.0f, 100.0f);
+    int nWarp    = addNode ("time.warp~",  80.0f, 260.0f);
+    int nTMath   = addNode ("time.math~",  280.0f, 180.0f);
+    int nSlider  = addNode ("slider",      480.0f, 80.0f);
+    int nSeq     = addNode ("seq",         480.0f, 220.0f);
+    int nMtof    = addNode ("mtof",        480.0f, 360.0f);
+    int nOsc     = addNode ("osc~",        480.0f, 480.0f);
+    int nFilter  = addNode ("filter~",     480.0f, 620.0f);
+    int nGain    = addNode ("gain~",       480.0f, 740.0f);
+    int nOut     = addNode ("out~",        480.0f, 860.0f);
+
+    auto nodeMetro = getNodeById (nMetro);
+    if (nodeMetro) nodeMetro->setParameter ("rate", 1.5f);
+
+    auto nodeWarp = getNodeById (nWarp);
+    if (nodeWarp) nodeWarp->setParameter ("dilationGamma", 1.25f);
+
+    auto nodeTMath = getNodeById (nTMath);
+    if (nodeTMath) nodeTMath->setParameter ("mode", 1.0f); // Lorentz Boost Composition!
+
+    auto nodeSlider = getNodeById (nSlider);
+    if (nodeSlider)
+    {
+        nodeSlider->setParameter ("min", 1.0f);
+        nodeSlider->setParameter ("max", 16.0f);
+        nodeSlider->setParameter ("isInteger", 1.0f);
+        nodeSlider->setParameter ("value", 8.0f);
+    }
+
+    auto nodeSeq = std::dynamic_pointer_cast<StepSequencerNode> (getNodeById (nSeq));
+    if (nodeSeq) nodeSeq->setPatternString ("48 52 55 59 60 64 67 71");
+
+    auto nodeFilter = getNodeById (nFilter);
+    if (nodeFilter) nodeFilter->setParameter ("cutoff", 2400.0f);
+
+    auto nodeGain = getNodeById (nGain);
+    if (nodeGain) nodeGain->setParameter ("gain", 0.65f);
+
+    auto nodeOut = getNodeById (nOut);
+    if (nodeOut) nodeOut->setParameter ("volume", 0.6f);
+
+    // Patch Connections: Time Modulating Time & Sequential Control
+    addConnection (nMetro, 0, nTMath, 0);     // time.metro~ gamma1 -> time.math~ inlet 0
+    addConnection (nWarp, 0, nTMath, 1);      // time.warp~ gamma2 -> time.math~ inlet 1
+    addConnection (nTMath, 0, nSeq, 0);       // Lorentz-combined time gamma -> seq timeIn!
+    addConnection (nTMath, 0, nOsc, 0);       // Lorentz-combined time gamma -> osc~ timeIn!
+    addConnection (nSlider, 0, nSeq, 1);      // slider (integer) -> seq steps
+    addConnection (nSeq, 0, nMtof, 1);        // seq note -> mtof midiIn
+    addConnection (nMtof, 0, nOsc, 1);        // mtof freq -> osc~ freq
+    addConnection (nOsc, 0, nFilter, 1);      // osc~ out~ -> filter~ in~
+    addConnection (nFilter, 0, nGain, 1);     // filter~ out~ -> gain~ in~
+    addConnection (nGain, 0, nOut, 1);        // gain~ out~ -> out~ inL~
+    addConnection (nGain, 0, nOut, 2);        // gain~ out~ -> out~ inR~
+
+    detectFeedbackLoops();
+}
+
 void RelativisticNodeGraph::pushUndoState()
 {
     auto currentState = saveToValueTree();

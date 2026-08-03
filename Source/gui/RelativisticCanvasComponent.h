@@ -176,6 +176,8 @@ private:
         std::string key;
         std::unique_ptr<juce::Label> label;
         std::unique_ptr<juce::Slider> slider;
+        std::unique_ptr<juce::TextButton> btnToggle;
+        std::unique_ptr<juce::TextEditor> symbolEditor;
         std::unique_ptr<juce::TextEditor> exprEditor;
         std::unique_ptr<juce::TextButton> btnModInlet;
         std::unique_ptr<juce::TextButton> btnTapValue;

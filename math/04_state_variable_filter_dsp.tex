@@ -36,30 +36,4 @@ v_H(n) &= \frac{x(n) - (g + k) s_1(n-1) - s_2(n-1)}{1 + g(g + k)} \\
 v_B(n) &= g \cdot v_H(n) + s_1(n-1) \\
 v_L(n) &= g \cdot v_B(n) + s_2(n-1)
 \end{align}
-State registers $s_1(n)$ and $s_2(n)$ are updated per sample as:
-\begin{align}
-s_1(n) &= 2 v_B(n) - s_1(n-1) \\
-s_2(n) &= 2 v_L(n) - s_2(n-1)
-\end{align}
-
-\section{Filter Mode Combinations}
-The active output signal $y(n)$ is selected according to filter mode:
-\begin{equation}
-y(n) =
-\begin{cases}
-v_L(n), & \text{Low-Pass (LP)} \\
-v_H(n), & \text{High-Pass (HP)} \\
-v_B(n), & \text{Band-Pass (BP)} \\
-v_H(n) + v_L(n), & \text{Notch / Band-Reject}
-\end{cases}
-\end{equation}
-
-\section{Moog 24dB 4-Pole Resonant Lowpass Cascade (\texttt{[filter\textasciitilde{}]})}
-For 4-pole $24\,\text{dB/octave}$ attenuation, two identical TPT 2-pole SVF stages are cascaded in series:
-\begin{align}
-y_{\text{stage1}}(n) &= \text{TPT\_SVF}_1\left(x(n), \, f_c, \, Q\right) \\
-y_{\text{stage2}}(n) &= \text{TPT\_SVF}_2\left(y_{\text{stage1}}(n), \, f_c, \, Q\right)
-\end{align}
-This structure maintains amplitude stability and prevents digital cramping near the Nyquist limit $f_s / 2$.
-
-\end{document}
+St

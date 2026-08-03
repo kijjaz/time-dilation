@@ -381,6 +381,10 @@ void TimeScopeNode::process (int numSamples)
     signalHistory[historyWritePos] = sampleVal;
     historyWritePos = (historyWritePos + 1) % signalHistory.size();
 
+    float peakInHistory = 1.0f;
+    for (float v : signalHistory) peakInHistory = std::max (peakInHistory, std::abs (v));
+    autoScaleMax += 0.1f * (peakInHistory * 1.15f - autoScaleMax);
+
     if (!outlets.empty())
     {
         outlets[0].controlValue = static_cast<float>(localCoordinateTime);
@@ -437,6 +441,14 @@ void TimeXYNode::process (int numSamples)
 
     pointHistory[writePos] = { valX, valY };
     writePos = (writePos + 1) % pointHistory.size();
+
+    float peakRadInHistory = 1.0f;
+    for (const auto& p : pointHistory)
+    {
+        float r = std::sqrt (p.x * p.x + p.y * p.y);
+        peakRadInHistory = std::max (peakRadInHistory, r);
+    }
+    autoScaleRadius += 0.1f * (peakRadInHistory * 1.15f - autoScaleRadius);
 
     if (outlets.size() > 0) outlets[0].controlValue = valX;
     if (outlets.size() > 1) outlets[1].controlValue = valY;
@@ -1057,6 +1069,14 @@ FilterNode::FilterNode (int id)
 
 void FilterNode::process (int numSamples)
 {
+    if (isBypassed())
+    {
+        outlets[0].audioData.copyFrom (0, 0, inlets[1].audioData, 0, 0, numSamples);
+        if (outlets[0].audioData.getNumChannels() > 1 && inlets[1].audioData.getNumChannels() > 1)
+            outlets[0].audioData.copyFrom (1, 0, inlets[1].audioData, 1, 0, numSamples);
+        return;
+    }
+
     double gamma = getEffectiveGamma();
     const auto* inL = inlets[1].audioData.getReadPointer (0);
     const auto* inR = (inlets[1].audioData.getNumChannels() > 1) ? inlets[1].audioData.getReadPointer (1) : inL;
@@ -1066,8 +1086,9 @@ void FilterNode::process (int numSamples)
 
     for (int s = 0; s < numSamples; ++s)
     {
-        float cutoff = getModulatedParamValue ("cutoff", 1200.0f, s) + inlets[2].controlValue;
-        cutoff = cutoff * static_cast<float>(std::abs (gamma));
+        float modVal = (inlets.size() > 2) ? inlets[2].controlValue : 0.0f;
+        float baseCutoff = getModulatedParamValue ("cutoff", 1200.0f, s);
+        float cutoff = (baseCutoff + modVal) * static_cast<float>(std::abs (gamma));
         cutoff = std::clamp (cutoff, 20.0f, std::min (20000.0f, static_cast<float>(currentSampleRate * 0.42f)));
         float alpha = std::clamp (static_cast<float>(2.0 * juce::MathConstants<double>::pi * cutoff / currentSampleRate), 0.001f, 0.95f);
 
@@ -1700,16 +1721,19 @@ void CounterNode::invokeMethod (const std::string& methodName)
 
 // 15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering
 OutNode::OutNode (int id)
-    : RelativisticNode (id, "out~", "out~ (Scope & Volume)")
+    : RelativisticNode (id, "out~", "out~ (Stereo Output)")
 {
-    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
-    addInlet ("L~", NodePortType::Audio);          // Inlet 1: Audio Left input
-    addInlet ("R~", NodePortType::Audio);          // Inlet 2: Audio Right input
-    addInlet ("vol_mod", NodePortType::Control);   // Inlet 3: Master Volume modulation
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("inL~", NodePortType::Audio);
+    addInlet ("inR~", NodePortType::Audio);
+    addInlet ("volMod", NodePortType::Control);
+
     addOutlet ("L~", NodePortType::Audio);
     addOutlet ("R~", NodePortType::Audio);
 
     setParameter ("volume", 0.8f);
+    setParameter ("limiter", 1.0f);     // 1: ENABLED (ARC Safety Peak Limiter)
+    setParameter ("ceilingDb", -1.5f);  // Default ceiling: -1.5 dBFS
     setParameter ("displayMode", 0.0f); // 0: Waveform vs Time, 1: X-Y Lissajous
 
     scopeBufferL.assign (256, 0.0f);
@@ -1775,13 +1799,48 @@ void OutNode::process (int numSamples)
     auto* outR = outlets[1].audioData.getWritePointer (0);
 
     float vol = getParameter ("volume", 0.8f) + inlets[3].controlValue;
+    bool limiterEnabled = (getParameter ("limiter", 1.0f) > 0.5f);
+    float ceilingDb = getParameter ("ceilingDb", -1.5f);
+    float ceilingLinear = std::pow (10.0f, ceilingDb / 20.0f); // -1.5 dBFS => ~0.8414f
+
     float sumSqL = 0.0f, sumSqR = 0.0f;
     float pL = 0.0f, pR = 0.0f;
 
+    double sr = std::max (44100.0, currentSampleRate);
+    float attCoeff = 1.0f - std::exp (-1.0f / static_cast<float>(0.00005 * sr)); // 0.05ms attack
+
     for (int s = 0; s < numSamples; ++s)
     {
-        float sL = std::clamp (inL[s] * vol, -2.0f, 2.0f);
-        float sR = std::clamp (inR[s] * vol, -2.0f, 2.0f);
+        float sL = inL[s] * vol;
+        float sR = inR[s] * vol;
+
+        if (limiterEnabled)
+        {
+            float peakMag = std::max (std::abs (sL), std::abs (sR));
+            float targetGain = (peakMag > ceilingLinear) ? (ceilingLinear / peakMag) : 1.0f;
+
+            // ARC (Auto Release Control):
+            // Short spikes -> 10ms fast release
+            // Sustained peaks -> 300ms smooth release to prevent harmonic distortion
+            float excessRatio = (ceilingLinear > 0.0001f) ? (peakMag / ceilingLinear) : 1.0f;
+            float relTimeSec = (excessRatio > 1.5f) ? 0.300f : 0.010f;
+            float relCoeff = 1.0f - std::exp (-1.0f / static_cast<float>(relTimeSec * sr));
+
+            float coeff = (targetGain < limiterGain) ? attCoeff : relCoeff;
+            limiterGain += coeff * (targetGain - limiterGain);
+
+            sL *= limiterGain;
+            sR *= limiterGain;
+
+            sL = std::clamp (sL, -ceilingLinear, +ceilingLinear);
+            sR = std::clamp (sR, -ceilingLinear, +ceilingLinear);
+        }
+        else
+        {
+            sL = std::clamp (sL, -2.0f, 2.0f);
+            sR = std::clamp (sR, -2.0f, 2.0f);
+        }
+
         outL[s] = sL;
         outR[s] = sR;
 
@@ -1817,27 +1876,34 @@ void OutNode::process (int numSamples)
 
 std::string OutNode::getDefaultFormulaScript() const
 {
-    return "// Master Output & Oscilloscope [out~]\n// Inputs: $v1 (Left Audio), $v2 (Right Audio), $v3 (Volume Mod)\n\nout_L = $v1 * (volume + $v3);\nout_R = $v2 * (volume + $v3);";
+    return "// Master Output & Oscilloscope [out~]\n// Inputs: $v1 (Left Audio), $v2 (Right Audio), $v3 (Volume Mod)\n\nout_L = clamp($v1 * (volume + $v3), -ceiling, +ceiling);\nout_R = clamp($v2 * (volume + $v3), -ceiling, +ceiling);";
 }
 
 std::vector<ParameterInfo> OutNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
     defs.push_back ({ "volume", "MASTER OUTPUT VOLUME", getParameter ("volume", 0.8f), 0.0f, 1.5f, getParamExpression ("volume"), -1 });
+    defs.push_back ({ "limiter", "ARC SAFETY LIMITER (0/1)", getParameter ("limiter", 1.0f), 0.0f, 1.0f, getParamExpression ("limiter"), -1, true });
+    defs.push_back ({ "ceilingDb", "CEILING LIMIT (dBFS)", getParameter ("ceilingDb", -1.5f), -12.0f, 0.0f, getParamExpression ("ceilingDb"), -1 });
     defs.push_back ({ "displayMode", "SCOPE MODE (0: TIME DOMAIN, 1: X-Y LISSAJOUS)", getParameter ("displayMode", 0.0f), 0.0f, 1.0f, getParamExpression ("displayMode"), -1 });
     return defs;
 }
 
 std::vector<std::string> OutNode::getExposedMethods() const
 {
-    return { "Toggle Scope Mode", isRecording ? "Stop WAV Record" : "Start WAV Record" };
+    return { "Toggle ARC Limiter", "Toggle Scope Mode", isRecording ? "Stop WAV Record" : "Start WAV Record" };
 }
 
 void OutNode::invokeMethod (const std::string& methodName)
 {
-    if (methodName == "Toggle Scope Mode")
+    if (methodName == "Toggle ARC Limiter")
     {
-        float current = getParameter ("displayMode", 0.0f);
+        float st = getParameter ("limiter", 1.0f);
+        setParameter ("limiter", (st > 0.5f) ? 0.0f : 1.0f);
+    }
+    else if (methodName == "Toggle Scope Mode")
+    {
+        float current = getParameter ("displayMode", 0.0f);;
         setParameter ("displayMode", (current > 0.5f) ? 0.0f : 1.0f);
     }
     else if (methodName == "Start WAV Record" || methodName == "Stop WAV Record" || methodName.find ("WAV") != std::string::npos)

@@ -99,18 +99,28 @@ bool ProjectFileManager::saveProjectBundle (const juce::File& targetProjectFileO
 bool ProjectFileManager::loadProjectBundle (const juce::File& projectFolderOrFile, RelativisticNodeGraph& graph)
 {
     juce::File xmlFile;
+    juce::File targetFolder;
+
     if (projectFolderOrFile.isDirectory())
     {
-        currentProjectFolder = projectFolderOrFile;
+        targetFolder = projectFolderOrFile;
         xmlFile = projectFolderOrFile.getChildFile ("project.xml");
+        if (!xmlFile.existsAsFile()) xmlFile = projectFolderOrFile.getChildFile ("patch.xml");
+        if (!xmlFile.existsAsFile())
+        {
+            auto xmlFiles = projectFolderOrFile.findChildFiles (juce::File::findFiles, false, "*.xml");
+            if (!xmlFiles.isEmpty()) xmlFile = xmlFiles[0];
+        }
     }
     else
     {
-        currentProjectFolder = projectFolderOrFile.getParentDirectory();
         xmlFile = projectFolderOrFile;
+        targetFolder = projectFolderOrFile.getParentDirectory();
     }
 
     if (!xmlFile.existsAsFile()) return false;
+
+    currentProjectFolder = targetFolder;
 
     auto xml = juce::XmlDocument::parse (xmlFile);
     if (xml != nullptr)

@@ -46,6 +46,14 @@ struct PatchConnection
     float singleSampleMemoryR = 0.0f;
 };
 
+enum class ParameterType
+{
+    Float,
+    Integer,
+    Toggle,
+    Symbol
+};
+
 struct ParameterInfo
 {
     std::string key;
@@ -56,6 +64,8 @@ struct ParameterInfo
     std::string expression;
     int modInletIdx = -1; // -1 if not patched as modulation inlet
     bool isInteger = false;
+    ParameterType type = ParameterType::Float;
+    std::string stringValue = "";
 };
 
 // Fractional Hermite 4-Point Delay Line for Audio Node Time Dilation
@@ -239,6 +249,9 @@ public:
     float getModulatedParamValue (const std::string& paramKey, float defaultVal = 0.0f, int sampleIdx = 0) const;
     const std::map<std::string, float>& getParameters() const { return parameters; }
 
+    bool isBypassed() const { return getParameter ("bypass", 0.0f) > 0.5f; }
+    void setBypassed (bool b) { setParameter ("bypass", b ? 1.0f : 0.0f); }
+
     void setParamExpression (const std::string& key, const std::string& expr) { paramExpressions[key] = expr; }
     std::string getParamExpression (const std::string& key) const {
         auto it = paramExpressions.find (key);
@@ -363,6 +376,7 @@ public:
     void loadFutureBassDrumExamplePatch();
     void loadRhythmicTimeWarpingExamplePatch();
     void loadSoundPitchWarpingExamplePatch();
+    void loadRelativisticTimeModulationExamplePatch();
 
     // Undo / Redo Persistent Stack
     void pushUndoState();

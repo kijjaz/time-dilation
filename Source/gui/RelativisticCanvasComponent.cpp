@@ -365,32 +365,35 @@ void RelativisticCanvasComponent::showHelpDialog (const juce::String& topic, con
 
 void RelativisticCanvasComponent::savePatchAs()
 {
-    auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project File As...",
+    auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project Bundle As...",
                                                    juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                   "*.tdaw;*.tdawproj;*.xml");
-    fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
+                                                   "*.tdaw;*.xml");
+    fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectDirectories | juce::FileBrowserComponent::warnAboutOverwriting,
         [this, fc] (const juce::FileChooser& chooser) {
             auto result = chooser.getResult();
             if (result != juce::File())
             {
-                if (result.getFileExtension().isEmpty())
-                    result = result.withFileExtension ("tdaw");
+                juce::File targetFile = result;
+                if (!targetFile.isDirectory() && targetFile.getFileExtension().isEmpty())
+                {
+                    targetFile = targetFile.withFileExtension ("tdaw");
+                }
 
-                bool success = ProjectFileManager::getInstance().saveProjectBundle (result, nodeGraph);
+                bool success = ProjectFileManager::getInstance().saveProjectBundle (targetFile, nodeGraph);
                 if (success)
                 {
-                    currentProjectFile = result;
+                    currentProjectFile = targetFile;
                     juce::AlertWindow::showMessageBoxAsync (
                         juce::AlertWindow::InfoIcon,
-                        "Project Saved",
-                        "Successfully saved patch to:\n" + result.getFullPathName());
+                        "Project Bundle Saved",
+                        "Successfully saved project bundle to:\n" + targetFile.getFullPathName());
                 }
                 else
                 {
                     juce::AlertWindow::showMessageBoxAsync (
                         juce::AlertWindow::WarningIcon,
                         "Save Failed",
-                        "Could not save project file to:\n" + result.getFullPathName());
+                        "Could not save project bundle to:\n" + targetFile.getFullPathName());
                 }
             }
         });
@@ -421,9 +424,9 @@ void RelativisticCanvasComponent::savePatch()
 
 void RelativisticCanvasComponent::loadPatch()
 {
-    auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project File...",
+    auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project Bundle (.tdaw / .xml)...",
                                                    juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                   "*.tdaw;*.tdawproj;*.xml;project.xml");
+                                                   "*.tdaw;*.xml;project.xml;patch.xml");
     fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectDirectories,
         [this, fc] (const juce::FileChooser& chooser) {
             auto result = chooser.getResult();
@@ -1519,30 +1522,61 @@ void RelativisticCanvasComponent::rebuildInspector()
         row.label->setFont (juce::FontOptions (12.0f, juce::Font::bold));
         addAndMakeVisible (*row.label);
 
-        row.slider = std::make_unique<juce::Slider>();
-        row.slider->setSliderStyle (juce::Slider::LinearHorizontal);
-        row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 65, 18);
-        if (def.isInteger)
+        if (def.type == ParameterType::Toggle || (def.minValue == 0.0f && def.maxValue == 1.0f && def.isInteger))
         {
-            row.slider->setRange (def.minValue, def.maxValue, 1.0);
-            row.slider->setNumDecimalPlacesToDisplay (0);
+            bool isOn = (def.value > 0.5f);
+            row.btnToggle = std::make_unique<juce::TextButton> (isOn ? "ON (1)" : "OFF (0)");
+            row.btnToggle->setColour (juce::TextButton::buttonColourId, isOn ? juce::Colour (0xff15803d) : juce::Colour (0xff374151));
+            row.btnToggle->onClick = [this, primaryId, paramKey] {
+                auto n = nodeGraph.getNodeById (primaryId);
+                if (n)
+                {
+                    float current = n->getParameter (paramKey, 0.0f);
+                    n->setParameter (paramKey, (current > 0.5f) ? 0.0f : 1.0f);
+                    rebuildInspector();
+                    repaint();
+                }
+            };
+            addAndMakeVisible (*row.btnToggle);
+        }
+        else if (def.type == ParameterType::Symbol)
+        {
+            row.symbolEditor = std::make_unique<juce::TextEditor>();
+            row.symbolEditor->setText (def.stringValue.empty() ? def.expression : def.stringValue);
+            row.symbolEditor->onReturnKey = [this, primaryId, paramKey, ed = row.symbolEditor.get()] {
+                auto n = nodeGraph.getNodeById (primaryId);
+                if (n) n->setParamExpression (paramKey, ed->getText().toStdString());
+                repaint();
+            };
+            addAndMakeVisible (*row.symbolEditor);
         }
         else
         {
-            float minR = std::min (-99999.0f, def.minValue);
-            float maxR = std::max (99999.0f, def.maxValue);
-            row.slider->setRange (minR, maxR, 0.01);
-        }
-        row.slider->setValue (def.value);
-        row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
-            auto n = nodeGraph.getNodeById (primaryId);
-            if (n)
+            row.slider = std::make_unique<juce::Slider>();
+            row.slider->setSliderStyle (juce::Slider::LinearHorizontal);
+            row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 65, 18);
+            if (def.type == ParameterType::Integer || def.isInteger)
             {
-                n->setParameter (paramKey, static_cast<float>(sl->getValue()));
-                repaint();
+                row.slider->setRange (def.minValue, def.maxValue, 1.0);
+                row.slider->setNumDecimalPlacesToDisplay (0);
             }
-        };
-        addAndMakeVisible (*row.slider);
+            else
+            {
+                float minR = std::min (-99999.0f, def.minValue);
+                float maxR = std::max (99999.0f, def.maxValue);
+                row.slider->setRange (minR, maxR, 0.01);
+            }
+            row.slider->setValue (def.value);
+            row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
+                auto n = nodeGraph.getNodeById (primaryId);
+                if (n)
+                {
+                    n->setParameter (paramKey, static_cast<float>(sl->getValue()));
+                    repaint();
+                }
+            };
+            addAndMakeVisible (*row.slider);
+        }
 
         row.exprEditor = std::make_unique<juce::TextEditor>();
         row.exprEditor->setText (def.expression.empty() ? "expr: " + def.name : def.expression);
@@ -2936,6 +2970,92 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         }
     }
 
+    // Special Canvas Visualization for [time.scope] Auto-Scaling Time Telemetry Visualizer
+    auto scopeNode = std::dynamic_pointer_cast<TimeScopeNode> (node);
+    if (scopeNode)
+    {
+        float graphX = x + 8.0f;
+        float graphY = y + 22.0f;
+        float graphW = w - 16.0f;
+        float graphH = h - 26.0f;
+
+        g.setColour (juce::Colour (0xff050811));
+        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
+        g.setColour (juce::Colour (0xff8b5cf6).withAlpha (0.4f));
+        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
+
+        const auto& hist = scopeNode->getSignalHistory();
+        float scaleMax = std::max (0.01f, scopeNode->getAutoScaleMax());
+
+        if (!hist.empty())
+        {
+            juce::Path wavePath;
+            float midY = graphY + graphH * 0.5f;
+            int total = static_cast<int>(hist.size());
+
+            for (int i = 0; i < 64; ++i)
+            {
+                int idx = i * (total / 64);
+                float val = hist[idx] / scaleMax;
+                float px = graphX + (static_cast<float>(i) / 63.0f) * graphW;
+                float py = midY - val * (graphH * 0.42f);
+
+                if (i == 0) wavePath.startNewSubPath (px, py);
+                else        wavePath.lineTo (px, py);
+            }
+
+            g.setColour (juce::Colour (0xff8b5cf6)); // Royal Violet Time Wave
+            g.strokePath (wavePath, juce::PathStrokeType (1.5f));
+
+            g.setColour (juce::Colour (0xffc084fc));
+            g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
+            g.drawText ("SCALE: ±" + juce::String (scaleMax, 2) + "x", graphX + 4, graphY + 2, graphW - 8, 12, juce::Justification::topRight);
+        }
+    }
+
+    // Special Canvas Visualization for [time.xy] Dual-Time X-Y Lissajous Scope
+    auto xyNode = std::dynamic_pointer_cast<TimeXYNode> (node);
+    if (xyNode)
+    {
+        float graphX = x + 8.0f;
+        float graphY = y + 22.0f;
+        float graphW = w - 16.0f;
+        float graphH = h - 26.0f;
+
+        g.setColour (juce::Colour (0xff050811));
+        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
+        g.setColour (juce::Colour (0xff38bdf8).withAlpha (0.4f));
+        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
+
+        const auto& pts = xyNode->getPointHistory();
+        float autoR = std::max (0.01f, xyNode->getAutoScaleRadius());
+
+        if (!pts.empty())
+        {
+            juce::Path xyPath;
+            float centerX = graphX + graphW * 0.5f;
+            float centerY = graphY + graphH * 0.5f;
+
+            for (size_t i = 0; i < pts.size(); ++i)
+            {
+                float normX = pts[i].x / autoR;
+                float normY = pts[i].y / autoR;
+                float px = centerX + normX * (graphW * 0.42f);
+                float py = centerY - normY * (graphH * 0.42f);
+
+                if (i == 0) xyPath.startNewSubPath (px, py);
+                else        xyPath.lineTo (px, py);
+            }
+
+            g.setColour (juce::Colour (0xff38bdf8)); // Glowing Cyan Phase Orbit
+            g.strokePath (xyPath, juce::PathStrokeType (1.5f));
+
+            g.setColour (juce::Colour (0xff7dd3fc));
+            g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
+            g.drawText ("RADIUS: ±" + juce::String (autoR, 2), graphX + 4, graphY + 2, graphW - 8, 12, juce::Justification::topRight);
+        }
+    }
+
     // Special Canvas Visualization for [out~] Live VU RMS Meters & Oscilloscope Screen
     auto outNode = std::dynamic_pointer_cast<OutNode> (node);
     if (outNode)
@@ -3336,12 +3456,16 @@ void RelativisticCanvasComponent::resized()
         {
             if (row.label) row.label->setBounds (inspectorX + 15, rowY, inspectorW - 30, 18);
             if (row.slider) row.slider->setBounds (inspectorX + 15, rowY + 20, inspectorW - 195, 24);
+            if (row.btnToggle) row.btnToggle->setBounds (inspectorX + 15, rowY + 20, inspectorW - 195, 24);
+            if (row.symbolEditor) row.symbolEditor->setBounds (inspectorX + 15, rowY + 20, inspectorW - 195, 24);
             if (row.btnModInlet) row.btnModInlet->setBounds (inspectorX + inspectorW - 175, rowY + 20, 75, 24);
             if (row.btnTapValue) row.btnTapValue->setBounds (inspectorX + inspectorW - 95, rowY + 20, 80, 24);
             if (row.exprEditor) row.exprEditor->setBounds (inspectorX + 15, rowY + 46, inspectorW - 30, 20);
 
             if (row.label) row.label->setVisible (true);
             if (row.slider) row.slider->setVisible (true);
+            if (row.btnToggle) row.btnToggle->setVisible (true);
+            if (row.symbolEditor) row.symbolEditor->setVisible (true);
             if (row.btnModInlet) row.btnModInlet->setVisible (true);
             if (row.btnTapValue) row.btnTapValue->setVisible (true);
             if (row.exprEditor) row.exprEditor->setVisible (true);

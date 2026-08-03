@@ -116,12 +116,14 @@ public:
     float getMonitoredGamma() const { return monitoredGamma; }
     double getMonitoredTimeSec() const { return monitoredTimeSec; }
     const std::vector<float>& getSignalHistory() const { return signalHistory; }
+    float getAutoScaleMax() const { return autoScaleMax; }
 
 private:
     float monitoredGamma = 1.0f;
     double monitoredTimeSec = 0.0;
     std::vector<float> signalHistory;
     size_t historyWritePos = 0;
+    float autoScaleMax = 1.0f;
 };
 
 struct Point2D { float x = 0.0f; float y = 0.0f; };
@@ -136,10 +138,12 @@ public:
     std::vector<ParameterInfo> getParameterDefs() const override;
 
     const std::vector<Point2D>& getPointHistory() const { return pointHistory; }
+    float getAutoScaleRadius() const { return autoScaleRadius; }
 
 private:
     std::vector<Point2D> pointHistory;
     size_t writePos = 0;
+    float autoScaleRadius = 1.0f;
 };
 
 // 4g. [spectrometer~] Live Audio Spectrum Visualizer (Logo Gradient Palette)
@@ -428,6 +432,8 @@ private:
     float rmsR = 0.0f;
     float peakL = 0.0f;
     float peakR = 0.0f;
+
+    float limiterGain = 1.0f;
 
     std::vector<float> scopeBufferL;
     std::vector<float> scopeBufferR;

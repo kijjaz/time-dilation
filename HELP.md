@@ -1,6 +1,6 @@
 ===============================================================================
                        TIME DILATION DAW WORKSTATION
-                             VERSION 4.0 MANUAL
+                             VERSION 0.0.1 MANUAL
 ===============================================================================
 
 1. EXECUTIVE OVERVIEW
@@ -104,59 +104,88 @@ B. Comprehensive Symbol Command Table Across Objects:
    - [delay ms]        : Delays symbol message pulses by specified milliseconds.
 
 
-5. RELATIVISTIC TIME OBJECT SYSTEM
+5. RELATIVISTIC TIME OBJECT SYSTEM & INTER-TIME MODULATION
 -------------------------------------------------------------------------------
 Time context is passed along purple time ports (NodePortType::Time) using time
-dilation factor gamma.
+dilation factor gamma (gamma = dtau / dt).
 
-A. Time Dilation Math:
+A. Time Dilation States:
    - Gamma = 1.0  : Standard real-time progression (1 second per second).
    - Gamma > 1.0  : Dilated acceleration (time moves fast, pitch shifts up).
    - Gamma < 1.0  : Temporal deceleration / redshift (time moves slow).
    - Gamma = 0.0  : Gravitational stasis (time holds perfectly still).
    - Gamma = -1.0 : Retrograde causality (time moves in reverse).
 
-B. Core Time Nodes:
-   - [time.warp~]     : Continuous time speed scaler (0.1x to 10.0x).
+B. Core Relativistic Time Nodes:
+   - [time.warp~]     : Continuous time speed scaler (0.1x to 16.0x).
    - [time.retro~]    : Temporal reversal engine (-1.0x).
    - [time.stasis~]   : Gravitational freeze gate.
    - [time.quantize~] : Snaps continuous gamma to metric grid steps (1/16, 1/8).
-   - [time.metro~]    : Dilated metronome tick generator.
-   - [time.transport] : Relativistic master transport hub.
-   - [time.scope]     : Telemetry visualizer for local time (t) and gamma.
-   - [time.future~]    : Future Lookahead Causality Offset Engine (shifts project horizon).
+   - [time.metro~]    : Dilated metronome tick generator (outputs gamma LFO).
+   - [time.math~]     : Time Signal Combiner (Add, Lorentz Boost, Min, Max, Mix).
+   - [time.scale~]    : Time Dilation Signal Scaler & Shifter.
+   - [time.filter~]   : Gravitational inertia slew filter (smooths time jumps).
+   - [audio2time~]    : Converts audio waveform amplitude into gamma time signal.
+   - [time2audio~]    : Converts gamma time signal into audible audio stream.
+
+C. Inter-Time Dilation Modulation (Time Objects Modulating Time Objects):
+   Time objects can feed directly into the timeIn (Inlet 0) or modulation inlets
+   of other time objects!
+   
+   Example 1: Hierarchical Cascading Time Dilation
+     [time.metro~ rate=1.5] ---> timeIn [time.warp~ dilationGamma=2.0]
+     Result: The LFO output of [time.metro~] modulates the speed of [time.warp~],
+     creating a breathing relativistic time warper that accelerates and decelerates
+     all downstream DSP nodes dynamically.
+
+   Example 2: Relativistic Lorentz Velocity Composition ([time.math~])
+     [time.metro~ gamma1] --\
+                            ---> [time.math~ mode=1 (Lorentz)] ---> timeIn [osc~]
+     [time.warp~  gamma2] --/
+     Result: Combines two independent time dilation fields using the authentic
+     Lorentz boost addition formula: gamma_comp = 1 + ((v1 + v2) / (1 + v1*v2/c^2)).
 
 
-11. FUTURE LOOKAHEAD CAUSALITY OFFSET ENGINE ([time.future~])
+6. TIME & AUDIO SIGNAL INTERCHANGE
 -------------------------------------------------------------------------------
-When a node requires signals from the future (e.g. 1.0 second lookahead):
-   - The DAW automatically applies a global causality delay (+1.0s) to all standard
-     nodes across the workspace.
-   - The node with [time.future~ 1.0s] reads directly from the live un-delayed
-     input stream, allowing future prediction while shifting the observer horizon.
+In Time Dilation DAW, time signals and audio signals can seamlessly interchange:
+   - Direct Connection: Any Time outlet connected to audio nodes (*~, expr~,
+     filter~, spectrometer~) streams its frame-by-frame gamma value as audio samples.
+   - [audio2time~] : Converts audio amplitude into gamma time dilation:
+                     gamma = offset + depth * audioIn
+   - [time2audio~] : Converts gamma time signal into audible audio buffer:
+                     audioOut = offset + scale * (gamma - 1.0)
 
 
-12. RELATIVISTIC SEQUENCER SUITE
+7. CONTROL UI & INTERACTOR OBJECT SUITE
 -------------------------------------------------------------------------------
-   - [seq] / [step]   : Multi-step pattern sequencer. Accepts floats, MIDI notes
-                        ("C4 E4 G4 B4"), and pattern strings.
-   - [euclid k n]     : Euclidean rhythm generator distributing k pulses over n steps.
-   - [markov]         : Generative Markov chain probability sequencer for dynamic
-                        stochastic melody & rhythm generation.
-   - [tidal] / [tidal~]: TidalCycles-style mini-notation pattern sequencer parsing
-                        nested Euclidean subdivisions e.g. "60 [62 64] 65 [67 69 71]",
-                        rests ("~"), note names ("c4", "eb4"), and speed multipliers.
+   - [slider]         : Interactive control slider with integer mode (isInteger=1),
+                        min, max, and offset parameters.
+   - [toggle] / [tgl] : 0 / 1 toggle switch object.
+   - [bang] / [b]     : Control pulse trigger button.
+   - [bang~] / [b~]   : Audio-rate single-sample impulse spike generator.
+   - [counter] / [cnt]: Discrete step counter with integer snapping (isInteger=1),
+                        min, max, step, and offset.
 
 
-13. UNIVERSAL timeIn PORT STANDARD
+8. MULTI-TRACK RELATIVISTIC ARRANGEMENT TIMELINE ([timeline])
 -------------------------------------------------------------------------------
-EVERY single node object in the engine (audio, control, math, delay, filter, table,
-expression, bang, sequencers, out~) includes a purple timeIn port as Inlet 0.
-Connecting a time dilation factor (gamma) to any node dynamically scales its DSP
-clock and processing rate (t -> gamma * t).
+The DAW supports instantiating multi-track arrangement timelines directly on the
+node canvas ([timeline] object).
+
+A. Track Types Supported:
+   - Audio Tracks     : Houses audio clips and stem recordings.
+   - MIDI Tracks      : Houses MIDI note event grids and velocity sequences.
+   - Time Dilation    : Houses continuous relativistic time dilation curves gamma(t).
+   - Control Auto     : Houses control parameter and event value automation.
+
+B. Transport & Relativistic Control:
+   - Features a purple timeIn port to time-warp the entire arrangement timeline.
+   - Multi-channel outlets: stereo audio (outL~, outR~), MIDI streams, and
+     automated time dilation curves (dilationOut).
 
 
-6. WIRELESS GLOBAL SIGNAL TAPPING (tap())
+9. WIRELESS GLOBAL SIGNAL TAPPING (tap())
 -------------------------------------------------------------------------------
 Any node formula or text field can wirelessly tap signals from any node in 
 the workspace without physical cables.
@@ -171,14 +200,14 @@ Syntax:
   copies tap("node_label.param") to the clipboard for instant pasting.
 
 
-7. DUAL PERSPECTIVE GUARANTEE
+10. DUAL PERSPECTIVE GUARANTEE
 -------------------------------------------------------------------------------
 Every node features two full perspectives:
 1. Top-Down Visual Inspector : Sliders, ranges, [TAP] buttons, +MOD INLETS.
 2. Bottom-Up Code Math       : C++ DSP math expressions ($v1, $v2, $t, params).
 
 
-8. WORKSTATION KEYBOARD SHORTCUTS
+11. WORKSTATION KEYBOARD SHORTCUTS
 -------------------------------------------------------------------------------
   - Spacebar           : Toggle Global Audio Engine Power (ON / OFF).
   - N / Double-Click   : Open Node Creation Search Palette.
@@ -190,27 +219,10 @@ Every node features two full perspectives:
   - Cmd + Z            : Undo Action.
   - Cmd + Shift + Z    : Redo Action.
   - Delete / Backspace : Delete Selected Nodes or Connections.
+  - Shift + Drag       : Marquee Rubberband Selection.
 
 
-9. MULTI-INSTANCE RELATIVISTIC TIMELINE ([timeline])
--------------------------------------------------------------------------------
-The DAW supports instantiating multiple independent arrangement timelines
-directly on the node canvas ([timeline] object).
-
-A. Features:
-   - Multi-Track Deck: Houses Audio Tracks, MIDI Tracks, and Time Dilation Tracks.
-   - Transport Sync: Connects to [time.transport] for synchronized playhead control.
-   - Relativistic Time Inlet (timeIn): Time-warps, accelerates, or freezes playback.
-   - Multi-Channel Outlets: Outputs stereo audio (outL~, outR~), MIDI control streams,
-     and automated time dilation curves (dilationOut).
-
-B. Arrangement Editor View:
-   - Double-clicking a [timeline] card opens the interactive multi-track Arrangement View.
-   - Track headers include [REC], [MUTE], [SOLO], [VOL] controls.
-   - Displays real-time audio waveforms, MIDI note grids, and time dilation curves.
-
-
-10. PROJECT BUNDLE & ASSET MANAGEMENT (.tdaw)
+12. PROJECT BUNDLE & ASSET MANAGEMENT (.tdaw)
 -------------------------------------------------------------------------------
 Time Dilation DAW uses a self-contained Project Directory Bundle structure:
 
@@ -220,14 +232,6 @@ Time Dilation DAW uses a self-contained Project Directory Bundle structure:
   │   ├── Audio/        # Recorded and imported WAV audio clips
   │   └── MIDI/         # Recorded MIDI pattern streams
   └── Cache/            # Transient waveform overviews & render cache
-
-A. Transient Cache & Save Migration Workflow:
-   - Live recorded audio buffers are cached in a temporary system cache folder.
-   - Clicking [Save Project] (Cmd+S) creates the .tdaw folder, copies all cache audio
-     and MIDI files into Assets/Audio/ and Assets/MIDI/, and saves project.xml.
-   - Opening a project (Cmd+O) automatically resolves relative asset paths
-     (Assets/Audio/sample.wav), ensuring 100% project portability.
-  - Shift + Drag       : Marquee Rubberband Selection.
 
 ===============================================================================
                   END OF TIME DILATION DAW MANUAL (HELP.md)

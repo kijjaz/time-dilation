@@ -1,5 +1,10 @@
 #include "RelativisticCanvasComponent.h"
 #include "RelativisticNodeObjects.h"
+#include "RelativisticTimeline.h"
+#include "TimelineEditorComponent.h"
+#include "ProjectFileManager.h"
+#include "FontManager.h"
+#include <juce_audio_devices/juce_audio_devices.h>
 #include <BinaryData.h>
 
 namespace time_dilation
@@ -317,9 +322,11 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
         inlineLabelEditor.setVisible (false);
     };
 
+    initObjectCatalog();
+
     addAndMakeVisible (btnAddObject);
     btnAddObject.onClick = [this] {
-        showObjectSearchMenu ({ getWidth() * 0.4f, getHeight() * 0.4f });
+        spawnInlineObjectEditor ({ getWidth() * 0.4f, getHeight() * 0.4f });
     };
 
     addAndMakeVisible (btnClear);
@@ -346,6 +353,18 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
             cableStyle = CableStyle::Organic;
             btnToggleCord.setButtonText ("CORDS: ORGANIC");
         }
+        repaint();
+    };
+
+    addAndMakeVisible (btnHorizonReadout);
+    btnHorizonReadout.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff0d1322));
+    btnHorizonReadout.setColour (juce::TextButton::textColourOffId, juce::Colour (0xff06b6d4));
+
+    addAndMakeVisible (btnResetHorizon);
+    btnResetHorizon.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1e293b));
+    btnResetHorizon.setColour (juce::TextButton::textColourOffId, juce::Colour (0xfff59e0b));
+    btnResetHorizon.onClick = [this] {
+        nodeGraph.resetCausalityHorizon();
         repaint();
     };
 
@@ -382,15 +401,10 @@ void RelativisticCanvasComponent::showMenuFile()
             }
             else if (result == 5)
             {
-                if (auto* app = juce::JUCEApplication::getInstance())
-                {
-                    app->sendUnhandledBacktrace (juce::String());
-                    // Spawn new window via JUCE command
-                    juce::MessageManager::callAsync ([] {
-                        if (auto* appInstance = juce::JUCEApplication::getInstance())
-                            appInstance->anotherInstanceStarted ("");
-                    });
-                }
+                juce::MessageManager::callAsync ([] {
+                    if (auto* appInstance = juce::JUCEApplication::getInstance())
+                        appInstance->anotherInstanceStarted ("");
+                });
             }
             else if (result == 2 || result == 3 || result == 4)
             {
@@ -758,11 +772,15 @@ void RelativisticCanvasComponent::showMenuHelp()
     m.addItem (14, "[time.quantize~] Relativistic Stutter Grid", true);
     m.addItem (15, "[time.transport] Multi-Clock Transport Sync", true);
     m.addItem (16, "[table] Interactive Waveform Drawing & Wavetable Synth", true);
+    m.addItem (17, "[drumseq] Rhythmic Time Warping (Steady Pitch Drums)", true);
+    m.addItem (18, "[fbdrum~] Sound Pitch Warping (Doppler Pitch Shift Drums)", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- USER HELP & WORKSTATION MANUAL ---");
     m.addItem (1, "Quick Start Guide", true);
     m.addItem (2, "Relativistic Time Dilation Architecture Manual", true);
+    m.addItem (8, "Tidal Live-Coding Suite Manual ([tidal])", true);
+    m.addItem (9, "Future Lookahead Causality Engine ([time.future~])", true);
     m.addItem (3, "Wireless Signal Tapping Syntax (tap())", true);
     m.addItem (4, "Pure Data Expression Scripting & C++ Math", true);
     m.addItem (5, "1-Sample Feedback Loop Protection", true);
@@ -779,6 +797,8 @@ void RelativisticCanvasComponent::showMenuHelp()
             else if (result == 14) { nodeGraph.loadTimeQuantizeExamplePatch(); repaint(); }
             else if (result == 15) { nodeGraph.loadTimeTransportExamplePatch(); repaint(); }
             else if (result == 16) { nodeGraph.loadTableExamplePatch(); repaint(); }
+            else if (result == 17) { nodeGraph.loadRhythmicTimeWarpingExamplePatch(); repaint(); }
+            else if (result == 18) { nodeGraph.loadSoundPitchWarpingExamplePatch(); repaint(); }
             else if (result == 1)
             {
                 showHelpDialog ("Quick Start Guide",
@@ -801,16 +821,32 @@ void RelativisticCanvasComponent::showMenuHelp()
                     "- time.quantize~: Quantizes time into metric grid beats.\n"
                     "- time.metro~: Relativistic metronome pulse generator.\n"
                     "- time.stasis~: Freezes time (gamma = 0.0) while holding audio state.\n"
-                    "- time.singularity~: Event horizon gravitational redshift.\n\n"
+                    "- time.singularity~: Event horizon gravitational redshift.\n"
+                    "- time.future~: Future Lookahead Causality Offset Engine.\n\n"
                     "UNIVERSAL TIME INLETS:\n"
                     "Every object has a purple time inlet (timeIn). Patching any time engine into an object's timeIn port dilates or reverses that object's clock independently!");
             }
-            else if (result == 10) { nodeGraph.loadTimeWarpExamplePatch(); repaint(); }
-            else if (result == 11) { nodeGraph.loadTimeRetroExamplePatch(); repaint(); }
-            else if (result == 12) { nodeGraph.loadTimeStasisExamplePatch(); repaint(); }
-            else if (result == 13) { nodeGraph.loadTimeSingularityExamplePatch(); repaint(); }
-            else if (result == 14) { nodeGraph.loadTimeQuantizeExamplePatch(); repaint(); }
-            else if (result == 15) { nodeGraph.loadTimeTransportExamplePatch(); repaint(); }
+            else if (result == 8)
+            {
+                showHelpDialog ("Tidal Live-Coding Suite Manual ([tidal])",
+                    "TIDAL LIVE-CODING SUITE MANUAL ([tidal])\n\n"
+                    "The [tidal] node parses TidalCycles-style mini-notation patterns with live scale mapping and per-step relativistic time dilation!\n\n"
+                    "MINI-NOTATION SYNTAX:\n"
+                    "- Subdivisions: \"60 [62 64] 65 [67 69 71]\" (Subdivides beats into half-notes or triplets)\n"
+                    "- Scale Degrees: \"scale 'minor' '0 [2 3] 4 [5 7]'\" (Maps indices to minor/major/pentatonic/dorian)\n"
+                    "- Per-Step Gamma Warp: \"60*1.0 [62 64]*2.0 65*0.5 [67 71]*-1.0\"\n"
+                    "- Rests: \"c4 ~ [e4 g4] ~ b4 ~\"\n\n"
+                    "CONTROL OUTLETS:\n"
+                    "Outlets: pitch, gate~, gate, gain, pan, cutoff, timeOut (Time), cyclePhase.");
+            }
+            else if (result == 9)
+            {
+                showHelpDialog ("Future Lookahead Causality Engine ([time.future~])",
+                    "FUTURE LOOKAHEAD CAUSALITY OFFSET ENGINE ([time.future~])\n\n"
+                    "Core Principle: Sound from the future may occur; we do not play it yet, but if we need to, we are instantly ready to do so.\n\n"
+                    "LATENT PRE-RENDERING:\n"
+                    "Future calculation threads pre-render audio frames into global RAM buffers. When a future lookahead node is triggered, audio plays with zero-latency instant execution!");
+            }
             else if (result == 3)
             {
                 showHelpDialog ("Wireless Signal Tapping Syntax (tap())",
@@ -868,6 +904,233 @@ void RelativisticCanvasComponent::showMenuHelp()
         });
 }
 
+void RelativisticCanvasComponent::initObjectCatalog()
+{
+    allRegisteredObjects = {
+        // Relativistic Time Engines
+        { "time.warp~", "Dilated Coordinate Time Generator (LFO Dilation)", "TIME" },
+        { "time.retro~", "Retrograde Time Reverser (-1.0x Time Flow)", "TIME" },
+        { "time.stasis~", "Gravitational Time Stasis Freeze Engine", "TIME" },
+        { "time.singularity~", "Event Horizon Gravitational Redshift Warp", "TIME" },
+        { "time.quantize~", "Metric Grid Time Quantizer (Micro-Step Stutter)", "TIME" },
+        { "time.transport", "Relativistic Master Transport Hub (BPM Clock)", "TIME" },
+        { "time.metro~", "Dilated Metronome Pulse Spiker", "TIME" },
+        { "time.scope", "Relativistic Time & Telemetry Visualizer Monitor", "TIME" },
+        { "time.future~", "Future Lookahead Causality Offset Engine", "TIME" },
+
+        // Audio & DSP Generators & Processors
+        { "osc~", "Sine/Saw/Square Varispeed Oscillator", "DSP" },
+        { "phasor~", "Linear Ramp Audio Phase Generator", "DSP" },
+        { "sampler~", "Varispeed Audio Sampler & Loop Player", "DSP" },
+        { "filter~", "State-Variable Filter (LP/HP/BP/Notch)", "DSP" },
+        { "svfilter~", "Vadim Zavalishin TPT State-Variable Filter", "DSP" },
+        { "delay~", "Feedback Delay Line (Hermite Varispeed)", "DSP" },
+        { "drive~", "Non-Linear Harmonic Tube Overdrive Distortion", "DSP" },
+        { "reverb~", "Stereo Algorithmic Reverb Unit", "DSP" },
+        { "crush~", "Quantum Bitcrusher & Sample Reducer", "DSP" },
+        { "adsr~", "Attack-Decay-Sustain-Release Envelope Generator", "DSP" },
+        { "env~", "Audio Envelope Follower (Peak Detector)", "DSP" },
+        { "gain~", "Relativistic Audio Signal Scaler & Time Warper", "DSP" },
+        { "out~", "Master Output Fader & Live Oscilloscope CRT", "DSP" },
+        { "dac~", "Audio Master Output Hardware DAC", "DSP" },
+        { "fbdrum~", "Polyphonic Future Bass Drum Synthesizer", "DSP" },
+        { "tabosc4~", "4-Point Hermite Interpolated Wavetable Oscillator", "DSP" },
+
+        // Sequencers & Generative Engines
+        { "seq", "Multi-Step Pattern Sequencer", "SEQ" },
+        { "drumseq", "Multi-Track 16-Step Future Bass Drum Sequencer", "SEQ" },
+        { "euclid", "Euclidean Rhythm Generator", "SEQ" },
+        { "markov", "Stochastic Markov Chain Melodic Generator", "SEQ" },
+        { "tidal", "Tidal Live-Coding Mini-Notation Sequencer", "SEQ" },
+        { "timeline", "Multi-Track Timeline Clip Sequencer", "SEQ" },
+
+        // Control Interactors & Triggers
+        { "number", "Control Number Box (Click & Drag Value)", "CTRL" },
+        { "bang", "Control Trigger Pulse Spiker", "CTRL" },
+        { "bang~", "Audio-Rate Impulse Spike Spiker", "CTRL" },
+        { "counter", "Smart Value Counter (Low, High, Step, Carry)", "CTRL" },
+        { "note", "MIDI Note Pitch Generator", "CTRL" },
+        { "tap", "Control Signal Wireless Tap Listener", "CTRL" },
+        { "tap~", "Audio Signal Wireless Tap Listener", "CTRL" },
+
+        // Expressions & Math
+        { "expr", "Pure Data Control Expression ($v1, tap('id'))", "MATH" },
+        { "expr~", "Pure Data Audio Expression ($v1, tap('id'))", "MATH" },
+        { "fexpr~", "Filter Recurrent Expression ($y1[-1])", "MATH" },
+        { "v", "Value Storage Control Node", "MATH" },
+        { "z~", "1-Sample Feedback Delay Unit", "MATH" },
+        { "snapshot~", "Audio-to-Control Sample Snapshot", "MATH" },
+        { "+", "Signal & Control Adder", "MATH" },
+        { "*", "Signal & Control Multiplier", "MATH" },
+        { "mtof", "MIDI Pitch to Frequency Hz Converter", "MATH" },
+        { "ftom", "Frequency Hz to MIDI Pitch Converter", "MATH" },
+
+        // Tables & Data Memory
+        { "table", "Wavetable / Step Value Memory Canvas", "DATA" },
+        { "tabwrite~", "Write Audio Buffer to Table Memory", "DATA" },
+        { "tabread~", "Read Audio Buffer from Table Memory", "DATA" }
+    };
+    filteredAutocompleteItems = allRegisteredObjects;
+}
+
+void RelativisticCanvasComponent::spawnInlineObjectEditor (juce::Point<float> spawnCanvasPos)
+{
+    if (isEditingDraftObject)
+        destroyDraftObjectEditor();
+
+    draftObjectCanvasPos = spawnCanvasPos;
+    isEditingDraftObject = true;
+    isDraftObjectInvalid = false;
+    draftWarningText = "";
+
+    float screenX = draftObjectCanvasPos.x + panX;
+    float screenY = draftObjectCanvasPos.y + panY;
+
+    draftObjectEditor = std::make_unique<juce::TextEditor>();
+    draftObjectEditor->setBounds (static_cast<int>(screenX), static_cast<int>(screenY), 190, 34);
+    draftObjectEditor->setFont (FontManager::getInstance().getOxaniumFont (15.0f, true));
+
+    draftObjectEditor->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0xff0d1322));
+    draftObjectEditor->setColour (juce::TextEditor::textColourId, juce::Colour (0xfff8fafc));
+    draftObjectEditor->setColour (juce::TextEditor::outlineColourId, juce::Colour (0xff06b6d4));
+    draftObjectEditor->setColour (juce::TextEditor::focusedOutlineColourId, juce::Colour (0xff06b6d4));
+
+    updateAutocompleteFilter ("");
+
+    draftObjectEditor->onTextChange = [this] {
+        if (draftObjectEditor)
+        {
+            updateAutocompleteFilter (draftObjectEditor->getText());
+            isDraftObjectInvalid = false;
+            draftWarningText = "";
+            draftObjectEditor->setColour (juce::TextEditor::outlineColourId, juce::Colour (0xff06b6d4));
+            draftObjectEditor->setColour (juce::TextEditor::focusedOutlineColourId, juce::Colour (0xff06b6d4));
+            draftObjectEditor->setColour (juce::TextEditor::textColourId, juce::Colour (0xfff8fafc));
+            repaint();
+        }
+    };
+
+    draftObjectEditor->onReturnKey = [this] {
+        commitDraftObject();
+    };
+
+    draftObjectEditor->onEscapeKey = [this] {
+        destroyDraftObjectEditor();
+        repaint();
+    };
+
+    draftObjectEditor->onFocusLost = [this] {
+        if (draftObjectEditor)
+        {
+            juce::String txt = draftObjectEditor->getText().trim();
+            if (txt.isEmpty())
+            {
+                destroyDraftObjectEditor();
+                repaint();
+            }
+            else if (!isDraftObjectInvalid)
+            {
+                commitDraftObject();
+            }
+        }
+    };
+
+    addAndMakeVisible (*draftObjectEditor);
+    draftObjectEditor->grabKeyboardFocus();
+    repaint();
+}
+
+void RelativisticCanvasComponent::destroyDraftObjectEditor()
+{
+    if (draftObjectEditor)
+    {
+        removeChildComponent (draftObjectEditor.get());
+        draftObjectEditor.reset();
+    }
+    isEditingDraftObject = false;
+    isDraftObjectInvalid = false;
+    draftWarningText = "";
+    selectedAutocompleteIdx = 0;
+}
+
+void RelativisticCanvasComponent::updateAutocompleteFilter (const juce::String& text)
+{
+    filteredAutocompleteItems.clear();
+    juce::String clean = text.trim().toLowerCase();
+
+    juce::String firstWord = clean;
+    if (clean.containsChar (' '))
+        firstWord = clean.upToFirstOccurrenceOf (" ", false, false);
+
+    if (firstWord.isEmpty())
+    {
+        filteredAutocompleteItems = allRegisteredObjects;
+    }
+    else
+    {
+        for (const auto& item : allRegisteredObjects)
+        {
+            juce::String tName = juce::String (item.typeName).toLowerCase();
+            juce::String desc = juce::String (item.description).toLowerCase();
+            if (tName.startsWith (firstWord) || tName.contains (firstWord) || desc.contains (firstWord))
+            {
+                filteredAutocompleteItems.push_back (item);
+            }
+        }
+    }
+    selectedAutocompleteIdx = 0;
+}
+
+void RelativisticCanvasComponent::commitDraftObject()
+{
+    if (!draftObjectEditor) return;
+
+    juce::String fullText = draftObjectEditor->getText().trim();
+    if (fullText.isEmpty())
+    {
+        destroyDraftObjectEditor();
+        repaint();
+        return;
+    }
+
+    juce::StringArray tokens;
+    tokens.addTokens (fullText, " ", "");
+    std::string typeToken = tokens[0].toStdString();
+
+    if (!RelativisticNodeGraph::isValidObjectType (typeToken))
+    {
+        // Invalid object name entered! Keep box open with RED warning!
+        isDraftObjectInvalid = true;
+        draftWarningText = "no such object available";
+        if (draftObjectEditor)
+        {
+            draftObjectEditor->setColour (juce::TextEditor::outlineColourId, juce::Colour (0xffef4444));
+            draftObjectEditor->setColour (juce::TextEditor::focusedOutlineColourId, juce::Colour (0xffef4444));
+            draftObjectEditor->setColour (juce::TextEditor::textColourId, juce::Colour (0xfffca5a5));
+        }
+        repaint();
+        return; // Keep open!
+    }
+
+    // Valid object!
+    int newId = nodeGraph.addNode (typeToken, draftObjectCanvasPos.x, draftObjectCanvasPos.y);
+    auto n = nodeGraph.getNodeById (newId);
+    if (n)
+    {
+        if (fullText.length() > typeToken.length())
+        {
+            n->setLabel (fullText.toStdString());
+            n->parseLabelArguments (fullText.toStdString());
+        }
+    }
+
+    selectedNodeIds.clear();
+    selectedNodeIds.insert (newId);
+    destroyDraftObjectEditor();
+    rebuildInspector();
+    repaint();
+}
+
 void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawnPos)
 {
     juce::PopupMenu m;
@@ -878,7 +1141,18 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (4, "[time.metro~]\tDilated Metronome Pulse Generator", true);
     m.addItem (24, "[time.stasis~]\tGravitational Time Stasis Freeze Engine", true);
     m.addItem (25, "[time.singularity~]\tEvent Horizon Gravitational Redshift Warp", true);
+    m.addItem (40, "[time.future~]\tFuture Lookahead Causality Offset Engine", true);
+    m.addItem (41, "[time.transport]\tRelativistic Master Transport Hub", true);
     m.addItem (30, "[time.scope]\tRelativistic Time & Telemetry Visualizer Monitor", true);
+
+    m.addSeparator();
+    m.addSectionHeader ("--- RELATIVISTIC SEQUENCERS & PATTERN ENGINES ---");
+    m.addItem (35, "[seq]\tMulti-Step Pattern Sequencer", true);
+    m.addItem (36, "[euclid]\tEuclidean Rhythm Generator", true);
+    m.addItem (37, "[markov]\tStochastic Markov Chain Sequencer", true);
+    m.addItem (38, "[tidal]\tTidal Live-Coding Mini-Notation Suite", true);
+    m.addItem (39, "[timeline]\tMulti-Track Timeline Clip Sequencer", true);
+    m.addItem (43, "[drumseq]\tMulti-Track Future Bass Drum Sequencer", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- CONTROL INTERACTORS & TRIGGERS (PD-STYLE) ---");
@@ -900,6 +1174,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (16, "[env~]\tEnvelope Follower (Peak Detector)", true);
     m.addItem (17, "[tap]\tControl Signal Wireless Tap", true);
     m.addItem (18, "[tap~]\tAudio Signal Wireless Tap", true);
+    m.addItem (42, "[fbdrum~]\tFuture Bass Drum Synthesizer Engine", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- MATH SIGNAL EXPRESSIONS & CONTROL NODES ---");
@@ -956,6 +1231,15 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
             else if (result == 32) typeName = "bang";
             else if (result == 33) typeName = "bang~";
             else if (result == 34) typeName = "counter";
+            else if (result == 35) typeName = "seq";
+            else if (result == 36) typeName = "euclid";
+            else if (result == 37) typeName = "markov";
+            else if (result == 38) typeName = "tidal";
+            else if (result == 39) typeName = "timeline";
+            else if (result == 40) typeName = "time.future~";
+            else if (result == 41) typeName = "time.transport";
+            else if (result == 42) typeName = "fbdrum~";
+            else if (result == 43) typeName = "drumseq";
 
             if (!typeName.empty())
             {
@@ -992,6 +1276,7 @@ void RelativisticCanvasComponent::rebuildInspector()
     {
         InspectorPropertyRow row;
         row.key = def.key;
+        std::string paramKey = def.key;
 
         row.label = std::make_unique<juce::Label>();
         row.label->setText (def.name + ":", juce::dontSendNotification);
@@ -1058,8 +1343,15 @@ void RelativisticCanvasComponent::rebuildInspector()
         std::string m = mName;
         btn->onClick = [this, primaryId, m] {
             auto n = nodeGraph.getNodeById (primaryId);
-            if (n) n->invokeMethod (m);
+            if (n)
+            {
+                n->invokeMethod (m);
+                rebuildInspector();
+                repaint();
+            }
         };
+        btn->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff8b5cf6));
+        btn->setColour (juce::TextButton::textColourOffId, juce::Colours::white);
         addAndMakeVisible (*btn);
         methodButtons.push_back (std::move (btn));
     }
@@ -1069,6 +1361,47 @@ void RelativisticCanvasComponent::rebuildInspector()
 
 bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
 {
+    if (isEditingDraftObject)
+    {
+        if (key.getKeyCode() == juce::KeyPress::escapeKey)
+        {
+            destroyDraftObjectEditor();
+            repaint();
+            return true;
+        }
+        if (key.getKeyCode() == juce::KeyPress::downKey)
+        {
+            if (!filteredAutocompleteItems.empty())
+            {
+                selectedAutocompleteIdx = (selectedAutocompleteIdx + 1) % static_cast<int>(filteredAutocompleteItems.size());
+                repaint();
+                return true;
+            }
+        }
+        if (key.getKeyCode() == juce::KeyPress::upKey)
+        {
+            if (!filteredAutocompleteItems.empty())
+            {
+                selectedAutocompleteIdx = (selectedAutocompleteIdx - 1 + static_cast<int>(filteredAutocompleteItems.size())) % static_cast<int>(filteredAutocompleteItems.size());
+                repaint();
+                return true;
+            }
+        }
+        if (key.getKeyCode() == juce::KeyPress::tabKey)
+        {
+            if (!filteredAutocompleteItems.empty() && selectedAutocompleteIdx >= 0 && selectedAutocompleteIdx < static_cast<int>(filteredAutocompleteItems.size()))
+            {
+                if (draftObjectEditor)
+                {
+                    draftObjectEditor->setText (filteredAutocompleteItems[selectedAutocompleteIdx].typeName + " ");
+                    draftObjectEditor->setCaretPosition (draftObjectEditor->getText().length());
+                }
+                repaint();
+                return true;
+            }
+        }
+    }
+
     bool isCmdOrCtrl = key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown();
 
     // 1. Select All (Cmd-A)
@@ -1182,7 +1515,43 @@ bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
     if ((isCmdOrCtrl && key.getKeyCode() == '1') ||
         (!isCmdOrCtrl && (key.getKeyCode() == 'N' || key.getKeyCode() == 'n')))
     {
-        showObjectSearchMenu ({ getWidth() * 0.4f, getHeight() * 0.4f });
+        spawnInlineObjectEditor ({ getWidth() * 0.4f, getHeight() * 0.4f });
+        return true;
+    }
+
+    // Save Project Bundle (Cmd+S / Ctrl+S)
+    if (isCmdOrCtrl && (key.getKeyCode() == 'S' || key.getKeyCode() == 's'))
+    {
+        auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project Bundle",
+                                                       juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                                       "*.tdaw;*.tdawproj");
+        fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectDirectories,
+            [this, fc] (const juce::FileChooser& chooser) {
+                auto result = chooser.getResult();
+                if (result != juce::File())
+                {
+                    ProjectFileManager::getInstance().saveProjectBundle (result, nodeGraph);
+                }
+            });
+        return true;
+    }
+
+    // Open Project Bundle (Cmd+O / Ctrl+O)
+    if (isCmdOrCtrl && (key.getKeyCode() == 'O' || key.getKeyCode() == 'o'))
+    {
+        auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project Bundle",
+                                                       juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                                       "*.tdaw;*.tdawproj;project.xml");
+        fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectDirectories,
+            [this, fc] (const juce::FileChooser& chooser) {
+                auto result = chooser.getResult();
+                if (result != juce::File())
+                {
+                    ProjectFileManager::getInstance().loadProjectBundle (result, nodeGraph);
+                    rebuildInspector();
+                    repaint();
+                }
+            });
         return true;
     }
 
@@ -1251,34 +1620,51 @@ RelativisticCanvasComponent::~RelativisticCanvasComponent()
 
 void RelativisticCanvasComponent::timerCallback()
 {
+    double hzSec = nodeGraph.getCurrentCausalityHorizonSec();
+    btnHorizonReadout.setButtonText ("HORIZON: +" + juce::String (hzSec, 3) + "s");
     repaint();
 }
 
 float RelativisticCanvasComponent::getNodeWidth (const RelativisticNode& node) const
 {
     if (node.getTypeName() == "time.scope" || node.getTypeName() == "time.display" || node.getTypeName() == "time.monitor")
-        return 170.0f;
+        return 190.0f;
     if (node.getTypeName() == "table")
-        return 160.0f;
+        return 180.0f;
+    if (node.getTypeName() == "out~" || node.getTypeName() == "out")
+        return 210.0f;
 
-    juce::Font labelFont (juce::FontOptions (14.0f, juce::Font::bold));
-    float textW = labelFont.getStringWidthF (node.getLabel()) + 38.0f;
+    juce::Font labelFont = FontManager::getInstance().getOxaniumFont (14.0f, true);
+    juce::Font portFont = FontManager::getInstance().getOxaniumFont (9.5f, false);
 
-    int numInlets = static_cast<int>(node.getInlets().size());
-    int numOutlets = static_cast<int>(node.getOutlets().size());
-    int maxPorts = std::max (numInlets, numOutlets);
-    float portsW = static_cast<float>(maxPorts) * 44.0f + 24.0f;
+    float textW = static_cast<float>(labelFont.getStringWidth (node.getLabel())) + 38.0f;
 
-    return std::max ({ 140.0f, textW, portsW });
+    float inletsTotalW = 0.0f;
+    for (const auto& in : node.getInlets())
+    {
+        inletsTotalW += std::max (48.0f, static_cast<float>(portFont.getStringWidth (in.name)) + 12.0f);
+    }
+
+    float outletsTotalW = 0.0f;
+    for (const auto& out : node.getOutlets())
+    {
+        outletsTotalW += std::max (48.0f, static_cast<float>(portFont.getStringWidth (out.name)) + 12.0f);
+    }
+
+    float portsW = std::max (inletsTotalW, outletsTotalW) + 24.0f;
+
+    return std::max ({ 160.0f, textW, portsW });
 }
 
 float RelativisticCanvasComponent::getNodeHeight (const RelativisticNode& node) const
 {
     if (node.getTypeName() == "time.scope" || node.getTypeName() == "time.display" || node.getTypeName() == "time.monitor")
-        return 75.0f;
+        return 80.0f;
     if (node.getTypeName() == "table")
-        return 70.0f;
-    return 48.0f;
+        return 75.0f;
+    if (node.getTypeName() == "out~" || node.getTypeName() == "out")
+        return 100.0f;
+    return 52.0f;
 }
 
 juce::Point<float> RelativisticCanvasComponent::getInletPos (const RelativisticNode& node, int idx) const
@@ -1590,11 +1976,27 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
                 return;
             }
         }
+        else if (auto outNode = std::dynamic_pointer_cast<OutNode> (n))
+        {
+            float graphX = outNode->getX() + panX + 8.0f;
+            float graphY = outNode->getY() + panY + 22.0f;
+            float graphW = getNodeWidth (*outNode) - 46.0f;
+            float graphH = getNodeHeight (*outNode) - 26.0f;
+
+            if (e.mouseDownPosition.x >= graphX && e.mouseDownPosition.x <= graphX + graphW &&
+                e.mouseDownPosition.y >= graphY && e.mouseDownPosition.y <= graphY + graphH)
+            {
+                outNode->invokeMethod ("Toggle Scope Mode");
+                rebuildInspector();
+                repaint();
+                return;
+            }
+        }
         else if (auto numNode = std::dynamic_pointer_cast<NumberNode> (n))
         {
             float currVal = numNode->getParameter ("value", 0.0f);
             float step = e.mods.isShiftDown() ? 0.1f : 1.0f;
-            float newVal = currVal - (e.getMouseVectorOffsetY() * 0.1f * step);
+            float newVal = currVal - (static_cast<float>(e.getDistanceFromDragStartY()) * 0.1f * step);
             numNode->setParameter ("value", newVal);
             repaint();
             return;
@@ -2046,14 +2448,94 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         }
     }
 
-    // Special Canvas Visualization for [out~] Live VU RMS Meters
+    // Special Canvas Visualization for [out~] Live VU RMS Meters & Oscilloscope Screen
     auto outNode = std::dynamic_pointer_cast<OutNode> (node);
     if (outNode)
     {
+        float graphX = x + 8.0f;
+        float graphY = y + 22.0f;
+        float graphW = w - 46.0f;
+        float graphH = h - 26.0f;
+
+        // Dark Scope Screen
+        g.setColour (juce::Colour (0xff050811));
+        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
+        g.setColour (juce::Colour (0xff1e293b));
+        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
+
+        // Center reticle crosshair
+        g.setColour (juce::Colour (0xff1e293b));
+        g.drawHorizontalLine (static_cast<int>(graphY + graphH * 0.5f), graphX, graphX + graphW);
+        g.drawVerticalLine (static_cast<int>(graphX + graphW * 0.5f), graphY, graphY + graphH);
+
+        const auto& scopeL = outNode->getScopeL();
+        const auto& scopeR = outNode->getScopeR();
+        int writeIdx = outNode->getScopeWriteIndex();
+
+        float displayMode = outNode->getParameter ("displayMode", 0.0f);
+
+        if (!scopeL.empty() && !scopeR.empty())
+        {
+            if (displayMode < 0.5f)
+            {
+                // Mode 0: Dual Trace Time Domain Scope (Left Cyan, Right Gold)
+                juce::Path pathL, pathR;
+                int total = static_cast<int>(scopeL.size());
+                float midY = graphY + graphH * 0.5f;
+
+                for (int i = 0; i < 64; ++i)
+                {
+                    int idx = (writeIdx + i * (total / 64)) % total;
+                    float sampleL = std::clamp (scopeL[idx], -1.2f, 1.2f);
+                    float sampleR = std::clamp (scopeR[idx], -1.2f, 1.2f);
+
+                    float px = graphX + (static_cast<float>(i) / 63.0f) * graphW;
+                    float pyL = midY - sampleL * (graphH * 0.42f);
+                    float pyR = midY - sampleR * (graphH * 0.42f);
+
+                    if (i == 0) { pathL.startNewSubPath (px, pyL); pathR.startNewSubPath (px, pyR); }
+                    else        { pathL.lineTo (px, pyL);           pathR.lineTo (px, pyR); }
+                }
+
+                g.setColour (juce::Colour (0xff06b6d4)); // Cyber Cyan Left Channel
+                g.strokePath (pathL, juce::PathStrokeType (1.5f));
+
+                g.setColour (juce::Colour (0xfff59e0b)); // Relativistic Gold Right Channel
+                g.strokePath (pathR, juce::PathStrokeType (1.2f));
+            }
+            else
+            {
+                // Mode 1: X-Y Lissajous Phase Plot Scope (Royal Violet)
+                juce::Path pathXY;
+                int total = static_cast<int>(scopeL.size());
+                float centerX = graphX + graphW * 0.5f;
+                float centerY = graphY + graphH * 0.5f;
+                float scaleX = graphW * 0.42f;
+                float scaleY = graphH * 0.42f;
+
+                for (int i = 0; i < 64; ++i)
+                {
+                    int idx = (writeIdx + i * (total / 64)) % total;
+                    float sampleL = std::clamp (scopeL[idx], -1.2f, 1.2f);
+                    float sampleR = std::clamp (scopeR[idx], -1.2f, 1.2f);
+
+                    float px = centerX + sampleL * scaleX;
+                    float py = centerY - sampleR * scaleY;
+
+                    if (i == 0) pathXY.startNewSubPath (px, py);
+                    else        pathXY.lineTo (px, py);
+                }
+
+                g.setColour (juce::Colour (0xffa855f7)); // Royal Violet Lissajous Scope
+                g.strokePath (pathXY, juce::PathStrokeType (1.5f));
+            }
+        }
+
+        // Live VU RMS Meters on the right edge
         float meterX = x + w - 32.0f;
-        float meterY = y + 8.0f;
+        float meterY = y + 22.0f;
         float meterW = 10.0f;
-        float meterH = 28.0f;
+        float meterH = graphH;
 
         g.setColour (juce::Colour (0xff0b0f19));
         g.fillRoundedRectangle (meterX, meterY, meterW * 2.2f, meterH, 2.0f);
@@ -2103,7 +2585,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f, 1.0f);
 
         // Smart Port Name Label without Truncation
-        float lw = std::max (44.0f, portFont.getStringWidthF (port.name) + 6.0f);
+        float lw = std::max (44.0f, static_cast<float>(portFont.getStringWidth (port.name)) + 6.0f);
         g.setColour (portCol.withAlpha (0.95f));
         g.drawText (port.name, p.x - lw * 0.5f, p.y + 3.0f, lw, 11.0f, juce::Justification::centred);
     }
@@ -2125,7 +2607,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f, 1.0f);
 
         // Smart Port Name Label without Truncation
-        float lw = std::max (44.0f, portFont.getStringWidthF (port.name) + 6.0f);
+        float lw = std::max (44.0f, static_cast<float>(portFont.getStringWidth (port.name)) + 6.0f);
         g.setColour (portCol.withAlpha (0.95f));
         g.drawText (port.name, p.x - lw * 0.5f, p.y - 14.0f, lw, 11.0f, juce::Justification::centred);
     }
@@ -2237,6 +2719,76 @@ void RelativisticCanvasComponent::paint (juce::Graphics& g)
         g.setColour (juce::Colour (0xff38bdf8));
         g.drawText (hoveredPort.signalTypeName + " | " + hoveredPort.routedValueText, tipX + 8, tipY + 20, tipW - 16, 14, juce::Justification::left);
     }
+
+    // Draw Cmd-1 Draft Object Box Autocomplete / Invalid Alert Overlay
+    if (isEditingDraftObject)
+    {
+        float boxX = draftObjectCanvasPos.x + panX;
+        float boxY = draftObjectCanvasPos.y + panY;
+        float boxH = 34.0f;
+
+        if (isDraftObjectInvalid)
+        {
+            // Invalid Object Warning Tag Below Box
+            float alertY = boxY + boxH + 4.0f;
+            float alertW = 220.0f;
+            float alertH = 24.0f;
+
+            g.setColour (juce::Colour (0xff450a0a)); // Dark Red pill
+            g.fillRoundedRectangle (boxX, alertY, alertW, alertH, 4.0f);
+            g.setColour (juce::Colour (0xffef4444)); // Neon Red outline
+            g.drawRoundedRectangle (boxX, alertY, alertW, alertH, 4.0f, 1.0f);
+
+            g.setColour (juce::Colour (0xfffca5a5)); // Bright Red text
+            g.setFont (FontManager::getInstance().getOxaniumFont (11.5f, true));
+            g.drawText ("! NO SUCH OBJECT AVAILABLE", boxX + 8, alertY, alertW - 16, alertH, juce::Justification::centredLeft);
+        }
+        else if (draftObjectEditor && draftObjectEditor->hasKeyboardFocus (true) && !filteredAutocompleteItems.empty())
+        {
+            // Floating Autocomplete Menu Below Box
+            float autoX = boxX;
+            float autoY = boxY + boxH + 4.0f;
+            float autoW = 320.0f;
+            int maxShow = std::min (6, static_cast<int>(filteredAutocompleteItems.size()));
+            float autoH = maxShow * 26.0f + 8.0f;
+
+            g.setColour (juce::Colour (0xff090d16)); // Deep Carbon Popup
+            g.fillRoundedRectangle (autoX, autoY, autoW, autoH, 6.0f);
+            g.setColour (juce::Colour (0xff1e293b));
+            g.drawRoundedRectangle (autoX, autoY, autoW, autoH, 6.0f, 1.0f);
+
+            for (int i = 0; i < maxShow; ++i)
+            {
+                float itemY = autoY + 4.0f + i * 26.0f;
+                bool isSelected = (i == selectedAutocompleteIdx);
+
+                if (isSelected)
+                {
+                    g.setColour (juce::Colour (0xff164e63)); // Cyber Cyan Selection Card
+                    g.fillRoundedRectangle (autoX + 4.0f, itemY, autoW - 8.0f, 24.0f, 4.0f);
+                    g.setColour (juce::Colour (0xff06b6d4));
+                    g.drawRoundedRectangle (autoX + 4.0f, itemY, autoW - 8.0f, 24.0f, 4.0f, 1.0f);
+                }
+
+                const auto& item = filteredAutocompleteItems[i];
+
+                // Type Name in Cyber Cyan / Royal White
+                g.setColour (isSelected ? juce::Colour (0xff38bdf8) : juce::Colour (0xff06b6d4));
+                g.setFont (FontManager::getInstance().getOxaniumFont (13.0f, true));
+                g.drawText ("[" + item.typeName + "]", autoX + 10, itemY, 110, 24, juce::Justification::centredLeft);
+
+                // Category Tag
+                g.setColour (juce::Colour (0xfff59e0b)); // Relativistic Gold
+                g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
+                g.drawText (item.category, autoX + 120, itemY, 40, 24, juce::Justification::centredLeft);
+
+                // Description
+                g.setColour (isSelected ? juce::Colour (0xfff8fafc) : juce::Colour (0xff94a3b8));
+                g.setFont (FontManager::getInstance().getOxaniumFont (10.5f, false));
+                g.drawText (item.description, autoX + 165, itemY, autoW - 170, 24, juce::Justification::centredLeft);
+            }
+        }
+    }
 }
 
 void RelativisticCanvasComponent::resized()
@@ -2267,6 +2819,8 @@ void RelativisticCanvasComponent::resized()
     btnAddObject.setBounds (12, static_cast<int>(paletteY), 160, static_cast<int>(paletteH));
     btnToggleCord.setBounds (180, static_cast<int>(paletteY), 140, static_cast<int>(paletteH));
     btnClear.setBounds (328, static_cast<int>(paletteY), 110, static_cast<int>(paletteH));
+    btnHorizonReadout.setBounds (446, static_cast<int>(paletteY), 145, static_cast<int>(paletteH));
+    btnResetHorizon.setBounds (599, static_cast<int>(paletteY), 135, static_cast<int>(paletteH));
 
     // Right Side Dual Inspector Bounds
     const float inspectorW = 320.0f;

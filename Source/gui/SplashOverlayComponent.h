@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <BinaryData.h>
 
 namespace time_dilation
 {
@@ -13,18 +14,65 @@ public:
     {
         setInterceptsMouseClicks (true, true);
 
-        auto assetDir = juce::File::getCurrentWorkingDirectory().getChildFile ("Source").getChildFile ("assets");
-        auto svgFile = assetDir.getChildFile ("logo_banner.svg");
-        auto pngFile = assetDir.getChildFile ("logo_banner.svg.png");
-
-        if (svgFile.existsAsFile())
+        // 1. Try loading high-resolution PNG image first (BinaryData or File)
+        int pngSize = 0;
+        const char* pngData = BinaryData::getNamedResource ("logo_banner_svg_png", pngSize);
+        if (pngData != nullptr && pngSize > 0)
         {
-            svgDrawable = juce::Drawable::createFromSVGFile (svgFile);
+            pngImage = juce::ImageFileFormat::loadFrom (pngData, pngSize);
         }
 
-        if (svgDrawable == nullptr && pngFile.existsAsFile())
+        if (!pngImage.isValid())
         {
-            pngImage = juce::ImageFileFormat::loadFrom (pngFile);
+            std::vector<juce::File> candidatePngFiles = {
+                juce::File ("/Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/assets/logo_banner.svg.png"),
+                juce::File::getCurrentWorkingDirectory().getChildFile ("Source").getChildFile ("assets").getChildFile ("logo_banner.svg.png"),
+                juce::File::getCurrentWorkingDirectory().getChildFile ("web").getChildFile ("logo_banner.png")
+            };
+            for (const auto& pngFile : candidatePngFiles)
+            {
+                if (pngFile.existsAsFile())
+                {
+                    pngImage = juce::ImageFileFormat::loadFrom (pngFile);
+                    if (pngImage.isValid())
+                        break;
+                }
+            }
+        }
+
+        // 2. SVG Fallback
+        if (!pngImage.isValid())
+        {
+            int svgSize = 0;
+            const char* svgData = BinaryData::getNamedResource ("logo_banner_svg", svgSize);
+            if (svgData != nullptr && svgSize > 0)
+            {
+                auto xml = juce::XmlDocument::parse (juce::String::createStringFromData (svgData, svgSize));
+                if (xml != nullptr)
+                {
+                    svgDrawable = juce::Drawable::createFromSVG (*xml);
+                }
+            }
+
+            if (svgDrawable == nullptr)
+            {
+                std::vector<juce::File> candidateSvgFiles = {
+                    juce::File ("/Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/web/logo_banner.svg"),
+                    juce::File ("/Users/kijjaz/Desktop/Antigravity/2026/20260801 Time Dilation DAW/Source/assets/logo_banner.svg"),
+                    juce::File::getCurrentWorkingDirectory().getChildFile ("web").getChildFile ("logo_banner.svg"),
+                    juce::File::getCurrentWorkingDirectory().getChildFile ("Source").getChildFile ("assets").getChildFile ("logo_banner.svg")
+                };
+
+                for (const auto& svgFile : candidateSvgFiles)
+                {
+                    if (svgFile.existsAsFile())
+                    {
+                        svgDrawable = juce::Drawable::createFromSVGFile (svgFile);
+                        if (svgDrawable != nullptr)
+                            break;
+                    }
+                }
+            }
         }
 
         // Start timer at 30 FPS (~33ms per frame)
@@ -84,29 +132,29 @@ public:
         // Render Logo Banner
         auto logoBounds = getLocalBounds().reduced (35).toFloat();
 
-        if (svgDrawable != nullptr)
-        {
-            svgDrawable->drawWithin (g, logoBounds, juce::RectanglePlacement::centred, alpha);
-        }
-        else if (pngImage.isValid())
+        if (pngImage.isValid())
         {
             g.drawImage (pngImage, logoBounds, juce::RectanglePlacement::centred);
+        }
+        else if (svgDrawable != nullptr)
+        {
+            svgDrawable->drawWithin (g, logoBounds, juce::RectanglePlacement::centred, alpha);
         }
         else
         {
             // Fallback Typography
             g.setColour (juce::Colour (0xffffffff).withAlpha (alpha));
-            g.setFont (juce::Font (32.0f, juce::Font::bold));
+            g.setFont (juce::FontOptions (32.0f, juce::Font::bold));
             g.drawText ("TIME DILATION DAW", getLocalBounds().withTrimmedBottom (30), juce::Justification::centred, true);
 
             g.setColour (juce::Colour (0xfff59e0b).withAlpha (alpha * 0.9f));
-            g.setFont (juce::Font (14.0f, juce::Font::bold));
+            g.setFont (juce::FontOptions (14.0f, juce::Font::bold));
             g.drawText ("RELATIVISTIC AUDIO ENGINE", getLocalBounds().withTrimmedTop (40), juce::Justification::centred, true);
         }
 
         // Click Dismiss Hint
         g.setColour (juce::Colour (0xfff59e0b).withAlpha (alpha * 0.65f));
-        g.setFont (juce::Font (11.0f, juce::Font::bold));
+        g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
         g.drawText ("CLICK ANYWHERE TO DISMISS", getLocalBounds().removeFromBottom (35), juce::Justification::centred, true);
     }
 

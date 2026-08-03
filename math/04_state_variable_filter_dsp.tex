@@ -1,0 +1,44 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\geometry{margin=1in}
+
+\title{\textbf{\Huge Topology-Preserving Transform (TPT) State-Variable Filters}\\
+\Large Zero-Delay Feedback Filter Discretization}
+\author{\textbf{Time Dilation DAW (v4.0) Engineering Group}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper details the continuous-time and discretized equations of the 2-pole active State Variable Filter (\texttt{[filter\textasciitilde{}]} and \texttt{[svfilter\textasciitilde{}]}) implemented using Vadim Zavalishin's Topology-Preserving Transform (TPT) method.
+\end{abstract}
+
+\section{Continuous-Time Active SVF Equations}
+The continuous-time state-variable filter integrates high-pass $y_{HP}$, band-pass $y_{BP}$, and low-pass $y_{LP}$ outputs:
+\begin{align}
+y_{HP}(t) &= x(t) - R \cdot y_{BP}(t) - y_{LP}(t) \\
+y_{BP}(t) &= \omega_0 \int y_{HP}(t) \, dt \\
+y_{LP}(t) &= \omega_0 \int y_{BP}(t) \, dt
+\end{align}
+where $\omega_0 = 2\pi f_c$ is the cutoff angular frequency and $R = \frac{1}{Q}$ is the damping factor.
+
+\section{Bilinear Transform Discretization \& TPT Structure}
+Applying the trapezoidal integration rule with pre-warped gain $g = \tan\left(\frac{\pi f_c}{f_s}\right)$ and resonance damping $k = \frac{1}{Q}$:
+\begin{align}
+v_H(n) &= \frac{x(n) - (g + k) s_1(n-1) - s_2(n-1)}{1 + g(g + k)} \\
+v_B(n) &= g \cdot v_H(n) + s_1(n-1) \\
+v_L(n) &= g \cdot v_B(n) + s_2(n-1)
+\end{align}
+State registers $s_1(n)$ and $s_2(n)$ are updated at each sample:
+\begin{align}
+s_1(n) &= 2 v_B(n) - s_1(n-1) \\
+s_2(n) &= 2 v_L(n) - s_2(n-1)
+\end{align}
+
+\end{document}

@@ -55,12 +55,19 @@ juce::File ProjectFileManager::saveAudioClipToCache (const juce::AudioBuffer<flo
     return outFile;
 }
 
-bool ProjectFileManager::saveProjectBundle (const juce::File& targetProjectFolder, RelativisticNodeGraph& graph)
+bool ProjectFileManager::saveProjectBundle (const juce::File& targetProjectFileOrFolder, RelativisticNodeGraph& graph)
 {
-    if (targetProjectFolder.existsAsFile())
-        currentProjectFolder = targetProjectFolder.getParentDirectory();
+    juce::File xmlFile;
+    if (targetProjectFileOrFolder.isDirectory())
+    {
+        currentProjectFolder = targetProjectFileOrFolder;
+        xmlFile = targetProjectFileOrFolder.getChildFile ("project.xml");
+    }
     else
-        currentProjectFolder = targetProjectFolder;
+    {
+        currentProjectFolder = targetProjectFileOrFolder.getParentDirectory();
+        xmlFile = targetProjectFileOrFolder;
+    }
 
     currentProjectFolder.createDirectory();
     auto audioDir = getAudioAssetsDirectory (currentProjectFolder);
@@ -83,8 +90,7 @@ bool ProjectFileManager::saveProjectBundle (const juce::File& targetProjectFolde
     auto xml = state.createXml();
     if (xml != nullptr)
     {
-        auto projectXmlFile = currentProjectFolder.getChildFile ("project.xml");
-        return xml->writeTo (projectXmlFile);
+        return xml->writeTo (xmlFile);
     }
 
     return false;

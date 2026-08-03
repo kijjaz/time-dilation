@@ -1013,7 +1013,7 @@ void SamplerNode::process (int numSamples)
 
 std::vector<std::string> SamplerNode::getExposedMethods() const
 {
-    return { "Reset Position", "Toggle Loop Mode", "Next Preset" };
+    return { "Load Audio File...", "Reset Position", "Toggle Loop Mode", "Next Preset" };
 }
 
 void SamplerNode::invokeMethod (const std::string& methodName)

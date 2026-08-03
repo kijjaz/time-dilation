@@ -367,7 +367,7 @@ void RelativisticCanvasComponent::savePatchAs()
 {
     auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project File As...",
                                                    juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                   "*.tdaw;*.tdawproj");
+                                                   "*.tdaw;*.tdawproj;*.xml");
     fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
         [this, fc] (const juce::FileChooser& chooser) {
             auto result = chooser.getResult();
@@ -376,17 +376,42 @@ void RelativisticCanvasComponent::savePatchAs()
                 if (result.getFileExtension().isEmpty())
                     result = result.withFileExtension ("tdaw");
 
-                ProjectFileManager::getInstance().saveProjectBundle (result, nodeGraph);
-                currentProjectFile = result;
+                bool success = ProjectFileManager::getInstance().saveProjectBundle (result, nodeGraph);
+                if (success)
+                {
+                    currentProjectFile = result;
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::InfoIcon,
+                        "Project Saved",
+                        "Successfully saved patch to:\n" + result.getFullPathName());
+                }
+                else
+                {
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::WarningIcon,
+                        "Save Failed",
+                        "Could not save project file to:\n" + result.getFullPathName());
+                }
             }
         });
 }
 
 void RelativisticCanvasComponent::savePatch()
 {
-    if (currentProjectFile.existsAsFile())
+    if (currentProjectFile.existsAsFile() || currentProjectFile.isDirectory())
     {
-        ProjectFileManager::getInstance().saveProjectBundle (currentProjectFile, nodeGraph);
+        bool success = ProjectFileManager::getInstance().saveProjectBundle (currentProjectFile, nodeGraph);
+        if (success)
+        {
+            juce::AlertWindow::showMessageBoxAsync (
+                juce::AlertWindow::InfoIcon,
+                "Project Saved",
+                "Successfully saved patch to:\n" + currentProjectFile.getFullPathName());
+        }
+        else
+        {
+            savePatchAs();
+        }
     }
     else
     {
@@ -398,16 +423,166 @@ void RelativisticCanvasComponent::loadPatch()
 {
     auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project File...",
                                                    juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                   "*.tdaw;*.tdawproj;project.xml");
+                                                   "*.tdaw;*.tdawproj;*.xml;project.xml");
     fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectDirectories,
         [this, fc] (const juce::FileChooser& chooser) {
             auto result = chooser.getResult();
             if (result != juce::File())
             {
-                ProjectFileManager::getInstance().loadProjectBundle (result, nodeGraph);
-                currentProjectFile = result;
-                rebuildInspector();
-                repaint();
+                bool success = ProjectFileManager::getInstance().loadProjectBundle (result, nodeGraph);
+                if (success)
+                {
+                    currentProjectFile = result;
+                    selectedNodeIds.clear();
+                    selectedConnectionId = 0;
+                    rebuildInspector();
+                    repaint();
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::InfoIcon,
+                        "Project Loaded",
+                        "Successfully loaded patch from:\n" + result.getFullPathName());
+                }
+                else
+                {
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::WarningIcon,
+                        "Load Failed",
+                        "Could not parse valid project file at:\n" + result.getFullPathName());
+                }
+            }
+        });
+}
+
+void RelativisticCanvasComponent::exportAudioWav()
+{
+    auto fc = std::make_shared<juce::FileChooser> ("Export Rendered Audio WAV File As...",
+                                                   juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                                   "*.wav");
+    fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
+        [this, fc] (const juce::FileChooser& chooser) {
+            auto result = chooser.getResult();
+            if (result != juce::File())
+            {
+                if (result.getFileExtension().isEmpty())
+                    result = result.withFileExtension ("wav");
+
+                double renderRate = 44100.0;
+                int renderSamples = static_cast<int>(renderRate * 10.0); // 10 seconds of high-fidelity offline rendering
+                int blockSize = 512;
+
+                juce::AudioBuffer<float> renderBuffer (2, renderSamples);
+                renderBuffer.clear();
+
+                nodeGraph.prepare (renderRate, blockSize);
+
+                juce::AudioBuffer<float> blockBuffer (2, blockSize);
+                int samplesRendered = 0;
+                while (samplesRendered < renderSamples)
+                {
+                    int numToProcess = std::min (blockSize, renderSamples - samplesRendered);
+                    blockBuffer.clear();
+                    nodeGraph.process (blockBuffer, numToProcess);
+
+                    renderBuffer.copyFrom (0, samplesRendered, blockBuffer, 0, 0, numToProcess);
+                    renderBuffer.copyFrom (1, samplesRendered, blockBuffer, 1, 0, numToProcess);
+
+                    samplesRendered += numToProcess;
+                }
+
+                juce::WavAudioFormat wavFormat;
+                std::unique_ptr<juce::AudioFormatWriter> writer (wavFormat.createWriterFor (
+                    result.createOutputStream().release(),
+                    renderRate,
+                    2,
+                    16,
+                    {},
+                    0));
+
+                if (writer != nullptr)
+                {
+                    writer->writeFromAudioSampleBuffer (renderBuffer, 0, renderSamples);
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::InfoIcon,
+                        "Audio Export Complete",
+                        "Successfully rendered 10.0 seconds of 44.1 kHz 16-bit WAV audio to:\n" + result.getFullPathName());
+                }
+                else
+                {
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::WarningIcon,
+                        "Audio Export Failed",
+                        "Could not create output WAV file stream at:\n" + result.getFullPathName());
+                }
+            }
+        });
+}
+
+void RelativisticCanvasComponent::exportCppScript()
+{
+    auto fc = std::make_shared<juce::FileChooser> ("Export Generated C++ DSP Graph Formulas As...",
+                                                   juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                                   "*.cpp;*.h;*.txt");
+    fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
+        [this, fc] (const juce::FileChooser& chooser) {
+            auto result = chooser.getResult();
+            if (result != juce::File())
+            {
+                if (result.getFileExtension().isEmpty())
+                    result = result.withFileExtension ("cpp");
+
+                juce::String code;
+                code << "// ==============================================================================\n";
+                code << "// Time Dilation DAW (v4.0) — Exported C++ Relativistic Audio Graph\n";
+                code << "// Generated Automatically from Active Modular Canvas Graph\n";
+                code << "// ==============================================================================\n\n";
+                code << "#include <JuceHeader.h>\n#include <cmath>\n#include <vector>\n#include <string>\n\n";
+                code << "class ExportedRelativisticAudioGraph\n{\npublic:\n";
+                code << "    ExportedRelativisticAudioGraph() {}\n\n";
+                code << "    void prepare (double sampleRate, int samplesPerBlock)\n    {\n";
+                code << "        fs = sampleRate;\n";
+                code << "        blockSize = samplesPerBlock;\n";
+                code << "        tau = 0.0;\n    }\n\n";
+                code << "    void processBlock (juce::AudioBuffer<float>& buffer)\n    {\n";
+                code << "        int numSamples = buffer.getNumSamples();\n";
+                code << "        for (int s = 0; s < numSamples; ++s)\n        {\n";
+                code << "            double dt = 1.0 / fs;\n";
+                code << "            tau += currentGamma * dt; // Dynamic Coordinate Time Integration\n\n";
+
+                code << "            // --- NODE DSP FORMULAS ---\n";
+                for (const auto& node : nodeGraph.getNodes())
+                {
+                    code << "            // Node #" << node->getId() << " [" << juce::String (node->getTypeName()) << "] label: \"" << juce::String (node->getLabel()) << "\"\n";
+                    std::string formula = node->getDefaultFormulaScript();
+                    juce::StringArray lines;
+                    lines.addLines (juce::String (formula));
+                    for (const auto& line : lines)
+                    {
+                        code << "            " << line << "\n";
+                    }
+                    code << "\n";
+                }
+
+                code << "        }\n    }\n\nprivate:\n";
+                code << "    double fs = 44100.0;\n";
+                code << "    int blockSize = 512;\n";
+                code << "    double tau = 0.0;\n";
+                code << "    double currentGamma = 1.0;\n";
+                code << "};\n";
+
+                if (result.replaceWithText (code))
+                {
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::InfoIcon,
+                        "C++ DSP Export Complete",
+                        "Successfully exported authentic C++ DSP graph formulas to:\n" + result.getFullPathName());
+                }
+                else
+                {
+                    juce::AlertWindow::showMessageBoxAsync (
+                        juce::AlertWindow::WarningIcon,
+                        "C++ DSP Export Failed",
+                        "Could not write file to:\n" + result.getFullPathName());
+                }
             }
         });
 }
@@ -458,11 +633,11 @@ void RelativisticCanvasComponent::showMenuFile()
             }
             else if (result == 10)
             {
-                showHelpDialog ("Export Audio", "Exporting audio WAV rendering engine.");
+                exportAudioWav();
             }
             else if (result == 11)
             {
-                showHelpDialog ("Export C++ Script", "Exporting authentic C++ DSP graph formulas.");
+                exportCppScript();
             }
         });
 }
@@ -1411,9 +1586,30 @@ void RelativisticCanvasComponent::rebuildInspector()
             auto n = nodeGraph.getNodeById (primaryId);
             if (n)
             {
-                n->invokeMethod (m);
-                rebuildInspector();
-                repaint();
+                if (m == "Load Audio File..." || m == "Load Sample File...")
+                {
+                    auto fc = std::make_shared<juce::FileChooser> ("Select Audio Sample File...",
+                                                                   juce::File::getSpecialLocation (juce::File::userHomeDirectory),
+                                                                   "*.wav;*.aif;*.aiff;*.mp3;*.flac");
+                    fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                        [this, primaryId, fc] (const juce::FileChooser& chooser) {
+                            auto result = chooser.getResult();
+                            if (result.existsAsFile())
+                            {
+                                auto n = nodeGraph.getNodeById (primaryId);
+                                auto sampler = std::dynamic_pointer_cast<SamplerNode> (n);
+                                if (sampler) sampler->loadAudioFile (result);
+                                rebuildInspector();
+                                repaint();
+                            }
+                        });
+                }
+                else
+                {
+                    n->invokeMethod (m);
+                    rebuildInspector();
+                    repaint();
+                }
             }
         };
         btn->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff8b5cf6));

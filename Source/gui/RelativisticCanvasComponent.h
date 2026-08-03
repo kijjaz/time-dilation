@@ -206,6 +206,8 @@ private:
     void savePatchAs();
     void savePatch();
     void loadPatch();
+    void exportAudioWav();
+    void exportCppScript();
 
     void rebuildInspector();
 

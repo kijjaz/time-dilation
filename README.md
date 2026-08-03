@@ -137,44 +137,4 @@ The theoretical physics and digital signal processing mathematics of **Time Dila
 
 1. **[`01_relativistic_time_dilation.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/01_relativistic_time_dilation.tex)** — Lorentz Velocity Dilation, Schwarzschild Gravitational Redshift Event Horizons, & Coordinate Time Integration $\tau(t) = \int_0^t \gamma(t') dt'$.
 2. **[`02_dsp_interpolation_and_resampling.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/02_dsp_interpolation_and_resampling.tex)** — Hermite 4-Point 3rd-Order Cubic Spline Interpolation Matrix \& Varispeed Sub-Sample Resampling.
-3. **[`03_pitch_and_tuning_conversions.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/03_pitch_and_tuning_conversions.tex)** — Equal Temperament Logarithmic `[mtof]` / `[ftom]` Conversions, Microtonal Cent Ratios, \& Acoustic Doppler Shifts.
-4. **[`04_state_variable_filter_dsp.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/04_state_variable_filter_dsp.tex)** — Vadim Zavalishin Topology-Preserving Transform (TPT) Zero-Delay State Variable Filter \& Moog 24dB Cascade Math.
-5. **[`05_feedback_loop_stability.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/05_feedback_loop_stability.tex)** — Directed Graph DFS Cycle Detection, Topological Sorting, \& 1-Block History Memory Allocation Proof.
-6. **[`06_nonlinear_saturation_dsp.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/06_nonlinear_saturation_dsp.tex)** — Non-Linear Hyperbolic Tangent ($\tanh$) Tube Saturation, Asymmetric Grid Bias, \& Cubic Soft-Clipping.
-7. **[`07_envelope_generators_adsr.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/07_envelope_generators_adsr.tex)** — Piecewise Exponential ADSR Envelope Generator State Transitions \& Peak/RMS Envelope Followers.
-8. **[`08_polyblep_anti_aliasing.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/08_polyblep_anti_aliasing.tex)** — 2-Point PolyBLEP (Polynomial Band-Limited Step) Residual Anti-Aliasing Correction.
-9. **[`09_granular_synthesis_math.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/09_granular_synthesis_math.tex)** — Gabor Granular Synthesis, Hanning/Gaussian Window Envelopes, Poisson Grain Distributions, \& Overlap-Add (OLA).
-10. **[`10_reverb_fdn_matrices.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/10_reverb_fdn_matrices.tex)** — Multi-Channel Feedback Delay Network (FDN) Reverb Unitary Householder Matrices \& Prime Delay Selection.
-11. **[`11_spectrometer_fft_log_analysis.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/11_spectrometer_fft_log_analysis.tex)** — 32-Band Logarithmic Frequency Spectrum Estimation \& 2D Phase Space Parametric State Trajectories.
-12. **[`future_lookahead_causality.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/future_lookahead_causality.tex)** — Relativistic Future Lookahead, Global Causality Horizon Offset Engine, \& Smoothed Time Dilation.
-
----
-
-## 🛠️ Building from Source
-
-### Prerequisites
-- **macOS**: 12.0 or newer
-- **Compiler**: Clang / AppleClang with C++20 support
-- **Build System**: CMake 3.22+ & Ninja or Make
-
-### Quick Build Instructions
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/kijjaz/time-dilation.git
-cd time-dilation
-
-# 2. Configure build environment with CMake
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-
-# 3. Compile Standalone Workstation & Plugins
-cmake --build build --config Release -j8
-
-# 4. Launch Application
-open "build/TimeDilationDAW_App_artefacts/Time Dilation DAW.app"
-```
-
----
-
-## 📄 License
-Released under the **MIT License**. Created for research in relativistic spacetime audio synthesis.
+3. **[`03_pitch_and_tuning_conversions.tex`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/math/03_pitch_and_tuning_conversions.tex)** — Equal Temperament Logarithmic `[mtof]` / `[ftom]` Conversions, Microtonal Cent Ratios, \& Acoustic Doppler Shi

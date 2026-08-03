@@ -86,67 +86,34 @@ public:
 
         g.setOpacity (alpha);
 
-        // Deep Sci-Fi Carbon Background
+        // Solid Obsidian Black Background (#070a12)
         g.fillAll (juce::Colour (0xff070a12));
 
-        float cx = getWidth() * 0.5f;
-        float cy = getHeight() * 0.5f;
-
-        // Dynamic Pulsing Radial Glow
-        float glowRadius = std::min (cx, cy) * (0.85f + 0.05f * std::sin (pulsePhase));
-        juce::ColourGradient bgGlow (juce::Colour (0xff1e1b4b).withAlpha (0.6f), cx, cy,
-                                    juce::Colour (0xff070a12), glowRadius, cy, true);
-        g.setGradientFill (bgGlow);
-        g.fillRect (getLocalBounds());
-
-        // Glassmorphic Center Card
-        float cardW = std::min (680.0f, getWidth() * 0.85f);
-        float cardH = std::min (380.0f, getHeight() * 0.75f);
-        float cardX = cx - cardW * 0.5f;
-        float cardY = cy - cardH * 0.5f;
-
-        g.setColour (juce::Colour (0xee0d1322));
-        g.fillRoundedRectangle (cardX, cardY, cardW, cardH, 12.0f);
-
-        // Relativistic Gold & Cyan Outline
-        g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.7f));
-        g.drawRoundedRectangle (cardX, cardY, cardW, cardH, 12.0f, 1.5f);
-        g.setColour (juce::Colour (0xfff59e0b).withAlpha (0.4f + 0.3f * std::sin (pulsePhase)));
-        g.drawRoundedRectangle (cardX - 2.0f, cardY - 2.0f, cardW + 4.0f, cardH + 4.0f, 14.0f, 2.0f);
-
-        // Render Clean PNG Logo Image Centered
-        juce::Rectangle<float> bannerArea (cardX + 20.0f, cardY + 20.0f, cardW - 40.0f, cardH - 100.0f);
-
+        // Draw Pristine PNG Splash Image Centered
         if (pngImage.isValid())
         {
-            g.drawImage (pngImage, bannerArea, juce::RectanglePlacement::centred);
+            auto bounds = getLocalBounds().toFloat();
+            float targetW = std::min (bounds.getWidth() * 0.92f, 1000.0f);
+            float aspect = pngImage.getHeight() / static_cast<float>(pngImage.getWidth());
+            float targetH = targetW * aspect;
+
+            if (targetH > bounds.getHeight() * 0.9f)
+            {
+                targetH = bounds.getHeight() * 0.9f;
+                targetW = targetH / aspect;
+            }
+
+            float x = (bounds.getWidth() - targetW) * 0.5f;
+            float y = (bounds.getHeight() - targetH) * 0.5f;
+
+            g.drawImage (pngImage, juce::Rectangle<float> (x, y, targetW, targetH), juce::RectanglePlacement::centred);
         }
         else
         {
             g.setColour (juce::Colour (0xfff8fafc));
             g.setFont (FontManager::getInstance().getOxaniumFont (28.0f, true));
-            g.drawText ("TIME DILATION DAW", cardX, cardY + 60.0f, cardW, 40.0f, juce::Justification::centred);
+            g.drawText ("TIME DILATION DAW", getLocalBounds(), juce::Justification::centred);
         }
-
-        // Subtitle & Version Tagline
-        g.setColour (juce::Colour (0xfff59e0b).withAlpha (alpha * 0.95f));
-        g.setFont (FontManager::getInstance().getOxaniumFont (11.5f, true));
-        g.drawText ("RELATIVISTIC TIME DILATION WORKSTATION  |  VERSION 0.0.1 (JUCE 7 C++20)", cardX + 15.0f, cardY + cardH - 68.0f, cardW - 30.0f, 20.0f, juce::Justification::centred);
-
-        // Dismiss Pill Button Hint
-        float pillW = 220.0f;
-        float pillH = 28.0f;
-        float pillX = cx - pillW * 0.5f;
-        float pillY = cardY + cardH - 42.0f;
-
-        g.setColour (juce::Colour (0xff1e293b).withAlpha (0.9f));
-        g.fillRoundedRectangle (pillX, pillY, pillW, pillH, 14.0f);
-        g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.8f));
-        g.drawRoundedRectangle (pillX, pillY, pillW, pillH, 14.0f, 1.0f);
-
-        g.setColour (juce::Colour (0xfff8fafc).withAlpha (alpha * 0.9f));
-        g.setFont (FontManager::getInstance().getOxaniumFont (10.5f, true));
-        g.drawText ("CLICK ANYWHERE TO DISMISS", pillX, pillY, pillW, pillH, juce::Justification::centred);
     }
 
 private:

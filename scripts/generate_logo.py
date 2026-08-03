@@ -357,26 +357,6 @@ def create_time_dilation_logo_v10():
     # Render "TD" Monogram Logo in Center of Black Hole!
     svg_parts.append(render_td_monogram(bh_x, bh_y, scale=1.0))
 
-    # 7. Integrated Typography with Solid Black Drop Shadows
-    svg_parts.append('<!-- Integrated Typography with Solid Black Drop Shadows -->')
-    svg_parts.append('''
-    <g transform="translate(60, 535)" filter="url(#blackTextShadow)">
-        <text x="3" y="3" font-family="'Inter', 'Outfit', 'Roboto', sans-serif" font-size="26" font-weight="900" letter-spacing="6" fill="#000000" opacity="1.0">
-            TIME DILATION DAW
-        </text>
-        <text x="5" y="25" font-family="'Inter', 'Outfit', 'Roboto', sans-serif" font-size="11" font-weight="600" letter-spacing="9" fill="#000000" opacity="1.0">
-            RELATIVISTIC AUDIO ENGINE
-        </text>
-
-        <text x="0" y="0" font-family="'Inter', 'Outfit', 'Roboto', sans-serif" font-size="26" font-weight="900" letter-spacing="6" fill="#ffffff">
-            TIME DILATION <tspan fill="#f59e0b">DAW</tspan>
-        </text>
-        <text x="2" y="22" font-family="'Inter', 'Outfit', 'Roboto', sans-serif" font-size="11" font-weight="600" letter-spacing="9" fill="#ea580c" opacity="0.95">
-            RELATIVISTIC AUDIO ENGINE
-        </text>
-    </g>
-    ''')
-
     svg_parts.append('</svg>')
     return "\n".join(svg_parts)
 

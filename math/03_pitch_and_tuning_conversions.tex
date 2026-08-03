@@ -40,4 +40,20 @@ m(f) = 69 + \frac{12}{\ln 2} \cdot \ln\left(\frac{f}{440}\right)
 \end{equation}
 
 \section{Cent Tuning \& Transposition Ratios}
-The frequency multiplier ratio $R(c)$ for a microtonal interval of $c
+The frequency multiplier ratio $R(c)$ for a microtonal interval of $c$ cents ($100\,\text{cents} = 1\,\text{semitone}$) is:
+\begin{equation}
+R(c) = 2^{\frac{c}{1200}}
+\end{equation}
+Given a base frequency $f_{\text{base}}$ and semitone shift $\Delta m$ with fine detune cents $c$, the modulated frequency is:
+\begin{equation}
+f_{\text{final}} = f_{\text{base}} \cdot 2^{\frac{\Delta m + c/100}{12}}
+\end{equation}
+
+\section{Relativistic Doppler Pitch Shift under Time Warping}
+When an audio node is driven by a time dilation factor $\gamma(t)$, the apparent perceived playback frequency $f_{\text{perceived}}$ experiences an acoustic Doppler shift:
+\begin{equation}
+f_{\text{perceived}}(t) = f_{\text{base}} \cdot |\gamma(t)|
+\end{equation}
+Under retrograde time flow ($\gamma(t) < 0$), the frequency magnitude remains $|f_{\text{perceived}}| = f_{\text{base}} \cdot |\gamma(t)|$ while the phase trajectories invert direction.
+
+\end{document}

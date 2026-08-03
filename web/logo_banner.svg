@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" style="background-color: #040207;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%">
     <defs>
         <radialGradient id="bgGlow" cx="44%" cy="50%" r="65%">
-            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.9"/>
-            <stop offset="45%" stop-color="#090310" stop-opacity="0.98"/>
-            <stop offset="100%" stop-color="#040207" stop-opacity="1.0"/>
+            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.35"/>
+            <stop offset="45%" stop-color="#090310" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#040207" stop-opacity="0.0"/>
         </radialGradient>
 
         <radialGradient id="singularityGlow" cx="50%" cy="50%" r="50%">
@@ -23060,4 +23060,12 @@
             RELATIVISTIC AUDIO ENGINE
         </text>
 
-        <text x="0" y="0" font-family="'Inter', 'Outfit', 'Roboto', sa
+        <text x="0" y="0" font-family="'Inter', 'Outfit', 'Roboto', sans-serif" font-size="26" font-weight="900" letter-spacing="6" fill="#ffffff">
+            TIME DILATION <tspan fill="#f59e0b">DAW</tspan>
+        </text>
+        <text x="2" y="22" font-family="'Inter', 'Outfit', 'Roboto', sans-serif" font-size="11" font-weight="600" letter-spacing="9" fill="#ea580c" opacity="0.95">
+            RELATIVISTIC AUDIO ENGINE
+        </text>
+    </g>
+    
+</svg>

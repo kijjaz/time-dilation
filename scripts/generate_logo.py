@@ -245,13 +245,13 @@ def create_time_dilation_logo_v10():
 
     svg_parts = []
 
-    # SVG Header - DEEP WARM OBSIDIAN
-    svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%" style="background-color: #040207;">
+    # SVG Header - DEEP WARM OBSIDIAN WITH TRANSPARENT ALPHA BACKGROUND
+    svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%">
     <defs>
         <radialGradient id="bgGlow" cx="44%" cy="50%" r="65%">
-            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.9"/>
-            <stop offset="45%" stop-color="#090310" stop-opacity="0.98"/>
-            <stop offset="100%" stop-color="#040207" stop-opacity="1.0"/>
+            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.35"/>
+            <stop offset="45%" stop-color="#090310" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#040207" stop-opacity="0.0"/>
         </radialGradient>
 
         <radialGradient id="singularityGlow" cx="50%" cy="50%" r="50%">
@@ -389,12 +389,12 @@ def create_icon_only_logo_v10():
     r_event_icon, r_photon_icon = 72, 94
 
     svg_parts = []
-    svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%" style="background-color: #040207; border-radius: 20%;">
+    svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%">
     <defs>
         <radialGradient id="bgGlowIcon" cx="50%" cy="50%" r="75%">
-            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.95"/>
-            <stop offset="50%" stop-color="#090310" stop-opacity="0.98"/>
-            <stop offset="100%" stop-color="#040207" stop-opacity="1.0"/>
+            <stop offset="0%" stop-color="#1a061e" stop-opacity="0.35"/>
+            <stop offset="50%" stop-color="#090310" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#040207" stop-opacity="0.0"/>
         </radialGradient>
 
         <radialGradient id="singularityGlowIcon" cx="50%" cy="50%" r="50%">

@@ -24,7 +24,7 @@ RelativisticNode::RelativisticNode (int id, const std::string& typeName, const s
 double RelativisticNode::getEffectiveGamma() const
 {
     double targetG = 1.0;
-    if (!inlets.empty() && inlets[0].type == NodePortType::Time && inlets[0].timeGamma != 0.0)
+    if (!inlets.empty() && inlets[0].type == NodePortType::Time && inlets[0].isConnected)
     {
         targetG = inlets[0].timeGamma;
     }
@@ -1465,6 +1465,7 @@ void RelativisticNodeGraph::propagateSignals()
             in.audioData.clear();
             in.controlValue = 0.0f;
             in.timeGamma = 1.0;
+            in.isConnected = false;
         }
     }
 
@@ -1488,6 +1489,8 @@ void RelativisticNodeGraph::propagateSignals()
 
                 if (srcPort.type == NodePortType::Audio || srcPort.type == NodePortType::Control || srcPort.type == NodePortType::Time)
                 {
+                    destPort.isConnected = true;
+
                     // If Feedback Loop, use 1-Block History Delay Buffer (previousBlockBuffer)
                     const auto& bufferToUse = conn.isFeedbackLoop ? srcPort.previousBlockBuffer : srcPort.audioData;
 

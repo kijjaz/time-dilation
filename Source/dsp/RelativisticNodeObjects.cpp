@@ -33,6 +33,7 @@ void TimeWarpNode::process (int numSamples)
 {
     float mod = inlets[1].controlValue;
     float baseGamma = getParameter ("dilationGamma", 2.0f);
+    float lfoAmount = getParameter ("lfoAmount", 0.0f);
     float lfoSpeed = getParameter ("lfoSpeed", 0.5f);
 
     double phaseIncPerSample = (2.0 * juce::MathConstants<double>::pi * lfoSpeed) / currentSampleRate;
@@ -41,14 +42,15 @@ void TimeWarpNode::process (int numSamples)
     auto* gammaOut = outlets[0].audioData.getWritePointer (0);
     outlets[0].audioData.clear();
 
-    double parentG = (inlets[0].timeGamma != 0.0) ? inlets[0].timeGamma : 1.0;
-    double lastGamma = parentG;
+    double parentG = (inlets[0].isConnected) ? inlets[0].timeGamma : 1.0;
+    double lastGamma = parentG * baseGamma;
 
     for (int s = 0; s < numSamples; ++s)
     {
         phase += phaseIncPerSample;
         float curMod = (modAudio != nullptr && inlets[1].audioData.getMagnitude (0, numSamples) > 0.0001f) ? modAudio[s] : mod;
-        double g = (baseGamma + (baseGamma * 0.5f) * std::sin (phase) + curMod) * parentG;
+        double lfoVal = (lfoAmount > 0.0001f) ? (lfoAmount * std::sin (phase)) : 0.0;
+        double g = (baseGamma + lfoVal + curMod) * parentG;
         lastGamma = std::clamp (g, -16.0, 16.0);
         gammaOut[s] = static_cast<float>(lastGamma);
     }
@@ -68,7 +70,8 @@ TimeRetroNode::TimeRetroNode (int id)
 void TimeRetroNode::process (int /*numSamples*/)
 {
     float factor = getParameter ("reversalFactor", -1.0f);
-    outlets[0].timeGamma = factor * std::abs (inlets[0].timeGamma);
+    double parentG = (inlets[0].isConnected) ? inlets[0].timeGamma : 1.0;
+    outlets[0].timeGamma = factor * std::abs (parentG);
 }
 
 // 3. [time.quantize~]
@@ -84,7 +87,7 @@ void TimeQuantizeNode::process (int /*numSamples*/)
 {
     float steps = getParameter ("stepDivision", 4.0f);
     steps = std::max (1.0f, steps);
-    double rawGamma = inlets[0].timeGamma;
+    double rawGamma = (inlets[0].isConnected) ? inlets[0].timeGamma : 1.0;
     double quantized = std::round (rawGamma * steps) / steps;
     outlets[0].timeGamma = (quantized == 0.0 && rawGamma != 0.0) ? (1.0 / steps) : quantized;
 }
@@ -173,7 +176,7 @@ void TimeSingularityNode::process (int /*numSamples*/)
     float massMod = inlets[1].controlValue;
     double effRedshift = redshift + massMod;
 
-    double parentG = inlets[0].timeGamma != 0.0 ? inlets[0].timeGamma : 1.0;
+    double parentG = (inlets[0].isConnected) ? inlets[0].timeGamma : 1.0;
     double gamma = (1.0 / std::max (0.01, static_cast<double>(effRedshift))) * parentG;
     outlets[0].timeGamma = std::clamp (gamma, 0.001, 16.0);
 }
@@ -217,8 +220,7 @@ TimeTransportNode::TimeTransportNode (int id)
 
 void TimeTransportNode::process (int numSamples)
 {
-    double gamma = std::abs (inlets[0].timeGamma);
-    if (gamma < 0.001) gamma = 1.0;
+    double gamma = (inlets[0].isConnected) ? inlets[0].timeGamma : 1.0;
 
     float playCtrl = inlets[1].controlValue;
     float stopCtrl = inlets[2].controlValue;
@@ -1159,6 +1161,7 @@ std::vector<ParameterInfo> TimeWarpNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
     defs.push_back ({ "dilationGamma", "TIME DILATION GAMMA (γ)", getParameter ("dilationGamma", 2.0f), 0.1f, 10.0f, getParamExpression ("dilationGamma"), -1 });
+    defs.push_back ({ "lfoAmount", "LFO MODULATION DEPTH", getParameter ("lfoAmount", 0.0f), 0.0f, 5.0f, getParamExpression ("lfoAmount"), -1 });
     defs.push_back ({ "lfoSpeed", "LFO SPEED (Hz)", getParameter ("lfoSpeed", 0.5f), 0.01f, 20.0f, getParamExpression ("lfoSpeed"), -1 });
     return defs;
 }
@@ -1251,7 +1254,7 @@ std::vector<ParameterInfo> FexprAudioNode::getParameterDefs() const
 
 std::string TimeWarpNode::getDefaultFormulaScript() const
 {
-    return "// Relativistic Time Warp Engine [time.warp~]\n// Controls dilated coordinate time factor (gamma)\n// Inputs: $v1 (Base Speed Modulator)\n\ngamma = 1.0 + 1.5 * sin($t * 2.5) + $v1;";
+    return "// Relativistic Time Warp Engine [time.warp~]\n// Multiplies coordinate time gamma factor\n\ngamma = (dilationGamma + lfoAmount * sin($t * lfoSpeed * 6.28318) + $v1) * timeIn;";
 }
 
 std::string TimeRetroNode::getDefaultFormulaScript() const

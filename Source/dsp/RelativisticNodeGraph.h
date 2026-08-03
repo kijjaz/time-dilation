@@ -29,6 +29,7 @@ struct Port
     juce::AudioBuffer<float> audioData;
     juce::AudioBuffer<float> previousBlockBuffer; // 1-Block History Delay Buffer for Feedback Routing Stability!
     double timeGamma = 1.0; // Relativistic Time Dilation Factor
+    bool isConnected = false; // Port connection status
 };
 
 class RelativisticNode;

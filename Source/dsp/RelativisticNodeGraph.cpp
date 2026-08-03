@@ -1510,18 +1510,134 @@ void RelativisticNodeGraph::propagateSignals()
     }
 }
 
+std::vector<std::shared_ptr<RelativisticNode>> RelativisticNodeGraph::getTopologicallySortedNodes() const
+{
+    std::map<int, std::vector<int>> adj;
+    std::map<int, int> inDegree;
+
+    for (const auto& n : nodes)
+    {
+        inDegree[n->getId()] = 0;
+    }
+
+    for (const auto& conn : connections)
+    {
+        if (!conn.isFeedbackLoop)
+        {
+            adj[conn.sourceNodeId].push_back (conn.destNodeId);
+            inDegree[conn.destNodeId]++;
+        }
+    }
+
+    std::vector<int> q;
+    for (const auto& n : nodes)
+    {
+        if (inDegree[n->getId()] == 0)
+        {
+            q.push_back (n->getId());
+        }
+    }
+
+    std::vector<std::shared_ptr<RelativisticNode>> sorted;
+    size_t head = 0;
+
+    while (head < q.size())
+    {
+        int currId = q[head++];
+        auto n = const_cast<RelativisticNodeGraph*>(this)->getNodeById (currId);
+        if (n) sorted.push_back (n);
+
+        for (int neighborId : adj[currId])
+        {
+            inDegree[neighborId]--;
+            if (inDegree[neighborId] == 0)
+            {
+                q.push_back (neighborId);
+            }
+        }
+    }
+
+    if (sorted.size() < nodes.size())
+    {
+        std::set<int> visited;
+        for (const auto& n : sorted) visited.insert (n->getId());
+        for (const auto& n : nodes)
+        {
+            if (visited.find (n->getId()) == visited.end())
+            {
+                sorted.push_back (n);
+            }
+        }
+    }
+
+    return sorted;
+}
+
+void RelativisticNodeGraph::pushNodeOutletsToConnectedInlets (RelativisticNode* srcNode)
+{
+    if (!srcNode) return;
+    int srcId = srcNode->getId();
+    const auto& srcOutlets = srcNode->getOutlets();
+
+    for (const auto& conn : connections)
+    {
+        if (conn.sourceNodeId == srcId)
+        {
+            auto destNode = getNodeById (conn.destNodeId);
+            if (destNode)
+            {
+                auto& destInlets = destNode->getInlets();
+                if (conn.sourceOutletIdx < static_cast<int>(srcOutlets.size()) &&
+                    conn.destInletIdx < static_cast<int>(destInlets.size()))
+                {
+                    const auto& srcPort = srcOutlets[conn.sourceOutletIdx];
+                    auto& destPort = destInlets[conn.destInletIdx];
+
+                    destPort.isConnected = true;
+
+                    const auto& bufferToUse = conn.isFeedbackLoop ? srcPort.previousBlockBuffer : srcPort.audioData;
+
+                    int numCopy = std::min ({ destPort.audioData.getNumSamples(), bufferToUse.getNumSamples(), blockSize });
+                    if (numCopy > 0)
+                    {
+                        destPort.audioData.addFrom (0, 0, bufferToUse, 0, 0, numCopy);
+                        if (bufferToUse.getNumChannels() > 1 && destPort.audioData.getNumChannels() > 1)
+                            destPort.audioData.addFrom (1, 0, bufferToUse, 1, 0, numCopy);
+                    }
+
+                    destPort.controlValue = srcPort.controlValue;
+                    destPort.timeGamma = srcPort.timeGamma;
+                }
+            }
+        }
+    }
+}
+
 void RelativisticNodeGraph::process (juce::AudioBuffer<float>& masterOutput, int numSamples)
 {
     const juce::ScopedLock lock (processLock);
     masterOutput.clear();
+    blockSize = numSamples;
 
     // 1. Control & Time Math Propagation runs ALWAYS (even when audio is OFF)
-    propagateSignals();
-
-    // 2. Process all Node Objects
     for (auto& node : nodes)
     {
         node->ensureBufferSize (numSamples);
+        for (auto& in : node->getInlets())
+        {
+            in.audioData.clear();
+            in.controlValue = 0.0f;
+            in.timeGamma = 1.0;
+            in.isConnected = false;
+        }
+    }
+
+    propagateSignals();
+
+    // 2. Process all Node Objects in Topological Execution Order
+    auto sortedNodes = getTopologicallySortedNodes();
+    for (auto& node : sortedNodes)
+    {
         double tau = node->updateCoordinateTime (numSamples);
         double gamma = node->getEffectiveGamma();
 
@@ -1566,9 +1682,10 @@ void RelativisticNodeGraph::process (juce::AudioBuffer<float>& masterOutput, int
         }
 
         node->processControlTimePipe (tau, gamma);
-    }
 
-    propagateSignals();
+        // Immediately push newly generated outlets to downstream node inlets
+        pushNodeOutletsToConnectedInlets (node.get());
+    }
 
     // Sum output from [out~], [out], and [dac~] objects ONLY if Audio Engine is ON
     if (audioEngineEnabled)

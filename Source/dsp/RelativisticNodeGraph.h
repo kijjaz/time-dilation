@@ -463,6 +463,8 @@ public:
 
     double tapSignal (const std::string& target) const;
     void detectFeedbackLoops();
+    std::vector<std::shared_ptr<RelativisticNode>> getTopologicallySortedNodes() const;
+    void pushNodeOutletsToConnectedInlets (RelativisticNode* srcNode);
 
     juce::ValueTree saveToValueTree() const;
     void loadFromValueTree (const juce::ValueTree& v, bool isRestoringUndo = false);

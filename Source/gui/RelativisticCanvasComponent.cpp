@@ -350,6 +350,9 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
         }
     };
 
+    addChildComponent (helpModalOverlay);
+    helpModalOverlay.setVisible (false);
+
     addChildComponent (inlineLabelEditor);
     inlineLabelEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colour (0xff1e293b));
     inlineLabelEditor.setColour (juce::TextEditor::outlineColourId, juce::Colour (0xffeab308));
@@ -441,7 +444,7 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
 
 void RelativisticCanvasComponent::showHelpDialog (const juce::String& topic, const juce::String& content)
 {
-    juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, topic, content);
+    helpModalOverlay.showDialog (topic, content);
 }
 
 void RelativisticCanvasComponent::savePatchAs()
@@ -3263,11 +3266,11 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
     }
     else if (draggingNodeId > 0)
     {
-        auto anchorNode = nodeGraph.getNodeById (draggingNodeId);
-        if (anchorNode)
+        auto initAnchorIt = initialNodePositions.find (draggingNodeId);
+        if (initAnchorIt != initialNodePositions.end())
         {
-            float targetX = (e.position.x - dragOffset.x - panX);
-            float targetY = (e.position.y - dragOffset.y - panY);
+            float targetX = (mousePos.x - dragOffset.x - panX);
+            float targetY = (mousePos.y - dragOffset.y - panY);
 
             if (snapToGrid)
             {
@@ -3275,8 +3278,8 @@ void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
                 targetY = std::round (targetY / gridSize) * gridSize;
             }
 
-            float deltaX = targetX - anchorNode->getX();
-            float deltaY = targetY - anchorNode->getY();
+            float deltaX = targetX - initAnchorIt->second.x;
+            float deltaY = targetY - initAnchorIt->second.y;
 
             for (int id : selectedNodeIds)
             {
@@ -4361,6 +4364,8 @@ void RelativisticCanvasComponent::resized()
         formulaEditor.setVisible (true);
         btnApplyFormula.setVisible (true);
     }
+
+    helpModalOverlay.setBounds (getLocalBounds());
 }
 
 void RelativisticCanvasComponent::showNotificationBanner (const std::string& text, bool isWarning)

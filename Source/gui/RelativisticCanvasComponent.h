@@ -2,6 +2,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../dsp/RelativisticNodeGraph.h"
+#include "FontManager.h"
 
 namespace time_dilation
 {
@@ -273,6 +274,105 @@ private:
     std::string notificationText;
     bool isNotificationWarning = false;
     uint32_t notificationExpiryTimeMs = 0;
+
+class HelpModalOverlayComponent : public juce::Component
+{
+public:
+    HelpModalOverlayComponent()
+    {
+        setInterceptsMouseClicks (true, true);
+
+        addAndMakeVisible (titleLabel);
+        titleLabel.setFont (FontManager::getInstance().getOxaniumFont (15.5f, true));
+        titleLabel.setColour (juce::Label::textColourId, juce::Colour (0xff38bdf8));
+
+        addAndMakeVisible (contentEditor);
+        contentEditor.setMultiLine (true);
+        contentEditor.setReadOnly (true);
+        contentEditor.setScrollbarsShown (true);
+        contentEditor.setCaretVisible (false);
+        contentEditor.setPopupMenuEnabled (true);
+        contentEditor.setFont (FontManager::getInstance().getOxaniumFont (13.0f, false));
+        contentEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colour (0xff050811));
+        contentEditor.setColour (juce::TextEditor::outlineColourId, juce::Colour (0xff1e293b));
+        contentEditor.setColour (juce::TextEditor::textColourId, juce::Colour (0xfff8fafc));
+
+        addAndMakeVisible (btnClose);
+        btnClose.setButtonText ("CLOSE");
+        btnClose.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff374151));
+        btnClose.setColour (juce::TextButton::textColourOffId, juce::Colour (0xfff8fafc));
+        btnClose.onClick = [this] { setVisible (false); };
+
+        addAndMakeVisible (btnCopy);
+        btnCopy.setButtonText ("COPY TO CLIPBOARD");
+        btnCopy.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1e293b));
+        btnCopy.setColour (juce::TextButton::textColourOffId, juce::Colour (0xfff59e0b));
+        btnCopy.onClick = [this] {
+            juce::SystemClipboard::copyTextToClipboard (contentEditor.getText());
+            btnCopy.setButtonText ("COPIED TO CLIPBOARD!");
+        };
+    }
+
+    void showDialog (const juce::String& topic, const juce::String& content)
+    {
+        titleLabel.setText ("SYSTEM HELP: " + topic, juce::dontSendNotification);
+        contentEditor.setText (content, false);
+        contentEditor.moveCaretToTop (false);
+        btnCopy.setButtonText ("COPY TO CLIPBOARD");
+        setVisible (true);
+        toFront (true);
+    }
+
+    void resized() override
+    {
+        auto bounds = getLocalBounds().toFloat();
+        float cardW = std::min (bounds.getWidth() * 0.88f, 740.0f);
+        float cardH = std::min (bounds.getHeight() * 0.85f, 580.0f);
+        float cardX = (bounds.getWidth() - cardW) * 0.5f;
+        float cardY = (bounds.getHeight() - cardH) * 0.5f;
+
+        cardBounds = { cardX, cardY, cardW, cardH };
+
+        titleLabel.setBounds (static_cast<int>(cardX + 16), static_cast<int>(cardY + 12), static_cast<int>(cardW - 32), 28);
+        contentEditor.setBounds (static_cast<int>(cardX + 16), static_cast<int>(cardY + 48), static_cast<int>(cardW - 32), static_cast<int>(cardH - 100));
+
+        btnCopy.setBounds (static_cast<int>(cardX + 16), static_cast<int>(cardY + cardH - 42), 170, 30);
+        btnClose.setBounds (static_cast<int>(cardX + cardW - 116), static_cast<int>(cardY + cardH - 42), 100, 30);
+    }
+
+    void mouseDown (const juce::MouseEvent& e) override
+    {
+        if (!cardBounds.contains (e.position))
+        {
+            setVisible (false);
+        }
+    }
+
+    void paint (juce::Graphics& g) override
+    {
+        g.fillAll (juce::Colour (0xd9070a12));
+
+        juce::ColourGradient grad (juce::Colour (0xff0b0f19), cardBounds.getX(), cardBounds.getY(),
+                                   juce::Colour (0xff111827), cardBounds.getRight(), cardBounds.getBottom(), false);
+        g.setGradientFill (grad);
+        g.fillRoundedRectangle (cardBounds, 8.0f);
+
+        g.setColour (juce::Colour (0xff06b6d4));
+        g.drawRoundedRectangle (cardBounds, 8.0f, 1.5f);
+
+        g.setColour (juce::Colour (0xff1e293b));
+        g.drawHorizontalLine (static_cast<int>(cardBounds.getY() + 42.0f), cardBounds.getX() + 10.0f, cardBounds.getRight() - 10.0f);
+    }
+
+private:
+    juce::Rectangle<float> cardBounds;
+    juce::Label titleLabel;
+    juce::TextEditor contentEditor;
+    juce::TextButton btnClose;
+    juce::TextButton btnCopy;
+};
+
+    HelpModalOverlayComponent helpModalOverlay;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativisticCanvasComponent)
 };

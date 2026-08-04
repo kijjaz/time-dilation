@@ -545,6 +545,7 @@ OscNode::OscNode (int id)
     addInlet ("timeIn", NodePortType::Time);
     addInlet ("freq", NodePortType::Control);
     addOutlet ("out~", NodePortType::Audio);
+    addMessagePorts();
 
     setParameter ("waveform", 0.0f);   // 0: Sine, 1: Saw, 2: Square, 3: Triangle
     setParameter ("timeMode", 0.0f);   // 0: Doppler (Speed+Pitch), 1: Time-Stretch (Speed Only), 2: Timbre Dilation (Envelopes Only)
@@ -1568,29 +1569,75 @@ std::vector<ParameterInfo> GainNode::getParameterDefs() const
     return defs;
 }
 
-// 11b. [number] Control Number Box Object
-NumberNode::NumberNode (int id)
-    : RelativisticNode (id, "number", "0.00")
+// 11b. [number] / [f] / [i] Control Number Box Object
+NumberNode::NumberNode (int id, bool isIntegerMode)
+    : RelativisticNode (id, isIntegerMode ? "i" : "f", isIntegerMode ? "i 0" : "f 0.00"),
+      isIntegerMode (isIntegerMode)
 {
     addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
-    addInlet ("in", NodePortType::Control);        // Inlet 1: Control input
+    addInlet ("hotIn", NodePortType::Control);     // Inlet 1: Hot input (set & output)
+    addInlet ("coldIn", NodePortType::Control);    // Inlet 2: Cold input (set value only)
     addOutlet ("out", NodePortType::Control);      // Outlet 0: Control output
     setParameter ("value", 0.0f);
+    setParameter ("isInteger", isIntegerMode ? 1.0f : 0.0f);
+}
+
+void NumberNode::setLabel (const std::string& l)
+{
+    RelativisticNode::setLabel (l);
+    size_t spacePos = l.find (' ');
+    if (spacePos != std::string::npos)
+    {
+        std::string argStr = l.substr (spacePos + 1);
+        try {
+            float val = std::stof (argStr);
+            if (isIntegerMode) val = std::round (val);
+            setParameter ("value", val);
+        } catch (...) {}
+    }
 }
 
 void NumberNode::process (int /*numSamples*/)
 {
-    if (inlets.size() > 1 && inlets[1].controlValue != 0.0f)
+    bool triggerOutput = false;
+
+    // Cold Inlet (Inlet 2): Sets stored value WITHOUT triggering an output
+    if (inlets.size() > 2 && (inlets[2].isConnected || inlets[2].controlValue != 0.0f))
     {
-        setParameter ("value", inlets[1].controlValue);
+        float curCold = inlets[2].controlValue;
+        if (curCold != lastColdValue)
+        {
+            lastColdValue = curCold;
+            float val = isIntegerMode ? std::round (curCold) : curCold;
+            setParameter ("value", val);
+        }
     }
-    float val = getParameter ("value", 0.0f);
-    outlets[0].controlValue = val;
+
+    // Hot Inlet (Inlet 1): Sets stored value AND triggers output
+    if (inlets.size() > 1 && (inlets[1].isConnected || inlets[1].controlValue != 0.0f))
+    {
+        float curHot = inlets[1].controlValue;
+        if (curHot != lastHotValue)
+        {
+            lastHotValue = curHot;
+            float val = isIntegerMode ? std::round (curHot) : curHot;
+            setParameter ("value", val);
+            triggerOutput = true;
+        }
+    }
+
+    float storedVal = getParameter ("value", 0.0f);
+    if (isIntegerMode) storedVal = std::round (storedVal);
+
+    if (triggerOutput || !inlets[1].isConnected)
+    {
+        outlets[0].controlValue = storedVal;
+    }
 }
 
 std::string NumberNode::getDefaultFormulaScript() const
 {
-    return "// Control Number Box Object [number]\n// Stores and outputs a floating-point control value\n\nout = value;";
+    return "// Control Number Box Object [number] / [f] / [i]\n// Hot inlet sets & outputs; Cold inlet sets value without output\n\nout = value;";
 }
 
 std::vector<ParameterInfo> NumberNode::getParameterDefs() const
@@ -1786,6 +1833,246 @@ void CounterNode::invokeMethod (const std::string& methodName)
         if (inlets.size() > 4) inlets[4].controlValue = 1.0f;
         else currentCount = getParameter ("low", 0.0f);
     }
+}
+
+// -----------------------------------------------------------------------------
+// [metro] Standard Control Metronome Object Implementation (Pure Data Semantics)
+// -----------------------------------------------------------------------------
+MetroNode::MetroNode (int id, float initialPeriodMs)
+    : RelativisticNode (id, "metro", "metro " + juce::String (static_cast<int>(initialPeriodMs)).toStdString() + "ms")
+{
+    addInlet ("timeIn", NodePortType::Time);      // Inlet 0: Dilated coordinate time
+    addInlet ("in", NodePortType::Control);       // Inlet 1: Hot: Bang/1 starts, 0 stops
+    addInlet ("period", NodePortType::Control);   // Inlet 2: Cold: Period in ms
+
+    addOutlet ("bang", NodePortType::Control);    // Outlet 0: Output Bang pulse
+
+    setParameter ("period", initialPeriodMs);
+    setParameter ("state", 0.0f); // 0 = stopped, 1 = running
+}
+
+void MetroNode::process (int numSamples)
+{
+    float periodMs = getParameter ("period", 500.0f);
+    if (inlets.size() > 2 && inlets[2].controlValue > 0.0f)
+    {
+        periodMs = inlets[2].controlValue;
+        setParameter ("period", periodMs);
+    }
+    periodMs = std::max (1.0f, periodMs);
+
+    // Inlet 1: Hot Control Inlet
+    float hotVal = inlets.size() > 1 ? inlets[1].controlValue : 0.0f;
+    bool currentHotState = (hotVal > 0.0f);
+
+    // Trigger edge detection on hot inlet
+    if (currentHotState && !lastHotInletState)
+    {
+        isRunning = true;
+        sampleProgress = 0.0; // Reset progress on start
+        setParameter ("state", 1.0f);
+    }
+    else if (!currentHotState && lastHotInletState)
+    {
+        isRunning = false;
+        setParameter ("state", 0.0f);
+    }
+    lastHotInletState = currentHotState;
+
+    // Direct parameter override (e.g. from Inspector or OSC)
+    if (getParameter ("state", 0.0f) > 0.5f) isRunning = true;
+
+    outlets[0].controlValue = 0.0f; // Default low
+
+    if (isRunning)
+    {
+        double effectiveRate = (currentSampleRate > 0.0) ? currentSampleRate : 44100.0;
+        double effectiveGamma = std::abs (getEffectiveGamma());
+        double samplesPerTick = (periodMs * 0.001) * effectiveRate;
+
+        sampleProgress += numSamples * effectiveGamma;
+
+        if (sampleProgress >= samplesPerTick)
+        {
+            sampleProgress -= samplesPerTick;
+            outlets[0].controlValue = 1.0f; // Emit Bang pulse!
+        }
+    }
+}
+
+void MetroNode::receiveMessage (const std::string& msg, float val)
+{
+    juce::String s (msg);
+    s = s.trim().toLowerCase();
+    if (s == "bang" || s == "1" || s == "start")
+    {
+        isRunning = true;
+        sampleProgress = 0.0;
+        setParameter ("state", 1.0f);
+    }
+    else if (s == "0" || s == "stop")
+    {
+        isRunning = false;
+        setParameter ("state", 0.0f);
+    }
+    else if (s == "toggle")
+    {
+        isRunning = !isRunning;
+        if (isRunning) sampleProgress = 0.0;
+        setParameter ("state", isRunning ? 1.0f : 0.0f);
+    }
+    else if (s.startsWith ("tempo"))
+    {
+        auto tokens = juce::StringArray::fromTokens (s, " ", "");
+        if (tokens.size() >= 2)
+        {
+            float v = tokens[1].getFloatValue();
+            juce::String unit = (tokens.size() >= 3) ? tokens[2] : "msec";
+            float periodMs = 500.0f;
+            if (unit == "permin" || unit == "bpm")
+            {
+                periodMs = (v > 0.0f) ? (60000.0f / v) : 500.0f;
+            }
+            else if (unit == "sec" || unit == "second" || unit == "seconds")
+            {
+                periodMs = v * 1000.0f;
+            }
+            else
+            {
+                periodMs = v;
+            }
+            setParameter ("period", periodMs);
+        }
+    }
+    else
+    {
+        float periodMs = s.getFloatValue();
+        if (periodMs > 0.0f)
+            setParameter ("period", periodMs);
+    }
+}
+
+std::string MetroNode::getDefaultFormulaScript() const
+{
+    return "// Standard Control Metronome Object [metro]\n// Emits bang pulse every period (ms). 1=start, 0=stop\n\nif (in1 > 0) {\n  t_tick = (t_sample >= period_ms);\n}";
+}
+
+std::vector<ParameterInfo> MetroNode::getParameterDefs() const
+{
+    return {
+        { "period", "PERIOD (MS)", getParameter ("period", 500.0f), 1.0f, 10000.0f, "ms" },
+        { "state",  "RUNNING (1/0)", getParameter ("state", 0.0f), 0.0f, 1.0f, "" }
+    };
+}
+
+std::vector<std::string> MetroNode::getExposedMethods() const
+{
+    return { "Start", "Stop", "Toggle" };
+}
+
+void MetroNode::invokeMethod (const std::string& methodName)
+{
+    if (methodName == "Start")
+    {
+        isRunning = true;
+        sampleProgress = 0.0;
+        setParameter ("state", 1.0f);
+    }
+    else if (methodName == "Stop")
+    {
+        isRunning = false;
+        setParameter ("state", 0.0f);
+    }
+    else if (methodName == "Toggle")
+    {
+        isRunning = !isRunning;
+        if (isRunning) sampleProgress = 0.0;
+        setParameter ("state", isRunning ? 1.0f : 0.0f);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// [send] / [s] Wireless Control Message Broadcaster Object Implementation
+// -----------------------------------------------------------------------------
+SendNode::SendNode (int id, const std::string& busName)
+    : RelativisticNode (id, "send", "s " + busName)
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addInlet ("in", NodePortType::Control);
+    setParameter ("bus", 0.0f);
+}
+
+void SendNode::process (int numSamples)
+{
+    juce::ignoreUnused (numSamples);
+    float val = (inlets.size() > 1) ? inlets[1].controlValue : 0.0f;
+    if (val != 0.0f)
+    {
+        std::string bus = getLabel();
+        if (bus.rfind ("s ", 0) == 0 || bus.rfind ("send ", 0) == 0)
+        {
+            auto spacePos = bus.find (' ');
+            if (spacePos != std::string::npos) bus = bus.substr (spacePos + 1);
+        }
+        if (parentGraph) parentGraph->broadcastBusMessage (bus, juce::String (val).toStdString(), val);
+    }
+}
+
+void SendNode::receiveMessage (const std::string& msg, float val)
+{
+    std::string bus = getLabel();
+    if (bus.rfind ("s ", 0) == 0 || bus.rfind ("send ", 0) == 0)
+    {
+        auto spacePos = bus.find (' ');
+        if (spacePos != std::string::npos) bus = bus.substr (spacePos + 1);
+    }
+    if (parentGraph) parentGraph->broadcastBusMessage (bus, msg, val);
+}
+
+std::string SendNode::getDefaultFormulaScript() const
+{
+    return "// Wireless Control Broadcaster [send]\n// Broadcasts messages/values to matching [receive] nodes\n\nbroadcast(bus, val);";
+}
+
+std::vector<ParameterInfo> SendNode::getParameterDefs() const
+{
+    return {
+        { "bus", "BUS NAME", 0.0f, 0.0f, 0.0f, getLabel(), -1 }
+    };
+}
+
+// -----------------------------------------------------------------------------
+// [receive] / [r] Wireless Control Message Receiver Object Implementation
+// -----------------------------------------------------------------------------
+ReceiveNode::ReceiveNode (int id, const std::string& busName)
+    : RelativisticNode (id, "receive", "r " + busName)
+{
+    addInlet ("timeIn", NodePortType::Time);
+    addOutlet ("out", NodePortType::Control);
+    setParameter ("bus", 0.0f);
+}
+
+void ReceiveNode::process (int numSamples)
+{
+    juce::ignoreUnused (numSamples);
+}
+
+void ReceiveNode::receiveMessage (const std::string& msg, float val)
+{
+    outlets[0].controlValue = val;
+    if (parentGraph) parentGraph->sendPortMessage (getId(), 0, msg);
+}
+
+std::string ReceiveNode::getDefaultFormulaScript() const
+{
+    return "// Wireless Control Receiver [receive]\n// Receives messages/values broadcasted by [send]\n\nval = received_msg;";
+}
+
+std::vector<ParameterInfo> ReceiveNode::getParameterDefs() const
+{
+    return {
+        { "bus", "BUS NAME", 0.0f, 0.0f, 0.0f, getLabel(), -1 }
+    };
 }
 
 // 15. [out~] Master Audio Output Node Object with Live Oscilloscope & Dual RMS/Peak Metering
@@ -2084,37 +2371,129 @@ std::vector<ParameterInfo> TapAudioNode::getParameterDefs() const
     return defs;
 }
 
-// 19. [v] Value Storage Control Node Object
+// 19. [v] / [msg] / [message] Value & Message Symbol Box Object
 ValueNode::ValueNode (int id)
-    : RelativisticNode (id, "v", "v value_store")
+    : RelativisticNode (id, "msg", "msg $1")
 {
-    addInlet ("in", NodePortType::Control);
-    addOutlet ("out", NodePortType::Control);
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
+    addInlet ("hotIn", NodePortType::Control);     // Inlet 1: Hot input ($1 set & send)
+    addInlet ("coldIn", NodePortType::Control);    // Inlet 2: Cold input ($1 set only)
+    addOutlet ("out", NodePortType::Message);      // Outlet 0: Message / Control symbol output
     setParameter ("value", 0.0f);
+    setLabel ("msg $1");
+}
+
+void ValueNode::setLabel (const std::string& l)
+{
+    RelativisticNode::setLabel (l);
+    size_t spacePos = l.find (' ');
+    if (spacePos != std::string::npos)
+    {
+        messageTemplate = l.substr (spacePos + 1);
+    }
+    else if (l != "v" && l != "msg" && l != "message")
+    {
+        messageTemplate = l;
+    }
+    else
+    {
+        messageTemplate = "$1";
+    }
+}
+
+std::string ValueNode::formatMessageWithArgs (const std::string& templateStr, float val1, float val2)
+{
+    if (templateStr.empty())
+    {
+        return (std::abs (val1 - std::round (val1)) < 0.0001f) ? std::to_string (static_cast<int>(std::round (val1))) : std::to_string (val1);
+    }
+
+    std::string result = templateStr;
+
+    // Format val1
+    char buf1[32];
+    if (std::abs (val1 - std::round (val1)) < 0.0001f)
+        std::snprintf (buf1, sizeof(buf1), "%d", static_cast<int>(std::round (val1)));
+    else
+        std::snprintf (buf1, sizeof(buf1), "%.2f", val1);
+
+    // Format val2
+    char buf2[32];
+    if (std::abs (val2 - std::round (val2)) < 0.0001f)
+        std::snprintf (buf2, sizeof(buf2), "%d", static_cast<int>(std::round (val2)));
+    else
+        std::snprintf (buf2, sizeof(buf2), "%.2f", val2);
+
+    // Replace $1 with val1
+    size_t pos = 0;
+    while ((pos = result.find ("$1", pos)) != std::string::npos)
+    {
+        result.replace (pos, 2, buf1);
+        pos += std::strlen (buf1);
+    }
+
+    // Replace $2 with val2
+    pos = 0;
+    while ((pos = result.find ("$2", pos)) != std::string::npos)
+    {
+        result.replace (pos, 2, buf2);
+        pos += std::strlen (buf2);
+    }
+
+    return result;
 }
 
 void ValueNode::process (int /*numSamples*/)
 {
-    if (inlets[0].controlValue != 0.0f)
+    bool triggerSend = false;
+
+    // Cold Inlet (Inlet 2): Sets stored $1 value without sending message
+    if (inlets.size() > 2 && (inlets[2].isConnected || inlets[2].controlValue != 0.0f))
     {
-        storedValue = inlets[0].controlValue;
+        float curCold = inlets[2].controlValue;
+        if (curCold != lastColdValue)
+        {
+            lastColdValue = curCold;
+            storedValue = curCold;
+            setParameter ("value", storedValue);
+        }
     }
-    else
+
+    // Hot Inlet (Inlet 1): Sets stored $1 value AND triggers message send
+    if (inlets.size() > 1)
     {
-        storedValue = getParameter ("value", storedValue);
+        float curHot = inlets[1].controlValue;
+        std::string textIn = inlets[1].messageValue;
+
+        if (inlets[1].isConnected && (curHot != lastHotValue || (textIn != lastMessageIn && !textIn.empty())))
+        {
+            lastHotValue = curHot;
+            lastMessageIn = textIn;
+            storedValue = curHot;
+            setParameter ("value", storedValue);
+            triggerSend = true;
+        }
     }
+
+    std::string formattedMsg = formatMessageWithArgs (messageTemplate, storedValue);
+    outlets[0].messageValue = formattedMsg;
     outlets[0].controlValue = storedValue;
+
+    if (triggerSend && parentGraph != nullptr)
+    {
+        parentGraph->sendPortMessage (getId(), 0, formattedMsg);
+    }
 }
 
 std::string ValueNode::getDefaultFormulaScript() const
 {
-    return "// Control Value Storage [v]\n// Holds value state across ticks for feedback calculations\n\nout = storedValue;";
+    return "// Message & Symbol Box Object [msg] / [v]\n// Replaces $1, $2 with incoming control parameters\n\nout = messageValue;";
 }
 
 std::vector<ParameterInfo> ValueNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
-    defs.push_back ({ "value", "STORED VALUE", getParameter ("value", storedValue), -1000.0f, 1000.0f, getParamExpression ("value"), -1 });
+    defs.push_back ({ "value", "STORED VALUE", getParameter ("value", storedValue), -10000.0f, 10000.0f, getParamExpression ("value"), -1 });
     return defs;
 }
 
@@ -2290,12 +2669,187 @@ std::vector<ParameterInfo> MulMathNode::getParameterDefs() const
     return defs;
 }
 
+// 24. [-] Signal & Control Subtractor Node Object
+SubMathNode::SubMathNode (int id)
+    : RelativisticNode (id, "-", "- 0")
+{
+    addInlet ("in1", NodePortType::Control);
+    addInlet ("in2", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    addOutlet ("out~", NodePortType::Audio);
+    setParameter ("offset", 0.0f);
+}
+
+void SubMathNode::parseLabelArguments (const std::string& label)
+{
+    juce::StringArray tokens;
+    tokens.addTokens (juce::String (label), " ", "");
+    if (tokens.size() > 1)
+    {
+        float o = tokens[1].getFloatValue();
+        setParameter ("offset", o);
+    }
+}
+
+void SubMathNode::process (int numSamples)
+{
+    const auto* in1 = inlets[0].audioData.getReadPointer (0);
+    const auto* in2 = inlets[1].audioData.getReadPointer (0);
+    auto* outAudio = outlets[1].audioData.getWritePointer (0);
+
+    float defaultOffset = getParameter ("offset", 0.0f);
+
+    float val1 = inlets[0].controlValue;
+    float val2 = (inlets[1].isConnected || inlets[1].controlValue != 0.0f) ? inlets[1].controlValue : defaultOffset;
+
+    bool hasAudio1 = inlets[0].audioData.getMagnitude (0, numSamples) > 0.0f;
+    bool hasAudio2 = inlets[1].audioData.getMagnitude (0, numSamples) > 0.0f;
+
+    for (int s = 0; s < numSamples; ++s)
+    {
+        float sig1 = hasAudio1 ? in1[s] : val1;
+        float sig2 = hasAudio2 ? in2[s] : val2;
+        outAudio[s] = sig1 - sig2;
+    }
+
+    outlets[0].controlValue = val1 - val2;
+}
+
+std::string SubMathNode::getDefaultFormulaScript() const
+{
+    return "// Subtractor Node [-]\n// Subtracts inputs ($v1 - $v2)\n\nout = $v1 - $v2;";
+}
+
+std::vector<ParameterInfo> SubMathNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "offset", "SUBTRACTOR OFFSET", getParameter ("offset", 0.0f), -9999.0f, 9999.0f, getParamExpression ("offset"), 1 });
+    return defs;
+}
+
+// 25. [/] Signal & Control Divider Node Object
+DivMathNode::DivMathNode (int id)
+    : RelativisticNode (id, "/", "/ 1")
+{
+    addInlet ("in1", NodePortType::Control);
+    addInlet ("in2", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    addOutlet ("out~", NodePortType::Audio);
+    setParameter ("divisor", 1.0f);
+}
+
+void DivMathNode::parseLabelArguments (const std::string& label)
+{
+    juce::StringArray tokens;
+    tokens.addTokens (juce::String (label), " ", "");
+    if (tokens.size() > 1)
+    {
+        float d = tokens[1].getFloatValue();
+        if (d != 0.0f) setParameter ("divisor", d);
+    }
+}
+
+void DivMathNode::process (int numSamples)
+{
+    const auto* in1 = inlets[0].audioData.getReadPointer (0);
+    const auto* in2 = inlets[1].audioData.getReadPointer (0);
+    auto* outAudio = outlets[1].audioData.getWritePointer (0);
+
+    float defaultDivisor = getParameter ("divisor", 1.0f);
+
+    float val1 = inlets[0].controlValue;
+    float val2 = (inlets[1].isConnected || inlets[1].controlValue != 0.0f) ? inlets[1].controlValue : defaultDivisor;
+
+    bool hasAudio1 = inlets[0].audioData.getMagnitude (0, numSamples) > 0.0f;
+    bool hasAudio2 = inlets[1].audioData.getMagnitude (0, numSamples) > 0.0f;
+
+    for (int s = 0; s < numSamples; ++s)
+    {
+        float sig1 = hasAudio1 ? in1[s] : val1;
+        float sig2 = hasAudio2 ? in2[s] : val2;
+        outAudio[s] = (sig2 != 0.0f) ? (sig1 / sig2) : 0.0f;
+    }
+
+    outlets[0].controlValue = (val2 != 0.0f) ? (val1 / val2) : 0.0f;
+}
+
+std::string DivMathNode::getDefaultFormulaScript() const
+{
+    return "// Divider Node [/]\n// Divides inputs ($v1 / $v2)\n\nout = ($v2 != 0.0) ? ($v1 / $v2) : 0.0;";
+}
+
+std::vector<ParameterInfo> DivMathNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "divisor", "DIVIDER DIVISOR", getParameter ("divisor", 1.0f), -9999.0f, 9999.0f, getParamExpression ("divisor"), 1 });
+    return defs;
+}
+
+// 26. [%] / [mod] Signal & Control Modulo Node Object
+ModMathNode::ModMathNode (int id)
+    : RelativisticNode (id, "mod", "mod 1")
+{
+    addInlet ("in1", NodePortType::Control);
+    addInlet ("in2", NodePortType::Control);
+    addOutlet ("out", NodePortType::Control);
+    addOutlet ("out~", NodePortType::Audio);
+    setParameter ("modulus", 1.0f);
+}
+
+void ModMathNode::parseLabelArguments (const std::string& label)
+{
+    juce::StringArray tokens;
+    tokens.addTokens (juce::String (label), " ", "");
+    if (tokens.size() > 1)
+    {
+        float m = tokens[1].getFloatValue();
+        if (m != 0.0f) setParameter ("modulus", m);
+    }
+}
+
+void ModMathNode::process (int numSamples)
+{
+    const auto* in1 = inlets[0].audioData.getReadPointer (0);
+    const auto* in2 = inlets[1].audioData.getReadPointer (0);
+    auto* outAudio = outlets[1].audioData.getWritePointer (0);
+
+    float defaultModulus = getParameter ("modulus", 1.0f);
+
+    float val1 = inlets[0].controlValue;
+    float val2 = (inlets[1].isConnected || inlets[1].controlValue != 0.0f) ? inlets[1].controlValue : defaultModulus;
+
+    bool hasAudio1 = inlets[0].audioData.getMagnitude (0, numSamples) > 0.0f;
+    bool hasAudio2 = inlets[1].audioData.getMagnitude (0, numSamples) > 0.0f;
+
+    for (int s = 0; s < numSamples; ++s)
+    {
+        float sig1 = hasAudio1 ? in1[s] : val1;
+        float sig2 = hasAudio2 ? in2[s] : val2;
+        outAudio[s] = (sig2 != 0.0f) ? std::fmod (sig1, sig2) : 0.0f;
+    }
+
+    outlets[0].controlValue = (val2 != 0.0f) ? std::fmod (val1, val2) : 0.0f;
+}
+
+std::string ModMathNode::getDefaultFormulaScript() const
+{
+    return "// Modulo Node [mod] / [%]\n// Floating-point modulo fmod($v1, $v2)\n\nout = ($v2 != 0.0) ? fmod($v1, $v2) : 0.0;";
+}
+
+std::vector<ParameterInfo> ModMathNode::getParameterDefs() const
+{
+    std::vector<ParameterInfo> defs;
+    defs.push_back ({ "modulus", "MODULO MODULUS", getParameter ("modulus", 1.0f), -9999.0f, 9999.0f, getParamExpression ("modulus"), 1 });
+    return defs;
+}
+
 // 24. [table] Pure Data-Style Named Float Buffer Table Object
 TableNode::TableNode (int id)
     : RelativisticNode (id, "table", "table array1")
 {
     addInlet ("in", NodePortType::Control);
     addOutlet ("out", NodePortType::Control);
+    addMessagePorts();
 
     setParameter ("size", 1024.0f);
     setParameter ("preset", 0.0f);
@@ -3350,25 +3904,43 @@ std::vector<ParameterInfo> NumberAudioNode::getParameterDefs() const
 PrintMonitorNode::PrintMonitorNode (int id)
     : RelativisticNode (id, "print", "print")
 {
-    addInlet ("timeIn", NodePortType::Time);       // Inlet 0: Dilated coordinate time
-    addInlet ("in", NodePortType::Control);        // Inlet 1: Control/Signal value input
+    addInlet ("in", NodePortType::Control);        // Inlet 0: Value / Control input
+    addInlet ("msgIn", NodePortType::Message);     // Inlet 1: Text command / symbol input
+    addInlet ("timeIn", NodePortType::Time);       // Inlet 2: Dilated coordinate time
     addOutlet ("out", NodePortType::Control);      // Outlet 0: Pass-through value
 }
 
 void PrintMonitorNode::process (int /*numSamples*/)
 {
-    float val = inlets[1].controlValue;
+    float val = inlets[0].controlValue;
+    std::string msg = inlets[1].messageValue;
     outlets[0].controlValue = val;
 
-    if (val != lastLoggedValue)
+    bool hasNewMsg = (!msg.empty() && msg != lastLoggedMsg);
+    bool hasNewVal = (val != lastLoggedValue);
+
+    if (hasNewMsg || hasNewVal)
     {
         lastLoggedValue = val;
-        std::lock_guard<std::mutex> lock (logMutex);
-        juce::String entry = juce::String::formatted (juce::CharPointer_UTF8 ("\xce\xb3=%.2fx : val=%.4f"), inlets[0].timeGamma, val);
-        logHistory.push_back (entry.toStdString());
-        if (logHistory.size() > 16) logHistory.erase (logHistory.begin());
-    }
+        lastLoggedMsg = msg;
 
+        std::string logStr;
+        if (hasNewMsg)
+            logStr = msg;
+        else
+            logStr = juce::String::formatted ("val = %.4f", val).toStdString();
+
+        {
+            std::lock_guard<std::mutex> lock (logMutex);
+            logHistory.push_back (logStr);
+            if (logHistory.size() > 32) logHistory.erase (logHistory.begin());
+        }
+
+        if (parentGraph)
+        {
+            const_cast<RelativisticNodeGraph*>(parentGraph)->logToConsole (getLabel(), logStr, false);
+        }
+    }
 }
 
 std::string PrintMonitorNode::getDefaultFormulaScript() const

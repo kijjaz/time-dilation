@@ -352,13 +352,42 @@ public:
 };
 
 // 11b. [number] Control Number Box Object
+// 11b. [number] / [f] / [i] Control Number Box Object
 class NumberNode : public RelativisticNode
 {
 public:
-    NumberNode (int id);
+    NumberNode (int id, bool isIntegerMode = false);
+    void setLabel (const std::string& l) override;
     void process (int numSamples) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;
+
+    bool getIsIntegerMode() const { return isIntegerMode; }
+
+private:
+    bool isIntegerMode = false;
+    float lastHotValue = 0.0f;
+    float lastColdValue = 0.0f;
+};
+
+// 19. [v] / [msg] / [message] Value & Message Symbol Box Object
+class ValueNode : public RelativisticNode
+{
+public:
+    ValueNode (int id);
+    void setLabel (const std::string& l) override;
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+
+    static std::string formatMessageWithArgs (const std::string& templateStr, float val1, float val2 = 0.0f);
+
+private:
+    float storedValue = 0.0f;
+    std::string messageTemplate = "";
+    float lastHotValue = 0.0f;
+    float lastColdValue = 0.0f;
+    std::string lastMessageIn = "";
 };
 
 // 11c. [bang] Control Trigger Pulse Object
@@ -407,6 +436,45 @@ private:
     float currentCount = 0.0f;
     bool lastInletState = false;
     bool lastResetState = false;
+};
+
+// 11f. [metro] Standard Control Metronome Object (Pure Data Semantics)
+class MetroNode : public RelativisticNode
+{
+public:
+    MetroNode (int id, float initialPeriodMs = 500.0f);
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    std::vector<std::string> getExposedMethods() const override;
+    void invokeMethod (const std::string& methodName) override;
+    void receiveMessage (const std::string& msg, float val = 1.0f) override;
+private:
+    double sampleProgress = 0.0;
+    bool isRunning = false;
+    bool lastHotInletState = false;
+};
+
+// 11g. [send] / [s] Wireless Control Message Broadcaster
+class SendNode : public RelativisticNode
+{
+public:
+    SendNode (int id, const std::string& busName = "bus1");
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    void receiveMessage (const std::string& msg, float val = 1.0f) override;
+};
+
+// 11h. [receive] / [r] Wireless Control Message Receiver
+class ReceiveNode : public RelativisticNode
+{
+public:
+    ReceiveNode (int id, const std::string& busName = "bus1");
+    void process (int numSamples) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+    void receiveMessage (const std::string& msg, float val = 1.0f) override;
 };
 
 // 12. [expr~] Pure Data-style Audio Signal Expression Object
@@ -524,18 +592,6 @@ public:
     std::vector<ParameterInfo> getParameterDefs() const override;
 };
 
-// 19. [v] Value Storage Control Node Object
-class ValueNode : public RelativisticNode
-{
-public:
-    ValueNode (int id);
-    void process (int numSamples) override;
-    std::string getDefaultFormulaScript() const override;
-    std::vector<ParameterInfo> getParameterDefs() const override;
-private:
-    float storedValue = 0.0f;
-};
-
 // 20. [z~] 1-Sample Feedback Delay Node Object
 class OneSampleDelayNode : public RelativisticNode
 {
@@ -575,6 +631,39 @@ class MulMathNode : public RelativisticNode
 {
 public:
     MulMathNode (int id);
+    void process (int numSamples) override;
+    void parseLabelArguments (const std::string& label) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// 24. [-] Signal & Control Subtractor Node Object
+class SubMathNode : public RelativisticNode
+{
+public:
+    SubMathNode (int id);
+    void process (int numSamples) override;
+    void parseLabelArguments (const std::string& label) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// 25. [/] Signal & Control Divider Node Object
+class DivMathNode : public RelativisticNode
+{
+public:
+    DivMathNode (int id);
+    void process (int numSamples) override;
+    void parseLabelArguments (const std::string& label) override;
+    std::string getDefaultFormulaScript() const override;
+    std::vector<ParameterInfo> getParameterDefs() const override;
+};
+
+// 26. [%] / [mod] Signal & Control Modulo Node Object
+class ModMathNode : public RelativisticNode
+{
+public:
+    ModMathNode (int id);
     void process (int numSamples) override;
     void parseLabelArguments (const std::string& label) override;
     std::string getDefaultFormulaScript() const override;
@@ -986,6 +1075,7 @@ private:
     mutable std::mutex logMutex;
     std::vector<std::string> logHistory;
     float lastLoggedValue = -99999.0f;
+    std::string lastLoggedMsg;
 };
 
 } // namespace time_dilation

@@ -10,9 +10,14 @@ TimelineEditorComponent::TimelineEditorComponent (TimelineNode& timelineNode)
     addAndMakeVisible (addAudioTrackBtn);
     addAndMakeVisible (addMidiTrackBtn);
     addAndMakeVisible (addDilTrackBtn);
+    addAndMakeVisible (openPoolBtn);
     addAndMakeVisible (recordArmToggle);
     addAndMakeVisible (bpmSlider);
     addAndMakeVisible (bpmLabel);
+
+    openPoolBtn.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff0f766e));
+    openPoolBtn.setColour (juce::TextButton::textColourOffId, juce::Colour (0xff38bdf8));
+    openPoolBtn.onClick = [this] { if (onOpenPoolRequested) onOpenPoolRequested(); };
 
     bpmSlider.setRange (20.0, 300.0, 1.0);
     bpmSlider.setValue (node.getParameter ("bpm", 120.0f));
@@ -58,17 +63,20 @@ void TimelineEditorComponent::resized()
     auto topRow = area.removeFromTop (36);
 
     addAudioTrackBtn.setBounds (topRow.removeFromLeft (110));
+    topRow.removeFromLeft (6);
+    addMidiTrackBtn.setBounds (topRow.removeFromLeft (100));
+    topRow.removeFromLeft (6);
+    addDilTrackBtn.setBounds (topRow.removeFromLeft (140));
     topRow.removeFromLeft (8);
-    addMidiTrackBtn.setBounds (topRow.removeFromLeft (105));
-    topRow.removeFromLeft (8);
-    addDilTrackBtn.setBounds (topRow.removeFromLeft (150));
-    topRow.removeFromLeft (16);
 
-    recordArmToggle.setBounds (topRow.removeFromLeft (90));
-    topRow.removeFromLeft (16);
+    openPoolBtn.setBounds (topRow.removeFromLeft (100));
+    topRow.removeFromLeft (12);
 
-    bpmLabel.setBounds (topRow.removeFromLeft (36));
-    bpmSlider.setBounds (topRow.removeFromLeft (100));
+    recordArmToggle.setBounds (topRow.removeFromLeft (85));
+    topRow.removeFromLeft (12);
+
+    bpmLabel.setBounds (topRow.removeFromLeft (34));
+    bpmSlider.setBounds (topRow.removeFromLeft (90));
 }
 
 void TimelineEditorComponent::paint (juce::Graphics& g)

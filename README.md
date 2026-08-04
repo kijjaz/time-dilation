@@ -154,27 +154,37 @@ The theoretical physics and digital signal processing mathematics of **Time Dila
 
 ## 🛠️ Building from Source
 
-### Prerequisites
-- **macOS**: 12.0 or newer
-- **Compiler**: Clang / AppleClang with C++20 support
-- **Build System**: CMake 3.22+ & Ninja or Make
+For detailed, step-by-step compilation instructions across **macOS**, **Linux**, and **Windows**, please refer to the dedicated **[`INSTALL.md`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/INSTALL.md)** guide.
 
 ### Quick Build Instructions
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/kijjaz/time-dilation.git
-cd time-dilation
+git clone https://github.com/kijjaz/time-dilation-daw.git
+cd "20260801 Time Dilation DAW"
 
 # 2. Configure build environment with CMake
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake -B build -DCMAKE_BUILD_TYPE=Release -GNinja
 
 # 3. Compile Standalone Workstation & Plugins
-cmake --build build --config Release -j8
+cmake --build build --config Release -j$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
 
-# 4. Launch Application
-open "build/TimeDilationDAW_App_artefacts/Time Dilation DAW.app"
+# 4. Launch Application (macOS example)
+open "build/TimeDilationDAW_App_artefacts/Release/Standalone/Time Dilation DAW.app"
 ```
+
+---
+
+## 🙏 Open-Source Credits & Attributions
+
+**Time Dilation DAW** is built on top of and inspired by these incredible open-source projects:
+
+| Library / Project | Creator / Maintainer | License | Primary Role & Link |
+| :--- | :--- | :--- | :--- |
+| **JUCE 7** | RAW Material Software / Pace Anti-Piracy | GPLv3 / Commercial | C++ cross-platform audio app framework, VST3/AU wrappers, audio device management, and vector graphics. ([juce.com](https://juce.com)) |
+| **Tracktion Engine** | Tracktion Software | GPLv3 / Commercial | High-level DAW engine powering the multitrack arrangement timeline ([timeline]) and transport scheduling. ([tracktion.com](https://www.tracktion.com)) |
+| **ExprTk** | Arash Partow | Arash Partow Open-Source License | High-performance C++ mathematical expression parsing engine evaluating real-time DSP math expressions (`$v1`, `$v2`, `$t`, `tap()`). ([partow.net](https://www.partow.net/programming/exprtk/)) |
+| **Pure Data (Pd) Principles** | Miller Puckette | BSD License | Mathematical formulations and object semantics (`osc~`, `filter~`, `delay~`, `env~`, `bang`) adapted into native C++. ([puredata.info](https://puredata.info)) |
 
 ---
 

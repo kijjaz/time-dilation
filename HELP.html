@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Dilation DAW — User Manual & Workstation Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600;700&family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-carbon: #070a12;
+            --card-slate: #0d1322;
+            --card-dark: #0b0f19;
+            --border-slate: #1e293b;
+            --border-accent: #334155;
+            
+            --gold-accent: #f59e0b;
+            --gold-glow: rgba(245, 158, 11, 0.2);
+            --cyan-accent: #06b6d4;
+            --cyan-bright: #38bdf8;
+            --violet-accent: #8b5cf6;
+            --violet-bright: #c084fc;
+            --emerald-accent: #10b981;
+            --emerald-bright: #34d399;
+            --red-warning: #ef4444;
+
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-carbon);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        nav.sidebar {
+            width: 280px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-slate);
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-slate);
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--gold-accent), var(--violet-accent));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Oxanium', sans-serif;
+            font-weight: 700;
+            color: #000;
+            font-size: 16px;
+        }
+
+        .brand-title {
+            font-family: 'Oxanium', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .brand-version {
+            font-size: 11px;
+            color: var(--gold-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-family: 'Oxanium', sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 8px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--border-slate);
+            color: var(--cyan-bright);
+        }
+
+        /* Main Content Container */
+        main.content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px 56px;
+            max-width: 1100px;
+        }
+
+        .header-banner {
+            background: linear-gradient(135deg, rgba(13, 19, 34, 0.9), rgba(15, 23, 42, 0.6));
+            border: 1px solid var(--border-accent);
+            border-left: 4px solid var(--gold-accent);
+            border-radius: 10px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-family: 'Oxanium', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .badge-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-family: 'Oxanium', sans-serif;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-gold { background: rgba(245, 158, 11, 0.15); color: var(--gold-accent); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-cyan { background: rgba(6, 182, 212, 0.15); color: var(--cyan-bright); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-violet { background: rgba(139, 92, 246, 0.15); color: var(--violet-bright); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+        section {
+            margin-bottom: 48px;
+        }
+
+        h2 {
+            font-family: 'Oxanium', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gold-accent);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-slate);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-family: 'Oxanium', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cyan-bright);
+            margin: 24px 0 12px 0;
+        }
+
+        p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Card Panels */
+        .card {
+            background: var(--card-slate);
+            border: 1px solid var(--border-slate);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-warning {
+            border-left: 4px solid var(--red-warning);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .card-info {
+            border-left: 4px solid var(--cyan-accent);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        /* Code Blocks & Badges */
+        code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--cyan-bright);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        pre {
+            background: #050811;
+            border: 1px solid var(--border-slate);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            overflow-x: auto;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        /* Symbol Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13.5px;
+            background: var(--card-slate);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-slate);
+        }
+
+        th {
+            background: #090e1a;
+            color: var(--gold-accent);
+            font-family: 'Oxanium', sans-serif;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-slate);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .port-tag {
+            display: inline-block;
+            font-family: 'Oxanium', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .port-audio { background: rgba(6, 182, 212, 0.2); color: var(--cyan-bright); }
+        .port-time { background: rgba(139, 92, 246, 0.2); color: var(--violet-bright); }
+        .port-control { background: rgba(245, 158, 11, 0.2); color: var(--gold-accent); }
+        .port-message { background: rgba(16, 185, 129, 0.2); color: var(--emerald-bright); }
+
+        kbd {
+            font-family: 'Oxanium', sans-serif;
+            background: #1e293b;
+            color: var(--gold-accent);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 2px 0 #0f172a;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="brand-header">
+            <div class="brand-logo">γ</div>
+            <div>
+                <div class="brand-title">TIME DILATION DAW</div>
+                <div class="brand-version">Version 0.0.1 Manual</div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Core Principles</div>
+            <a href="#overview" class="nav-link">1. Executive Overview</a>
+            <a href="#safety" class="nav-link">2. Audio Safety & Stability</a>
+            <a href="#dual-perspective" class="nav-link">3. Dual Perspective Guarantee</a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Message Protocol</div>
+            <a href="#symbol-commands" class="nav-link">4. Symbol Command Table</a>
+            <a href="#wireless-busses" class="nav-link">5. Wireless Message Busses</a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Relativistic Time</div>
+            <a href="#time-nodes" class="nav-link">6. Relativistic Time Suite</a>
+            <a href="#port-compatibility" class="nav-link">7. Port Compatibility Rules</a>
+            <a href="#time-interchange" class="nav-link">8. Time-Audio Interchange</a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Arrangement & Tapping</div>
+            <a href="#timeline" class="nav-link">9. Multi-Track Timeline</a>
+            <a href="#tapping" class="nav-link">10. Wireless Global Tapping</a>
+            <a href="#shortcuts" class="nav-link">11. Keyboard Shortcuts</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="content">
+
+        <!-- Header Banner -->
+        <div class="header-banner">
+            <h1>TIME DILATION DAW WORKSTATION</h1>
+            <div class="subtitle">Relativistic Modular Audio Workstation & Live C++ DSP Math Engine</div>
+            <div class="badge-bar">
+                <span class="badge badge-gold">JUCE 7 / C++20</span>
+                <span class="badge badge-cyan">Carbon & Gold Design System</span>
+                <span class="badge badge-violet">Coordinate Time Clocks (γ)</span>
+            </div>
+        </div>
+
+        <!-- 1. Executive Overview -->
+        <section id="overview">
+            <h2>1. Executive Overview</h2>
+            <p><strong>Time Dilation DAW</strong> is a state-of-the-art Relativistic Modular Audio Workstation built with native C++20 and JUCE 7. It unifies top-down visual block diagram patching with bottom-up authentic C++ / DSP math expression coding.</p>
+            <p>Every node in the workspace operates on its own <strong>local coordinate time clock</strong> (<code>d&tau; = &gamma; &middot; dt</code>), enabling dynamic continuous time warping (<code>time.warp~</code>), temporal reversal (<code>time.retro~</code>), gravitational stasis (<code>time.stasis~</code>), relativistic grid quantization (<code>time.quantize~</code>), and Lorentz velocity addition composition (<code>time.math~</code>).</p>
+        </section>
+
+        <!-- 2. Audio Safety & Stability -->
+        <section id="safety">
+            <h2>2. Audio Engine Safety & Feedback Loop Guarantee</h2>
+            <div class="card card-warning">
+                <h3 style="margin-top:0; color:var(--red-warning)">AUDIO: OFF (SAFE) Default Launch</h3>
+                <p>The application unconditionally defaults to <code>AUDIO: OFF (SAFE)</code> on launch. The user must manually click the power toggle button in the top header bar to start audio processing execution.</p>
+            </div>
+
+            <div class="card card-info">
+                <h3 style="margin-top:0;">1-Block Feedback Delay Stability (<code>previousBlockBuffer</code>)</h3>
+                <p>The DSP engine automatically detects topological feedback loops in the patch graph. Destination ports in feedback paths sample from a 1-block delay buffer, ensuring 100% real-time stability without sample rate crashes or thread deadlocks.</p>
+            </div>
+        </section>
+
+        <!-- 3. Dual Perspective Guarantee -->
+        <section id="dual-perspective">
+            <h2>3. Dual Perspective Guarantee</h2>
+            <p>Every object block in Time Dilation DAW exposes two synchronous perspectives:</p>
+            <ul>
+                <li><strong>Top-Down Visual Inspector</strong>: Sliders, ranges, <code>[TAP]</code> buttons, and modulation inlets.</li>
+                <li><strong>Bottom-Up Code Math</strong>: Live C++ / DSP math expression scripts evaluating <code>$v1</code>, <code>$v2</code>, <code>$t</code>, and <code>tap()</code>.</li>
+            </ul>
+        </section>
+
+        <!-- 4. Symbol Command Table -->
+        <section id="symbol-commands">
+            <h2>4. Symbol Messages & Inlets Command Table</h2>
+            <p>Control inlets accept simple symbol messages to update object parameters or invoke DSP methods dynamically:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Object Symbol</th>
+                        <th>Accepted Inlets</th>
+                        <th>Symbol Messages & Commands</th>
+                        <th>Description / Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>[osc~]</code></td>
+                        <td><span class="port-tag port-control">In 0 (Freq)</span> <span class="port-tag port-time">TimeIn</span></td>
+                        <td><code>set &lt;freq&gt;</code>, <code>sine</code>, <code>saw</code>, <code>square</code>, <code>reset</code></td>
+                        <td>Multi-waveform anti-aliased oscillator. Reset clears phase.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[table]</code></td>
+                        <td><span class="port-tag port-control">In 0 (Control)</span></td>
+                        <td><code>set &lt;idx&gt; &lt;val&gt;</code>, <code>get &lt;idx&gt;</code>, <code>fillSine</code>, <code>normalize</code>, <code>clear</code></td>
+                        <td>Wavetable RAM buffer. Write/read samples, fill sine, or peak normalize.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[time.transport]</code></td>
+                        <td><span class="port-tag port-control">In 0 (Trigger)</span></td>
+                        <td><code>start</code>, <code>stop</code>, <code>pause</code>, <code>seek &lt;beat&gt;</code>, <code>bpm &lt;val&gt;</code></td>
+                        <td>Relativistic Master Transport Hub. Controls master timeline playback & BPM.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[sampler~]</code></td>
+                        <td><span class="port-tag port-audio">AudioIn</span> <span class="port-tag port-control">In 0</span></td>
+                        <td><code>start</code>, <code>stop</code>, <code>read &lt;file&gt;</code>, <code>record</code>, <code>clear</code></td>
+                        <td>Audio sample player & RAM buffer recorder.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[filter~]</code></td>
+                        <td><span class="port-tag port-audio">AudioIn</span> <span class="port-tag port-control">In 0 (Cutoff)</span></td>
+                        <td><code>lowpass</code>, <code>highpass</code>, <code>bandpass</code>, <code>bypass &lt;0|1&gt;</code></td>
+                        <td>State-variable filter with controllable resonance and cutoff.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[delay~]</code></td>
+                        <td><span class="port-tag port-audio">AudioIn</span> <span class="port-tag port-control">In 0 (Time)</span></td>
+                        <td><code>delay &lt;ms&gt;</code>, <code>clear</code></td>
+                        <td>Feedback delay line with delay time parameter in milliseconds.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[out~]</code></td>
+                        <td><span class="port-tag port-audio">Audio L/R</span></td>
+                        <td><code>mute</code>, <code>unmute</code>, <code>reset</code></td>
+                        <td>Master audio DAC output with stereo VU meters.</td>
+                    </tr>
+                    <tr>
+                        <td><code>[bang]</code></td>
+                        <td><span class="port-tag port-control">In 0</span></td>
+                        <td><code>bang</code></td>
+                        <td>Control trigger button. Emits bang pulse to connected outlets.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 5. Wireless Message Busses -->
+        <section id="wireless-busses">
+            <h2>5. Message Routing & Wireless Busses</h2>
+            <ul>
+                <li><code>[msg]</code> / <code>[message]</code>: Dynamic symbol message box with <code>$(...)</code> expression math evaluation.</li>
+                <li><code>[send busName]</code> / <code>[receive busName]</code>: Wireless message transmitter & receiver pairs.</li>
+                <li><code>[route selector1 selector2]</code>: Routes incoming message selectors to matching outlets.</li>
+                <li><code>[spigot]</code>: Control signal gate (pass/block toggle).</li>
+            </ul>
+        </section>
+
+        <!-- 6. Relativistic Time Suite -->
+        <section id="time-nodes">
+            <h2>6. Relativistic Time Node Suite</h2>
+            <p>Time context flows along purple time ports (<code>NodePortType::Time</code>) using coordinate time factor &gamma; (<code>&gamma; = d&tau;/dt</code>):</p>
+            <ul>
+                <li><code>[time.warp~]</code>: Continuous time speed scaler (&gamma; = 0.1x to 16.0x).</li>
+                <li><code>[time.retro~]</code>: Temporal reversal engine (&gamma; = -1.0x).</li>
+                <li><code>[time.stasis~]</code>: Gravitational freeze gate (&gamma; = 0.0x).</li>
+                <li><code>[time.quantize~]</code>: Grid quantization of continuous coordinate time.</li>
+                <li><code>[time.math~]</code>: Lorentz velocity addition & time field composition.</li>
+            </ul>
+        </section>
+
+        <!-- 7. Port Compatibility Rules -->
+        <section id="port-compatibility">
+            <h2>7. Port Compatibility & Conversion Rules</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source Port Type</th>
+                        <th>Destination Port Type</th>
+                        <th>Direct Connection Allowed?</th>
+                        <th>Required Converter Node</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="port-tag port-time">Time (Purple)</span></td>
+                        <td><span class="port-tag port-time">Time (Purple)</span></td>
+                        <td><strong style="color:var(--emerald-bright)">YES</strong></td>
+                        <td>None</td>
+                    </tr>
+                    <tr>
+                        <td><span class="port-tag port-time">Time (Purple)</span></td>
+                        <td><span class="port-tag port-control">Control (Amber)</span></td>
+                        <td><strong style="color:var(--emerald-bright)">YES</strong></td>
+                        <td>Direct Scalar Modulation</td>
+                    </tr>
+                    <tr>
+                        <td><span class="port-tag port-audio">Audio~ (Cyan)</span></td>
+                        <td><span class="port-tag port-time">Time (Purple)</span></td>
+                        <td><strong style="color:var(--red-warning)">NO</strong></td>
+                        <td><code>[audio2time~]</code> or <code>[a2t~]</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="port-tag port-time">Time (Purple)</span></td>
+                        <td><span class="port-tag port-audio">Audio~ (Cyan)</span></td>
+                        <td><strong style="color:var(--red-warning)">NO</strong></td>
+                        <td><code>[time2audio~]</code> or <code>[t2a~]</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 8. Time-Audio Interchange -->
+        <section id="time-interchange">
+            <h2>8. Bidirectional Time-Audio Signal Interchange</h2>
+            <p>Seamlessly convert between purple time signals (&gamma;) and cyan audio streams:</p>
+            <pre><code>// audio2time~: Audio waveform amplitude -> gamma time dilation
+gamma = offset + depth * audioIn;
+
+// time2audio~: Gamma time dilation -> audible audio stream
+audioOut = offset + scale * (gamma - 1.0);</code></pre>
+        </section>
+
+        <!-- 9. Multi-Track Timeline -->
+        <section id="timeline">
+            <h2>9. Multi-Track Relativistic Timeline (<code>[timeline]</code>)</h2>
+            <p>Instantiate arrangement timelines directly on the canvas supporting Audio Tracks, MIDI Tracks, Time Dilation Automation Curves, and Control Parameter Automation.</p>
+        </section>
+
+        <!-- 10. Wireless Global Tapping -->
+        <section id="tapping">
+            <h2>10. Wireless Global Signal Tapping (<code>tap()</code>)</h2>
+            <p>Tap any node's output or parameter anywhere in the patch graph without drawing physical cables:</p>
+            <pre><code>tap(2)                          // Tap node by numeric ID
+tap("osc1")                     // Tap node by custom label
+tap("filter~.cutoff")           // Tap specific internal parameter
+tap("time.warp~.gamma")         // Tap coordinate time dilation factor</code></pre>
+        </section>
+
+        <!-- 11. Keyboard Shortcuts -->
+        <section id="shortcuts">
+            <h2>11. Workstation Keyboard Shortcuts</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Shortcut Key</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><kbd>Spacebar</kbd></td><td>Toggle Master Audio Power (ON / OFF)</td></tr>
+                    <tr><td><kbd>N</kbd> or <kbd>Double-Click Canvas</kbd></td><td>Open Object Palette Search Menu</td></tr>
+                    <tr><td><kbd>Cmd</kbd> + <kbd>E</kbd></td><td>Toggle Mode (Edit Mode &harr; Perform Mode)</td></tr>
+                    <tr><td><kbd>Cmd</kbd> + <kbd>S</kbd></td><td>Save Project Bundle (<code>.tdaw</code> folder)</td></tr>
+                    <tr><td><kbd>Cmd</kbd> + <kbd>C</kbd> / <kbd>Cmd</kbd> + <kbd>V</kbd></td><td>Copy / Paste Selected Nodes</td></tr>
+                    <tr><td><kbd>Cmd</kbd> + <kbd>D</kbd></td><td>Duplicate Selected Nodes</td></tr>
+                    <tr><td><kbd>Cmd</kbd> + <kbd>Z</kbd> / <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td><td>Undo / Redo Last Patch Action</td></tr>
+                    <tr><td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Delete Selected Nodes or Cables</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</body>
+</html>

@@ -81,6 +81,124 @@ double RelativisticNode::getRelativisticGamma (double defaultTimeAmt, int /*defa
     return 1.0 + (rawGamma - 1.0) * timeAmt;
 }
 
+void RelativisticNode::addMessagePorts()
+{
+    addInlet ("msgIn", NodePortType::Message);
+    addOutlet ("msgOut", NodePortType::Message);
+}
+
+void RelativisticNode::addUniversalPorts()
+{
+    bool hasTimeIn = false;
+    for (const auto& in : inlets) {
+        if (in.type == NodePortType::Time || in.name == "timeIn" || in.name == "time") { hasTimeIn = true; break; }
+    }
+    if (!hasTimeIn) addInlet ("timeIn", NodePortType::Time);
+
+    bool hasMsgIn = false;
+    for (const auto& in : inlets) {
+        if (in.type == NodePortType::Message || in.name == "msgIn" || in.name == "msg") { hasMsgIn = true; break; }
+    }
+    if (!hasMsgIn) addInlet ("msgIn", NodePortType::Message);
+
+    bool hasTimeOut = false;
+    for (const auto& out : outlets) {
+        if (out.type == NodePortType::Time || out.name == "timeOut" || out.name == "time") { hasTimeOut = true; break; }
+    }
+    if (!hasTimeOut) addOutlet ("timeOut", NodePortType::Time);
+
+    bool hasMsgOut = false;
+    for (const auto& out : outlets) {
+        if (out.type == NodePortType::Message || out.name == "msgOut" || out.name == "msg") { hasMsgOut = true; break; }
+    }
+    if (!hasMsgOut) addOutlet ("msgOut", NodePortType::Message);
+}
+
+void RelativisticNode::receiveMessage (const std::string& msg, float val)
+{
+    if (msg.empty()) return;
+
+    // Forward message down msgOut outlet if present & connected
+    for (size_t i = 0; i < outlets.size(); ++i)
+    {
+        if (outlets[i].type == NodePortType::Message)
+        {
+            outlets[i].messageValue = msg;
+            if (parentGraph != nullptr)
+            {
+                parentGraph->sendPortMessage (nodeId, static_cast<int>(i), msg);
+            }
+        }
+    }
+
+    juce::String jMsg (msg);
+    auto tokens = juce::StringArray::fromTokens (jMsg.trim(), " ", "");
+
+    if (tokens.isEmpty()) return;
+
+    juce::String cmd = tokens[0].toLowerCase();
+
+    // 1. Play / Start / Trigger
+    if (cmd == "play" || cmd == "start" || cmd == "trig" || cmd == "trigger" || cmd == "on")
+    {
+        for (const auto& method : getExposedMethods())
+        {
+            if (method.find ("Play") != std::string::npos || method.find ("Trig") != std::string::npos || method.find ("Start") != std::string::npos)
+            {
+                invokeMethod (method);
+                return;
+            }
+        }
+        setParameter ("playState", 1.0f);
+        return;
+    }
+
+    // 2. Stop / Pause / Off
+    if (cmd == "stop" || cmd == "pause" || cmd == "off")
+    {
+        for (const auto& method : getExposedMethods())
+        {
+            if (method.find ("Stop") != std::string::npos || method.find ("Pause") != std::string::npos)
+            {
+                invokeMethod (method);
+                return;
+            }
+        }
+        setParameter ("playState", 0.0f);
+        return;
+    }
+
+    // 3. Parameter Key Value Assignment (e.g., "frequency 440" or "gain 0.8" or "bpm 140")
+    if (tokens.size() >= 2)
+    {
+        std::string paramKey = tokens[0].toStdString();
+        float paramVal = tokens[1].getFloatValue();
+        setParameter (paramKey, paramVal);
+        return;
+    }
+
+    // 4. Single parameter value fallback
+    if (jMsg.containsOnly ("0123456789.-+"))
+    {
+        float singleVal = jMsg.getFloatValue();
+        if (!parameters.empty())
+        {
+            parameters.begin()->second = singleVal;
+        }
+        return;
+    }
+
+    // 5. Method name invocation fallback
+    for (const auto& method : getExposedMethods())
+    {
+        if (juce::String (method).equalsIgnoreCase (jMsg))
+        {
+            invokeMethod (method);
+            return;
+        }
+    }
+}
+
 double RelativisticNode::getRequestedFutureHorizonSec() const
 {
     double effGamma = getEffectiveGamma();
@@ -372,10 +490,10 @@ bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
         "time.singularity~", "time.transport", "time.scope", "time.display", "time.monitor",
         "time.xy", "xy", "xy~", "plot.xy", "spectrometer~", "spectrum~", "fft~",
         "time.future~", "future~", "osc~", "phasor~", "sampler~", "filter~", "delay~",
-        "dac~", "expr", "expr~", "fexpr~", "gain~", "out~", "out", "env~", "tap", "tap~",
+        "dac~", "expr", "expr~", "fexpr~", "gain~", "out~", "out", "env~", "tap", "tap~", "send", "s", "receive", "r",
         "v", "msg", "message", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
         "svfilter~", "drive~", "reverb~", "crush~", "adsr~", "mtof", "ftom", "midi2freq",
-        "number", "num", "nb", "display", "number.display", "bang", "b", "bang~", "b~", "counter", "cnt", "note",
+        "number", "num", "nb", "display", "number.display", "bang", "b", "bang~", "b~", "counter", "cnt", "metro", "metronome", "note",
         "slider", "hslider", "vslider", "toggle", "tgl", "audio2time~", "a2t~", "time2audio~", "t2a~",
         "time.math~", "time.combine~", "time.+", "time.-", "time.*", "time.scale~", "time.filter~",
         "time.boost~", "time.lorenz~", "time.noise~", "time.rand~", "time.samplehold~", "time.sh~",
@@ -406,6 +524,75 @@ void RelativisticNodeGraph::prepare (double sr, int samplesPerBlock)
     for (auto& n : nodes)
     {
         n->prepare (sampleRate, blockSize);
+    }
+}
+
+void RelativisticNodeGraph::sendPortMessage (int sourceNodeId, int sourceOutletIdx, const std::string& msgText) const
+{
+    if (msgText.empty()) return;
+
+    // 1. Direct cabled message routing down emerald message cords
+    for (const auto& conn : connections)
+    {
+        if (conn.sourceNodeId == sourceNodeId && conn.sourceOutletIdx == sourceOutletIdx)
+        {
+            auto destNode = const_cast<RelativisticNodeGraph*>(this)->getNodeById (conn.destNodeId);
+            if (destNode)
+            {
+                destNode->receiveMessage (msgText);
+            }
+        }
+    }
+
+    // 2. Wireless Target Object Addressing: "nodeLabel.method" or "nodeLabel.param value"
+    size_t dotPos = msgText.find ('.');
+    if (dotPos != std::string::npos && dotPos > 0)
+    {
+        std::string targetLabel = msgText.substr (0, dotPos);
+        std::string command = msgText.substr (dotPos + 1);
+
+        for (auto& node : nodes)
+        {
+            if (node->getLabel() == targetLabel || node->getTypeName() == targetLabel)
+            {
+                node->receiveMessage (command);
+            }
+        }
+    }
+
+    // 3. Global Variable Assignment: "$var = 120"
+    if (msgText.rfind ("$", 0) == 0)
+    {
+        size_t eqPos = msgText.find ('=');
+        if (eqPos != std::string::npos)
+        {
+            std::string varName = juce::String (msgText.substr (1, eqPos - 1)).trim().toStdString();
+            float varVal = juce::String (msgText.substr (eqPos + 1)).trim().getFloatValue();
+            const_cast<RelativisticNodeGraph*>(this)->globalVariables[varName] = varVal;
+        }
+    }
+}
+
+void RelativisticNodeGraph::broadcastBusMessage (const std::string& busName, const std::string& msgText, float val) const
+{
+    if (busName.empty()) return;
+    for (auto& node : nodes)
+    {
+        std::string tName = node->getTypeName();
+        std::string lbl = node->getLabel();
+        if (tName == "receive" || tName == "r" || lbl == busName)
+        {
+            std::string nodeBus = lbl;
+            if (nodeBus.rfind ("r ", 0) == 0 || nodeBus.rfind ("receive ", 0) == 0)
+            {
+                auto spacePos = nodeBus.find (' ');
+                if (spacePos != std::string::npos) nodeBus = nodeBus.substr (spacePos + 1);
+            }
+            if (nodeBus == busName || lbl == busName)
+            {
+                node->receiveMessage (msgText, val);
+            }
+        }
     }
 }
 
@@ -442,8 +629,11 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "v" || typeName == "msg" || typeName == "message") node = std::make_shared<ValueNode> (id);
     else if (typeName == "z~")             node = std::make_shared<OneSampleDelayNode> (id);
     else if (typeName == "snapshot~")      node = std::make_shared<SnapshotNode> (id);
-    else if (typeName == "+")              node = std::make_shared<AddMathNode> (id);
-    else if (typeName == "*")              node = std::make_shared<MulMathNode> (id);
+    else if (typeName == "+" || typeName == "+~") node = std::make_shared<AddMathNode> (id);
+    else if (typeName == "*" || typeName == "*~") node = std::make_shared<MulMathNode> (id);
+    else if (typeName == "-" || typeName == "-~") node = std::make_shared<SubMathNode> (id);
+    else if (typeName == "/" || typeName == "/~") node = std::make_shared<DivMathNode> (id);
+    else if (typeName == "%" || typeName == "%~" || typeName == "mod" || typeName == "mod~") node = std::make_shared<ModMathNode> (id);
     else if (typeName == "table")          node = std::make_shared<TableNode> (id);
     else if (typeName == "tabwrite~")      node = std::make_shared<TabWriteNode> (id);
     else if (typeName == "tabread~")       node = std::make_shared<TabReadNode> (id);
@@ -454,14 +644,36 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else if (typeName == "crush~")         node = std::make_shared<CrushNode> (id);
     else if (typeName == "adsr~")          node = std::make_shared<AdsrNode> (id);
     else if (typeName == "mtof" || typeName == "midi2freq") node = std::make_shared<MtofNode> (id);
-    else if (typeName == "ftom")           node = std::make_shared<FtomNode> (id);
-    else if (typeName == "number" || typeName == "num" || typeName == "nb" || typeName == "display" || typeName == "number.display") node = std::make_shared<NumberNode> (id);
+    else if (typeName == "number" || typeName == "num" || typeName == "nb" || typeName == "f" || typeName == "float" || typeName == "display" || typeName == "number.display") node = std::make_shared<NumberNode> (id, false);
+    else if (typeName == "i" || typeName == "int" || typeName == "integer") node = std::make_shared<NumberNode> (id, true);
     else if (typeName == "meter~" || typeName == "vu~") node = std::make_shared<VuMeterAudioNode> (id);
     else if (typeName == "number~" || typeName == "num~") node = std::make_shared<NumberAudioNode> (id);
     else if (typeName == "print" || typeName == "monitor") node = std::make_shared<PrintMonitorNode> (id);
     else if (typeName == "bang" || typeName == "b") node = std::make_shared<BangNode> (id);
     else if (typeName == "bang~" || typeName == "b~") node = std::make_shared<BangAudioNode> (id);
     else if (typeName == "counter" || typeName == "cnt") node = std::make_shared<CounterNode> (id);
+    else if (typeName == "metro" || typeName == "metronome" || typeName.rfind ("metro ", 0) == 0 || typeName.rfind ("metronome ", 0) == 0)
+    {
+        float periodMs = 500.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1 && tokens[1].getFloatValue() > 0.0f)
+            periodMs = tokens[1].getFloatValue();
+        node = std::make_shared<MetroNode> (id, periodMs);
+    }
+    else if (typeName == "send" || typeName == "s" || typeName.rfind ("send ", 0) == 0 || typeName.rfind ("s ", 0) == 0)
+    {
+        std::string bus = "bus1";
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) bus = tokens[1].toStdString();
+        node = std::make_shared<SendNode> (id, bus);
+    }
+    else if (typeName == "receive" || typeName == "r" || typeName.rfind ("receive ", 0) == 0 || typeName.rfind ("r ", 0) == 0)
+    {
+        std::string bus = "bus1";
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) bus = tokens[1].toStdString();
+        node = std::make_shared<ReceiveNode> (id, bus);
+    }
     else if (typeName == "slider" || typeName == "hslider" || typeName == "vslider") node = std::make_shared<SliderNode> (id);
     else if (typeName == "toggle" || typeName == "tgl") node = std::make_shared<ToggleNode> (id);
     else if (typeName == "audio2time~" || typeName == "a2t~") node = std::make_shared<AudioToTimeNode> (id);
@@ -487,10 +699,12 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     else                                   node = std::make_shared<OscNode> (id);
 
 
+    node->addUniversalPorts();
     node->setParentGraph (this);
     node->setPosition (x, y);
     node->prepare (sampleRate, blockSize);
     nodes.push_back (node);
+    notifyGraphModified();
     return id;
 }
 
@@ -498,14 +712,8 @@ std::shared_ptr<TableNode> RelativisticNodeGraph::getTableByName (const std::str
 {
     for (const auto& n : nodes)
     {
-        if (n->getTypeName() == "table")
-        {
-            auto tbl = std::dynamic_pointer_cast<TableNode> (n);
-            if (tbl && tbl->getTableName() == name)
-            {
-                return tbl;
-            }
-        }
+        if (n->getTypeName() == "table" && n->getLabel() == name)
+            return std::dynamic_pointer_cast<TableNode> (n);
     }
     return nullptr;
 }
@@ -520,6 +728,8 @@ void RelativisticNodeGraph::removeNode (int nodeId)
         [nodeId] (const PatchConnection& c) {
             return c.sourceNodeId == nodeId || c.destNodeId == nodeId;
         }), connections.end());
+
+    notifyGraphModified();
 }
 
 int RelativisticNodeGraph::addConnection (int srcNodeId, int srcOutletIdx, int destNodeId, int destInletIdx)
@@ -534,6 +744,7 @@ int RelativisticNodeGraph::addConnection (int srcNodeId, int srcOutletIdx, int d
 
     connections.push_back (c);
     detectFeedbackLoops();
+    notifyGraphModified();
     return c.id;
 }
 
@@ -543,6 +754,7 @@ void RelativisticNodeGraph::removeConnection (int connectionId)
     connections.erase (std::remove_if (connections.begin(), connections.end(),
         [connectionId] (const PatchConnection& c) { return c.id == connectionId; }), connections.end());
     detectFeedbackLoops();
+    notifyGraphModified();
 }
 
 bool RelativisticNodeGraph::removeModulationInlet (int nodeId, const std::string& paramKey)
@@ -637,6 +849,33 @@ std::shared_ptr<RelativisticNode> RelativisticNodeGraph::getNodeById (int id)
     return nullptr;
 }
 
+std::shared_ptr<RelativisticNode> RelativisticNodeGraph::getNodeByLabel (const std::string& label) const
+{
+    for (auto& n : nodes)
+    {
+        if (n->getLabel() == label || n->getTypeName() == label) return n;
+    }
+    return nullptr;
+}
+
+void RelativisticNodeGraph::removeConnection (int srcNodeId, int srcOutletIdx, int destNodeId, int destInletIdx)
+{
+    int targetId = 0;
+    for (const auto& conn : connections)
+    {
+        if (conn.sourceNodeId == srcNodeId && conn.sourceOutletIdx == srcOutletIdx &&
+            conn.destNodeId == destNodeId && conn.destInletIdx == destInletIdx)
+        {
+            targetId = conn.id;
+            break;
+        }
+    }
+    if (targetId > 0)
+    {
+        removeConnection (targetId);
+    }
+}
+
 void RelativisticNodeGraph::clearGraph()
 {
     nodes.clear();
@@ -648,6 +887,127 @@ void RelativisticNodeGraph::clearGraph()
 void RelativisticNodeGraph::createDefaultPatch()
 {
     clearGraph();
+}
+
+void RelativisticNodeGraph::loadBasicCounterExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nBang    = addNode ("bang",    100.0f, 100.0f);
+    int nCounter = addNode ("counter", 100.0f, 220.0f);
+    int nNum     = addNode ("number",  100.0f, 360.0f);
+    int nMsg     = addNode ("msg",     260.0f, 360.0f);
+
+    auto counter = getNodeById (nCounter);
+    if (counter)
+    {
+        counter->setParameter ("min", 0.0f);
+        counter->setParameter ("max", 16.0f);
+        counter->setParameter ("step", 1.0f);
+    }
+
+    auto msg = getNodeById (nMsg);
+    if (msg) msg->setParamExpression ("value", "Value Changed!");
+
+    addConnection (nBang,    0, nCounter, 0); // bang pulse -> counter trigger
+    addConnection (nCounter, 0, nNum,     0); // counter value -> number box
+    addConnection (nCounter, 0, nMsg,     0); // counter value -> msg box
+}
+
+void RelativisticNodeGraph::loadStepSequencerExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nMetro = addNode ("time.metro~", 100.0f, 100.0f);
+    int nSeq   = addNode ("seq",         300.0f, 100.0f);
+    int nMtof  = addNode ("mtof",        500.0f, 100.0f);
+    int nNum   = addNode ("number",      500.0f, 220.0f);
+
+    auto metro = getNodeById (nMetro);
+    if (metro) metro->setParameter ("rate", 2.0f);
+
+    auto seq = std::dynamic_pointer_cast<StepSequencerNode> (getNodeById (nSeq));
+    if (seq) seq->setPatternString ("60 62 64 65 67 69 71 72");
+
+    addConnection (nMetro, 0, nSeq,  0); // metro time -> seq timeIn
+    addConnection (nSeq,   0, nMtof, 0); // seq MIDI pitch -> mtof
+    addConnection (nMtof,  0, nNum,  0); // mtof Hz -> number display
+}
+
+void RelativisticNodeGraph::loadMathExpressionExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nNum1 = addNode ("number", 100.0f, 100.0f);
+    int nExpr = addNode ("expr",   300.0f, 100.0f);
+    int nNum2 = addNode ("number", 500.0f, 100.0f);
+
+    auto num1 = getNodeById (nNum1);
+    if (num1) num1->setParameter ("value", 10.0f);
+
+    auto expr = getNodeById (nExpr);
+    if (expr)
+    {
+        expr->setLabel ("expr $v1 * 2.5 + 12");
+        expr->setFormulaScript ("val = $v1 * 2.5 + 12;");
+    }
+
+    addConnection (nNum1, 0, nExpr, 0); // num1 -> expr inlet 0 ($v1)
+    addConnection (nExpr, 0, nNum2, 0); // expr out -> num2 display
+}
+
+void RelativisticNodeGraph::loadWirelessTappingExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nOsc  = addNode ("osc~",   100.0f, 100.0f);
+    int nExpr = addNode ("expr",   350.0f, 100.0f);
+    int nNum  = addNode ("number", 550.0f, 100.0f);
+
+    auto osc = getNodeById (nOsc);
+    if (osc)
+    {
+        osc->setLabel ("osc1");
+        osc->setParameter ("frequency", 440.0f);
+    }
+
+    auto expr = getNodeById (nExpr);
+    if (expr)
+    {
+        expr->setLabel ("expr tap('osc1.frequency') * 2");
+        expr->setFormulaScript ("val = tap('osc1.frequency') * 2.0;");
+    }
+
+    addConnection (nExpr, 0, nNum, 0); // expr wireless tap out -> number box
+}
+
+void RelativisticNodeGraph::loadSimpleOscillatorExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nOsc  = addNode ("osc~",  100.0f, 100.0f);
+    int nGain = addNode ("gain~", 320.0f, 100.0f);
+    int nOut  = addNode ("out~",  540.0f, 100.0f);
+
+    auto osc = getNodeById (nOsc);
+    if (osc) osc->setParameter ("frequency", 440.0f);
+
+    auto gain = getNodeById (nGain);
+    if (gain) gain->setParameter ("gain", 0.5f);
+
+    addConnection (nOsc,  0, nGain, 0); // osc~ audio -> gain~
+    addConnection (nGain, 0, nOut,  0); // gain~ audio -> out~ L
+    addConnection (nGain, 0, nOut,  1); // gain~ audio -> out~ R
+}
+
+void RelativisticNodeGraph::loadTableWavetableExamplePatch()
+{
+    loadTableExamplePatch();
 }
 
 void RelativisticNodeGraph::loadTimeWarpExamplePatch()
@@ -1111,6 +1471,74 @@ void RelativisticNodeGraph::loadRelativisticTimeModulationExamplePatch()
     addConnection (nFilter, 0, nGain, 1);     // filter~ out~ -> gain~ in~
     addConnection (nGain, 0, nOut, 1);        // gain~ out~ -> out~ inL~
     addConnection (nGain, 0, nOut, 2);        // gain~ out~ -> out~ inR~
+
+    detectFeedbackLoops();
+}
+
+void RelativisticNodeGraph::loadModularSubtractiveSynthesizerExamplePatch()
+{
+    pushUndoState();
+    clearGraph();
+
+    int nTidal   = addNode ("tidal",   80.0f, 100.0f);
+    int nMtof    = addNode ("mtof",    300.0f, 100.0f);
+    int nOsc     = addNode ("osc~",    500.0f, 100.0f);
+    int nAdsr    = addNode ("adsr~",   300.0f, 260.0f);
+    int nFilter  = addNode ("filter~", 500.0f, 260.0f);
+    int nGain    = addNode ("gain~",   500.0f, 420.0f);
+    int nOut     = addNode ("out~",    500.0f, 580.0f);
+
+    auto nodeTidal = std::dynamic_pointer_cast<TidalPatternSequencerNode> (getNodeById (nTidal));
+    if (nodeTidal) nodeTidal->setPatternString ("scale 'minor' '0 [3 5] 7 [10 12]*1.5 ~ [7 5]*0.8'");
+
+    auto nodeOsc = getNodeById (nOsc);
+    if (nodeOsc)
+    {
+        nodeOsc->setParameter ("waveform", 1.0f); // Sawtooth wave
+        nodeOsc->setParameter ("gain", 0.7f);
+    }
+
+    auto nodeAdsr = getNodeById (nAdsr);
+    if (nodeAdsr)
+    {
+        nodeAdsr->setParameter ("attack", 0.01f);
+        nodeAdsr->setParameter ("decay", 0.25f);
+        nodeAdsr->setParameter ("sustain", 0.4f);
+        nodeAdsr->setParameter ("release", 0.3f);
+    }
+
+    auto nodeFilter = getNodeById (nFilter);
+    if (nodeFilter)
+    {
+        nodeFilter->setParameter ("cutoff", 1800.0f);
+        nodeFilter->setParameter ("resonance", 2.5f);
+    }
+
+    auto nodeGain = getNodeById (nGain);
+    if (nodeGain) nodeGain->setParameter ("gain", 0.6f);
+
+    // 1. Tidal MIDI Note (Out 0) -> mtof (In 0) -> osc~ (In 1: Freq)
+    addConnection (nTidal, 0, nMtof, 0);
+    addConnection (nMtof,  0, nOsc,  1);
+
+    // 2. Tidal Gate Trigger (Out 1: gate~) -> adsr~ (In 0: gate~)
+    addConnection (nTidal, 1, nAdsr, 0);
+
+    // 3. osc~ audio (Out 0) -> filter~ audio (In 0: in~)
+    addConnection (nOsc, 0, nFilter, 0);
+
+    // 4. adsr~ envelope (Out 0) -> filter~ cutoff mod (In 2: cutoff)
+    addConnection (nAdsr, 0, nFilter, 2);
+
+    // 5. filter~ audio (Out 0) -> gain~ audio (In 0: in~)
+    addConnection (nFilter, 0, nGain, 0);
+
+    // 6. adsr~ envelope (Out 0) -> gain~ gain mod (In 1: gain)
+    addConnection (nAdsr, 0, nGain, 1);
+
+    // 7. gain~ audio (Out 0) -> out~ (In 0: L, In 1: R)
+    addConnection (nGain, 0, nOut, 0);
+    addConnection (nGain, 0, nOut, 1);
 
     detectFeedbackLoops();
 }
@@ -1613,7 +2041,13 @@ void RelativisticNodeGraph::pushNodeOutletsToConnectedInlets (RelativisticNode* 
                     }
 
                     destPort.controlValue = srcPort.controlValue;
+                    destPort.messageValue = srcPort.messageValue;
                     destPort.timeGamma = srcPort.timeGamma;
+
+                    if (destPort.type == NodePortType::Message && !srcPort.messageValue.empty())
+                    {
+                        destNode->receiveMessage (srcPort.messageValue);
+                    }
                 }
             }
         }
@@ -1793,6 +2227,34 @@ void RelativisticNodeGraph::process (juce::AudioBuffer<float>& masterOutput, int
             }
         }
     }
+}
+
+void RelativisticNodeGraph::logToConsole (const std::string& sourceLabel, const std::string& message, bool isWarning)
+{
+    const juce::SpinLock::ScopedLockType sl (consoleLock);
+    ConsoleLogEntry entry;
+    entry.timestampSec = currentCausalityHorizonSec;
+    entry.sourceLabel = sourceLabel;
+    entry.message = message;
+    entry.isWarning = isWarning;
+
+    consoleLogs.push_back (entry);
+    if (consoleLogs.size() > 500)
+    {
+        consoleLogs.erase (consoleLogs.begin(), consoleLogs.begin() + 100);
+    }
+}
+
+std::vector<ConsoleLogEntry> RelativisticNodeGraph::getConsoleLogs() const
+{
+    const juce::SpinLock::ScopedLockType sl (consoleLock);
+    return consoleLogs;
+}
+
+void RelativisticNodeGraph::clearConsoleLogs()
+{
+    const juce::SpinLock::ScopedLockType sl (consoleLock);
+    consoleLogs.clear();
 }
 
 } // namespace time_dilation

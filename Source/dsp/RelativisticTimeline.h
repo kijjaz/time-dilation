@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RelativisticNodeGraph.h"
+#include "AssetPoolManager.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <vector>
 #include <string>
@@ -18,8 +19,15 @@ enum class TrackType
     ControlAutomation
 };
 
+enum class RecordInputSource
+{
+    InternalPatch,     // Direct patch cord input from graph
+    PhysicalHardware   // Physical audio interface input channel
+};
+
 struct AudioClip
 {
+    int poolAssetId = 0;
     double startBeat = 0.0;
     double durationBeats = 4.0;
     juce::AudioBuffer<float> buffer;
@@ -68,6 +76,18 @@ public:
     float getVolume() const { return volume; }
     void setVolume (float v) { volume = v; }
 
+    RecordInputSource getInputSource() const { return inputSource; }
+    void setInputSource (RecordInputSource src) { inputSource = src; }
+
+    int getInputChannelIndex() const { return inputChannelIndex; }
+    void setInputChannelIndex (int ch) { inputChannelIndex = ch; }
+
+    int getNumChannels() const { return numChannels; }
+    void setNumChannels (int n) { numChannels = n; }
+
+    BitDepthFormat getRecordingBitDepth() const { return recordingBitDepth; }
+    void setRecordingBitDepth (BitDepthFormat fmt) { recordingBitDepth = fmt; }
+
     // Audio Clips
     std::vector<AudioClip>& getAudioClips() { return audioClips; }
     const std::vector<AudioClip>& getAudioClips() const { return audioClips; }
@@ -94,7 +114,7 @@ public:
     juce::AudioBuffer<float>& getRecordingBuffer() { return recordingBuffer; }
     double getRecordStartBeat() const { return recordStartBeat; }
     void startRecording (double currentBeat);
-    void stopRecording (double currentBeat);
+    void stopRecording (double currentBeat, double sampleRate = 44100.0, double bpm = 120.0);
 
 private:
     std::string trackName;
@@ -104,6 +124,11 @@ private:
     bool muted = false;
     bool soloed = false;
     float volume = 0.8f;
+
+    RecordInputSource inputSource = RecordInputSource::InternalPatch;
+    int inputChannelIndex = 0;
+    int numChannels = 2; // Stereo by default
+    BitDepthFormat recordingBitDepth = BitDepthFormat::Int24;
 
     std::vector<AudioClip> audioClips;
     std::vector<MidiNoteEvent> midiNotes;
@@ -128,6 +153,7 @@ public:
     std::vector<ParameterInfo> getParameterDefs() const override;
     std::vector<std::string> getExposedMethods() const override;
     void invokeMethod (const std::string& methodName) override;
+    void receiveMessage (const std::string& msg, float val = 1.0f) override;
 
     // Track Management
     int addTrack (const std::string& name, TrackType type);

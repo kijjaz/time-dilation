@@ -67,3 +67,16 @@ The system allows producers complete freedom to set and modulate every project p
 - **Marquee Selection**: Shift-click-drag rubberband rectangle to select multiple node objects.
 - **Hotkeys**: Command-A (Select All), Command-D (Duplicate), Command-C (Copy), Command-V (Paste), Command-Z (Undo), Command-Shift-Z (Redo), Delete / Backspace (Remove node/connection), N / Double-Click (Add Object Search Menu).
 - **Undo State Persistence**: Full undo/redo undo history stored directly inside saved `.rel` project files.
+
+---
+
+## 5. External Open-Source Libraries & Attributions
+
+| Library / Engine | Creator / Author | License / Source | Role & Implementation |
+| :--- | :--- | :--- | :--- |
+| **JUCE 7** | Pace Anti-Piracy / Raw Material | GPLv3 / Commercial ([juce.com](https://juce.com)) | C++ cross-platform audio app framework (Audio I/O, VST3/AU plugin wrappers, GUI components, LookAndFeel, vector rendering). |
+| **Tracktion Engine** | Tracktion Software | GPLv3 / Commercial ([tracktion.com](https://www.tracktion.com)) | High-level DAW engine powering the multitrack arrangement timeline ([timeline]), clip scheduling, and transport synchronization. |
+| **ExprTk** | Arash Partow | Open-Source ([partow.net](https://www.partow.net/programming/exprtk/)) | High-performance C++ math expression parsing library embedded in [`RelativisticExpressionParser.cpp`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/Source/dsp/RelativisticExpressionParser.cpp) to evaluate real-time DSP scripts (`$v1`, `$v2`, `$t`, `tap()`). |
+| **Pure Data (Pd) Principles** | Miller Puckette | BSD License ([puredata.info](https://puredata.info)) | Mathematical formulas and object semantics for core DSP objects (`osc~`, `filter~`, `delay~`, `env~`, `bang`) adapted into native C++. |
+| **TidalCycles Principles** | Alex McLean & Tidal Community | Open-Source BSD / GPL ([tidalcycles.org](https://tidalcycles.org)) | Mini-notation pattern parsing concepts (`"scale 'minor' 0 [3 5] 7 10"`, `~` rests) adapted into native C++ in [`RelativisticSequencers.cpp`](file:///Users/kijjaz/Desktop/Antigravity/2026/20260801%20Time%20Dilation%20DAW/Source/dsp/RelativisticSequencers.cpp). *Note: Native C++ implementation without external Haskell dependencies.* |
+

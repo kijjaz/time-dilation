@@ -68,18 +68,28 @@ void TimelineTrack::startRecording (double currentBeat)
     recordingBuffer.clear();
 }
 
-void TimelineTrack::stopRecording (double currentBeat)
+void TimelineTrack::stopRecording (double currentBeat, double sampleRate, double bpm)
 {
     if (!isRecording) return;
     isRecording = false;
 
-    if (trackType == TrackType::Audio)
+    if (trackType == TrackType::Audio && recordingBuffer.getNumSamples() > 0)
     {
         AudioClip clip;
         clip.startBeat = recordStartBeat;
         clip.durationBeats = std::max (0.25, currentBeat - recordStartBeat);
-        clip.clipName = trackName + " Clip";
+        clip.clipName = trackName + " Take";
         clip.buffer.makeCopyOf (recordingBuffer);
+
+        int poolId = AssetPoolManager::getInstance().addAudioItem (
+            clip.clipName,
+            recordingBuffer,
+            sampleRate,
+            recordingBitDepth,
+            numChannels
+        );
+
+        clip.poolAssetId = poolId;
         audioClips.push_back (clip);
     }
 }
@@ -172,7 +182,7 @@ void TimelineNode::process (int numSamples)
         isRecording = false;
         for (auto& trk : tracks)
         {
-            trk.stopRecording (currentPlayheadBeat);
+            trk.stopRecording (currentPlayheadBeat, currentSampleRate, bpm);
         }
     }
 
@@ -279,6 +289,100 @@ void TimelineNode::invokeMethod (const std::string& methodName)
     else if (methodName == "Clear Tracks")
     {
         tracks.clear();
+    }
+}
+
+void TimelineNode::receiveMessage (const std::string& msg, float val)
+{
+    juce::String str (msg);
+    str = str.trim().toLowerCase();
+
+    if (str == "play" || str == "start" || str == "1")
+    {
+        isPlaying = true;
+    }
+    else if (str == "stop" || str == "pause" || str == "0")
+    {
+        isPlaying = false;
+    }
+    else if (str == "record" || str == "rec")
+    {
+        bool arm = (val > 0.0f);
+        setParameter ("isArmed", arm ? 1.0f : 0.0f);
+    }
+    else if (str == "rewind")
+    {
+        currentPlayheadBeat = 0.0;
+        setParameter ("playhead", 0.0f);
+    }
+    else if (str.startsWith ("seek") || str.startsWith ("goto"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 2)
+        {
+            currentPlayheadBeat = tokens[1].getDoubleValue();
+            setParameter ("playhead", static_cast<float>(currentPlayheadBeat));
+        }
+    }
+    else if (str.startsWith ("bpm") || str.startsWith ("tempo"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 2)
+        {
+            bpm = tokens[1].getFloatValue();
+            setParameter ("bpm", bpm);
+        }
+    }
+    else if (str.startsWith ("arm"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 2)
+        {
+            int idx = tokens[1].getIntValue();
+            if (idx >= 0 && idx < static_cast<int>(tracks.size()))
+                tracks[idx].setArmed (true);
+        }
+    }
+    else if (str.startsWith ("disarm"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 2)
+        {
+            int idx = tokens[1].getIntValue();
+            if (idx >= 0 && idx < static_cast<int>(tracks.size()))
+                tracks[idx].setArmed (false);
+        }
+    }
+    else if (str.startsWith ("mute"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 2)
+        {
+            int idx = tokens[1].getIntValue();
+            if (idx >= 0 && idx < static_cast<int>(tracks.size()))
+                tracks[idx].setMuted (true);
+        }
+    }
+    else if (str.startsWith ("unmute"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 2)
+        {
+            int idx = tokens[1].getIntValue();
+            if (idx >= 0 && idx < static_cast<int>(tracks.size()))
+                tracks[idx].setMuted (false);
+        }
+    }
+    else if (str.startsWith ("vol"))
+    {
+        auto tokens = juce::StringArray::fromTokens (str, " ", "");
+        if (tokens.size() >= 3)
+        {
+            int idx = tokens[1].getIntValue();
+            float v = tokens[2].getFloatValue();
+            if (idx >= 0 && idx < static_cast<int>(tracks.size()))
+                tracks[idx].setVolume (v);
+        }
     }
 }
 

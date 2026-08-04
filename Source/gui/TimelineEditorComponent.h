@@ -20,12 +20,15 @@ public:
     void mouseDown (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
 
+    std::function<void()> onOpenPoolRequested;
+
 private:
     TimelineNode& node;
 
     juce::TextButton addAudioTrackBtn { "+ Audio Track" };
     juce::TextButton addMidiTrackBtn  { "+ MIDI Track" };
     juce::TextButton addDilTrackBtn   { "+ Time Dilation Track" };
+    juce::TextButton openPoolBtn      { "MEDIA POOL" };
     juce::ToggleButton recordArmToggle { "REC ARM" };
     juce::Slider bpmSlider;
     juce::Label bpmLabel { {}, "BPM" };

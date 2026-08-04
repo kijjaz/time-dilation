@@ -52,10 +52,11 @@ FetchContent_Declare(
     tracktion_engine
     GIT_REPOSITORY https://github.com/Tracktion/tracktion_engine.git
     GIT_TAG        master
-    GIT_SHALLOW    TRUE
 )
 
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ENGINE_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(TRACKTION_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
 set(TRACKTION_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(JUCE_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -101,6 +102,8 @@ target_sources(TimeDilationDAW_App PRIVATE
     Source/dsp/RelativisticNodeObjects.cpp
     Source/dsp/RelativisticExpressionParser.h
     Source/dsp/RelativisticExpressionParser.cpp
+    Source/dsp/RelativisticOscServer.h
+    Source/dsp/RelativisticOscServer.cpp
     Source/gui/CarbonGoldLookAndFeel.h
     Source/gui/CarbonGoldLookAndFeel.cpp
     Source/gui/AudioSettingsComponent.h
@@ -137,6 +140,12 @@ target_sources(TimeDilationDAW_App PRIVATE
     Source/dsp/ProjectFileManager.cpp
     Source/dsp/RelativisticSequencers.h
     Source/dsp/RelativisticSequencers.cpp
+    Source/gui/StepSequencerGridComponent.h
+    Source/gui/StepSequencerGridComponent.cpp
+    Source/dsp/AssetPoolManager.h
+    Source/dsp/AssetPoolManager.cpp
+    Source/gui/AssetPoolDrawerComponent.h
+    Source/gui/AssetPoolDrawerComponent.cpp
 )
 
 target_include_directories(TimeDilationDAW_App PRIVATE
@@ -160,6 +169,7 @@ target_link_libraries(TimeDilationDAW_App PRIVATE
     juce::juce_graphics
     juce::juce_gui_basics
     juce::juce_gui_extra
+    juce::juce_osc
 )
 
 if (MSVC)

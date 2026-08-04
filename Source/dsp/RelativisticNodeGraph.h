@@ -17,7 +17,8 @@ enum class NodePortType
 {
     Control, // Bang / Float values (Amber)
     Audio,   // Audio Buffer ~ (Cyan)
-    Time     // Time Context / Gamma Dilated Clock (Purple)
+    Time,    // Time Context / Gamma Dilated Clock (Purple)
+    Message  // Message Symbol / Text Command (Emerald Green)
 };
 
 struct Port
@@ -26,6 +27,7 @@ struct Port
     std::string name;
     NodePortType type = NodePortType::Audio;
     float controlValue = 0.0f;
+    std::string messageValue; // Text Command / Symbol for Message Ports
     juce::AudioBuffer<float> audioData;
     juce::AudioBuffer<float> previousBlockBuffer; // 1-Block History Delay Buffer for Feedback Routing Stability!
     double timeGamma = 1.0; // Relativistic Time Dilation Factor
@@ -281,9 +283,13 @@ public:
     std::vector<Port>& getInlets() { return inlets; }
     std::vector<Port>& getOutlets() { return outlets; }
 
+    void addMessagePorts();
+    void addUniversalPorts();
+
     virtual void prepare (double sampleRate, int samplesPerBlock);
     void ensureBufferSize (int requiredSamples);
     virtual void process (int numSamples) = 0;
+    void sendPortMessage (int sourceNodeId, int sourceOutletIdx, const std::string& msgText);
 
     void setPosition (float x, float y) { posX = x; posY = y; }
     float getX() const { return posX; }
@@ -315,6 +321,7 @@ public:
     virtual std::vector<ParameterInfo> getParameterDefs() const;
     virtual std::vector<std::string> getExposedMethods() const;
     virtual void invokeMethod (const std::string& methodName);
+    virtual void receiveMessage (const std::string& msg, float val = 1.0f);
 
     void setFormulaScript (const std::string& script) { formulaScript = script; }
     std::string getFormulaScript() const {
@@ -386,6 +393,14 @@ protected:
     void addOutlet (const std::string& name, NodePortType type);
 };
 
+struct ConsoleLogEntry
+{
+    double timestampSec = 0.0;
+    std::string sourceLabel;
+    std::string message;
+    bool isWarning = false;
+};
+
 class RelativisticNodeGraph
 {
 public:
@@ -396,6 +411,13 @@ public:
 
     void prepare (double sampleRate, int samplesPerBlock);
     void process (juce::AudioBuffer<float>& masterOutput, int numSamples);
+
+    void logToConsole (const std::string& sourceLabel, const std::string& message, bool isWarning = false);
+    std::vector<ConsoleLogEntry> getConsoleLogs() const;
+    void clearConsoleLogs();
+
+    std::function<void()> onGraphModified;
+    void notifyGraphModified() { if (onGraphModified) onGraphModified(); }
 
     void setAudioEngineEnabled (bool enabled) { audioEngineEnabled = enabled; }
     bool isAudioEngineEnabled() const { return audioEngineEnabled; }
@@ -416,27 +438,44 @@ public:
 
     int addConnection (int srcNodeId, int srcOutletIdx, int destNodeId, int destInletIdx);
     void removeConnection (int connectionId);
+    void removeConnection (int srcNodeId, int srcOutletIdx, int destNodeId, int destInletIdx);
 
     const std::vector<std::shared_ptr<RelativisticNode>>& getNodes() const { return nodes; }
     const std::vector<PatchConnection>& getConnections() const { return connections; }
 
     std::shared_ptr<RelativisticNode> getNodeById (int id);
+    std::shared_ptr<RelativisticNode> getNodeByLabel (const std::string& label) const;
     std::shared_ptr<TableNode> getTableByName (const std::string& name) const;
 
+    void sendPortMessage (int sourceNodeId, int sourceOutletIdx, const std::string& msgText) const;
+    void broadcastBusMessage (const std::string& busName, const std::string& msgText, float val = 1.0f) const;
     void clearGraph();
     void createDefaultPatch();
 
-    // Interactive Relativistic Time Example Patches
+    // 1. Control & Trigger Patches
+    void loadBasicCounterExamplePatch();
+    void loadStepSequencerExamplePatch();
+
+    // 2. Math & Signal Expressions
+    void loadMathExpressionExamplePatch();
+    void loadWirelessTappingExamplePatch();
+
+    // 3. Audio & DSP Synthesis
+    void loadSimpleOscillatorExamplePatch();
+    void loadTableExamplePatch();
+    void loadTableWavetableExamplePatch();
+    void loadModularSubtractiveSynthesizerExamplePatch();
+    void loadFutureBassDrumExamplePatch();
+
+    // 4. Relativistic Time Dilation & Combined Engine
     void loadTimeWarpExamplePatch();
+    void loadRhythmicTimeWarpingExamplePatch();
+    void loadSoundPitchWarpingExamplePatch();
     void loadTimeRetroExamplePatch();
     void loadTimeStasisExamplePatch();
     void loadTimeSingularityExamplePatch();
     void loadTimeQuantizeExamplePatch();
     void loadTimeTransportExamplePatch();
-    void loadTableExamplePatch();
-    void loadFutureBassDrumExamplePatch();
-    void loadRhythmicTimeWarpingExamplePatch();
-    void loadSoundPitchWarpingExamplePatch();
     void loadRelativisticTimeModulationExamplePatch();
 
     // Undo / Redo Persistent Stack
@@ -484,6 +523,10 @@ private:
     std::vector<PatchConnection> connections;
 
     std::map<std::string, double> globalVariables;
+
+    // Real-Time Console Logging Buffer
+    mutable juce::SpinLock consoleLock;
+    std::vector<ConsoleLogEntry> consoleLogs;
 
     // Persistent Undo / Redo Stack
     std::vector<juce::ValueTree> undoStack;

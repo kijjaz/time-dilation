@@ -87,6 +87,134 @@ void StepSequencerNode::setPatternString (const std::string& patStr)
         stepValues.push_back (parseNoteOrFloat (token));
     }
     if (stepValues.empty()) stepValues = { 60.0f, 62.0f, 64.0f, 65.0f, 67.0f, 69.0f, 71.0f, 72.0f };
+    if (stepVelocities.size() < stepValues.size())
+        stepVelocities.resize (stepValues.size(), 0.8f);
+}
+
+void StepSequencerNode::setStepValue (int step, float value)
+{
+    if (step >= 0 && step < static_cast<int>(stepValues.size()))
+    {
+        stepValues[step] = value;
+        // Update patternString
+        std::stringstream ss;
+        for (size_t i = 0; i < stepValues.size(); ++i)
+        {
+            if (i > 0) ss << " ";
+            ss << static_cast<int>(stepValues[i]);
+        }
+        patternString = ss.str();
+    }
+}
+
+void StepSequencerNode::setStepVelocity (int step, float vel)
+{
+    if (stepVelocities.size() < stepValues.size())
+        stepVelocities.resize (stepValues.size(), 0.8f);
+    if (step >= 0 && step < static_cast<int>(stepVelocities.size()))
+        stepVelocities[step] = std::clamp (vel, 0.0f, 1.0f);
+}
+
+float StepSequencerNode::getStepValue (int step) const
+{
+    if (step >= 0 && step < static_cast<int>(stepValues.size()))
+        return stepValues[step];
+    return 60.0f;
+}
+
+float StepSequencerNode::getStepVelocity (int step) const
+{
+    if (step >= 0 && step < static_cast<int>(stepVelocities.size()))
+        return stepVelocities[step];
+    return 0.8f;
+}
+
+void StepSequencerNode::setStepCount (int count)
+{
+    int c = std::clamp (count, 1, 64);
+    setParameter ("steps", static_cast<float>(c));
+    stepValues.resize (c, 60.0f);
+    stepVelocities.resize (c, 0.8f);
+    setStepValue (0, stepValues[0]); // Trigger patternString rebuild
+}
+
+int StepSequencerNode::getStepCount() const
+{
+    return static_cast<int>(std::max (1.0f, getParameter ("steps", 8.0f)));
+}
+
+int StepSequencerNode::getStepSubdivision (int step) const
+{
+    if (step >= 0 && step < static_cast<int>(stepSubdivisions.size()))
+        return stepSubdivisions[step];
+    return 1;
+}
+
+void StepSequencerNode::setStepSubdivision (int step, int subCount)
+{
+    int sc = std::clamp (subCount, 1, 16);
+    if (step >= 0 && step < 64)
+    {
+        if (stepSubdivisions.size() <= static_cast<size_t>(step))
+            stepSubdivisions.resize (step + 1, 1);
+        stepSubdivisions[step] = sc;
+
+        if (subStepValues.size() <= static_cast<size_t>(step))
+            subStepValues.resize (step + 1);
+        subStepValues[step].resize (sc, getStepValue (step));
+
+        if (subStepVelocities.size() <= static_cast<size_t>(step))
+            subStepVelocities.resize (step + 1);
+        subStepVelocities[step].resize (sc, getStepVelocity (step));
+    }
+}
+
+float StepSequencerNode::getSubStepValue (int step, int subStep) const
+{
+    if (step >= 0 && step < static_cast<int>(subStepValues.size()))
+    {
+        if (subStep >= 0 && subStep < static_cast<int>(subStepValues[step].size()))
+            return subStepValues[step][subStep];
+    }
+    return getStepValue (step);
+}
+
+void StepSequencerNode::setSubStepValue (int step, int subStep, float val)
+{
+    if (step >= 0 && step < 64)
+    {
+        int sc = getStepSubdivision (step);
+        if (subStepValues.size() <= static_cast<size_t>(step))
+            subStepValues.resize (step + 1);
+        if (subStepValues[step].size() < static_cast<size_t>(sc))
+            subStepValues[step].resize (sc, getStepValue (step));
+        if (subStep >= 0 && subStep < static_cast<int>(subStepValues[step].size()))
+            subStepValues[step][subStep] = val;
+    }
+}
+
+float StepSequencerNode::getSubStepVelocity (int step, int subStep) const
+{
+    if (step >= 0 && step < static_cast<int>(subStepVelocities.size()))
+    {
+        if (subStep >= 0 && subStep < static_cast<int>(subStepVelocities[step].size()))
+            return subStepVelocities[step][subStep];
+    }
+    return getStepVelocity (step);
+}
+
+void StepSequencerNode::setSubStepVelocity (int step, int subStep, float vel)
+{
+    if (step >= 0 && step < 64)
+    {
+        int sc = getStepSubdivision (step);
+        if (subStepVelocities.size() <= static_cast<size_t>(step))
+            subStepVelocities.resize (step + 1);
+        if (subStepVelocities[step].size() < static_cast<size_t>(sc))
+            subStepVelocities[step].resize (sc, getStepVelocity (step));
+        if (subStep >= 0 && subStep < static_cast<int>(subStepVelocities[step].size()))
+            subStepVelocities[step][subStep] = std::clamp (vel, 0.0f, 1.0f);
+    }
 }
 
 void StepSequencerNode::process (int numSamples)
@@ -910,6 +1038,124 @@ void DrumSequencerNode::setPresetPattern (const std::string& presetName)
         gridSteps[3].perc = true; gridSteps[3].percPitch = 48;
         gridSteps[11].perc = true; gridSteps[11].percPitch = 52;
         gridSteps[15].perc = true; gridSteps[15].percPitch = 55;
+    }
+}
+
+void DrumSequencerNode::setDrumStep (int step, int trackIdx, bool active, float velocity)
+{
+    if (step < 0 || step >= static_cast<int>(gridSteps.size()))
+    {
+        if (step >= 0 && step < 32)
+            gridSteps.resize (step + 1);
+        else
+            return;
+    }
+
+    velocity = std::clamp (velocity, 0.0f, 1.0f);
+    gridSteps[step].velocity = velocity;
+
+    switch (trackIdx)
+    {
+        case 0: gridSteps[step].kick = active; break;
+        case 1: gridSteps[step].snare = active; break;
+        case 2: gridSteps[step].clap = active; break;
+        case 3: gridSteps[step].hatClosed = active; break;
+        case 4: gridSteps[step].hatOpen = active; break;
+        case 5: gridSteps[step].perc = active; break;
+        default: break;
+    }
+}
+
+bool DrumSequencerNode::getDrumStep (int step, int trackIdx) const
+{
+    if (step < 0 || step >= static_cast<int>(gridSteps.size())) return false;
+    switch (trackIdx)
+    {
+        case 0: return gridSteps[step].kick;
+        case 1: return gridSteps[step].snare;
+        case 2: return gridSteps[step].clap;
+        case 3: return gridSteps[step].hatClosed;
+        case 4: return gridSteps[step].hatOpen;
+        case 5: return gridSteps[step].perc;
+        default: return false;
+    }
+}
+
+float DrumSequencerNode::getDrumStepVelocity (int step, int trackIdx) const
+{
+    if (step < 0 || step >= static_cast<int>(gridSteps.size())) return 0.9f;
+    return gridSteps[step].velocity;
+}
+
+void DrumSequencerNode::setStepCount (int count)
+{
+    int c = std::clamp (count, 1, 32);
+    setParameter ("steps", static_cast<float>(c));
+    gridSteps.resize (c);
+}
+
+int DrumSequencerNode::getStepCount() const
+{
+    return std::clamp (static_cast<int>(getParameter ("steps", 16.0f)), 1, 32);
+}
+
+int DrumSequencerNode::getStepSubdivision (int step) const
+{
+    if (step >= 0 && step < static_cast<int>(stepSubdivisions.size()))
+        return stepSubdivisions[step];
+    return 1;
+}
+
+void DrumSequencerNode::setStepSubdivision (int step, int subCount)
+{
+    int sc = std::clamp (subCount, 1, 16);
+    if (step >= 0 && step < 32)
+    {
+        if (stepSubdivisions.size() <= static_cast<size_t>(step))
+            stepSubdivisions.resize (step + 1, 1);
+        stepSubdivisions[step] = sc;
+
+        if (subStepActive.size() <= static_cast<size_t>(step))
+            subStepActive.resize (step + 1);
+        subStepActive[step].resize (6, std::vector<bool> (sc, false));
+
+        if (subStepVelocities.size() <= static_cast<size_t>(step))
+            subStepVelocities.resize (step + 1);
+        subStepVelocities[step].resize (6, std::vector<float> (sc, 0.9f));
+    }
+}
+
+bool DrumSequencerNode::getSubStep (int step, int subStep, int trackIdx) const
+{
+    if (step >= 0 && step < static_cast<int>(subStepActive.size()))
+    {
+        if (trackIdx >= 0 && trackIdx < 6)
+        {
+            if (subStep >= 0 && subStep < static_cast<int>(subStepActive[step][trackIdx].size()))
+                return subStepActive[step][trackIdx][subStep];
+        }
+    }
+    return getDrumStep (step, trackIdx);
+}
+
+void DrumSequencerNode::setSubStep (int step, int subStep, int trackIdx, bool active, float vel)
+{
+    if (step >= 0 && step < 32 && trackIdx >= 0 && trackIdx < 6)
+    {
+        int sc = getStepSubdivision (step);
+        if (subStepActive.size() <= static_cast<size_t>(step))
+            subStepActive.resize (step + 1);
+        if (subStepActive[step].size() < 6)
+            subStepActive[step].resize (6, std::vector<bool> (sc, false));
+        if (subStepActive[step][trackIdx].size() < static_cast<size_t>(sc))
+            subStepActive[step][trackIdx].resize (sc, false);
+
+        if (subStep >= 0 && subStep < static_cast<int>(subStepActive[step][trackIdx].size()))
+            subStepActive[step][trackIdx][subStep] = active;
+
+        // Also update parent step if 0th substep
+        if (subStep == 0)
+            setDrumStep (step, trackIdx, active, vel);
     }
 }
 

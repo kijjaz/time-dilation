@@ -27,12 +27,37 @@ public:
 
     int getCurrentStep() const { return currentStep; }
     const std::vector<float>& getStepValues() const { return stepValues; }
+    const std::vector<float>& getStepVelocities() const { return stepVelocities; }
 
+    void setStepValue (int step, float value);
+    void setStepVelocity (int step, float vel);
+    float getStepValue (int step) const;
+    float getStepVelocity (int step) const;
+    void setStepCount (int count);
+    int getStepCount() const;
+
+    int getStepSubdivision (int step) const;
+    void setStepSubdivision (int step, int subCount);
+    float getSubStepValue (int step, int subStep) const;
+    void setSubStepValue (int step, int subStep, float val);
+    float getSubStepVelocity (int step, int subStep) const;
+    void setSubStepVelocity (int step, int subStep, float vel);
+
+    int getBeatsPerBar() const { return beatsPerBar; }
+    int getBeatValue() const { return beatValue; }
+    void setTimeSignature (int beats, int val) { beatsPerBar = beats; beatValue = val; }
 
 private:
     std::string patternString = "60 62 64 65 67 69 71 72";
     std::vector<float> stepValues;
+    std::vector<float> stepVelocities;
+    std::vector<int> stepSubdivisions;
+    std::vector<std::vector<float>> subStepValues;
+    std::vector<std::vector<float>> subStepVelocities;
+    int beatsPerBar = 4;
+    int beatValue = 4;
     int currentStep = 0;
+    int currentSubStep = 0;
     double stepProgress = 0.0;
     bool isPingPongReversing = false;
     int flashCounter = 0;
@@ -166,9 +191,30 @@ public:
     const std::vector<DrumStep>& getSteps() const { return gridSteps; }
     int getCurrentStep() const { return currentStep; }
 
+    void setDrumStep (int step, int trackIdx, bool active, float velocity = 0.9f);
+    bool getDrumStep (int step, int trackIdx) const;
+    float getDrumStepVelocity (int step, int trackIdx) const;
+    void setStepCount (int count);
+    int getStepCount() const;
+
+    int getStepSubdivision (int step) const;
+    void setStepSubdivision (int step, int subCount);
+    bool getSubStep (int step, int subStep, int trackIdx) const;
+    void setSubStep (int step, int subStep, int trackIdx, bool active, float vel = 0.9f);
+
+    int getBeatsPerBar() const { return beatsPerBar; }
+    int getBeatValue() const { return beatValue; }
+    void setTimeSignature (int beats, int val) { beatsPerBar = beats; beatValue = val; }
+
 private:
     std::vector<DrumStep> gridSteps;
+    std::vector<int> stepSubdivisions;
+    std::vector<std::vector<std::vector<bool>>> subStepActive; // [step][trackIdx][subStep]
+    std::vector<std::vector<std::vector<float>>> subStepVelocities;
+    int beatsPerBar = 4;
+    int beatValue = 4;
     int currentStep = 0;
+    int currentSubStep = 0;
     double stepProgress = 0.0;
 };
 

@@ -208,6 +208,25 @@ public:
 
     void systemRequestedQuit() override
     {
+        for (int i = windows.size() - 1; i >= 0; --i)
+        {
+            if (auto* win = windows[i])
+            {
+                if (auto* studioEd = dynamic_cast<TimeDilationAudioProcessorEditor*> (win->getContentComponent()))
+                {
+                    if (auto* canvas = studioEd->getCanvasComponent())
+                    {
+                        if (canvas->isDirty())
+                        {
+                            canvas->requestExit ([this] {
+                                quit();
+                            });
+                            return;
+                        }
+                    }
+                }
+            }
+        }
         quit();
     }
 
@@ -216,6 +235,11 @@ public:
         if (commandLine.contains ("--audio-setup"))
         {
             showAudioDeviceSetupDialog();
+        }
+        else if (commandLine.startsWith ("--example="))
+        {
+            int patchId = commandLine.substring (10).getIntValue();
+            createNewWindow ("Time Dilation DAW", patchId);
         }
         else
         {
@@ -309,10 +333,22 @@ public:
                 app->getAudioDeviceManager().removeMidiInputDeviceCallback ({}, &processorPlayer);
             }
             processorPlayer.setProcessor (nullptr);
+            clearContentComponent();
         }
 
         void closeButtonPressed() override
         {
+            if (auto* studioEd = dynamic_cast<TimeDilationAudioProcessorEditor*> (getContentComponent()))
+            {
+                if (auto* canvas = studioEd->getCanvasComponent())
+                {
+                    canvas->requestExit ([this] {
+                        if (auto* app = TimeDilationApplication::getInstance())
+                            app->closeWindow (this);
+                    });
+                    return;
+                }
+            }
             if (auto* app = TimeDilationApplication::getInstance())
             {
                 app->closeWindow (this);

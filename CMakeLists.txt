@@ -126,4 +126,49 @@ target_sources(TimeDilationDAW_App PRIVATE
     Source/gui/GranularStudioComponent.h
     Source/gui/GranularStudioComponent.cpp
     Source/gui/TidalBeatStudioComponent.h
-    Source/gui/
+    Source/gui/TidalBeatStudioComponent.cpp
+    Source/gui/RelativisticCanvasComponent.h
+    Source/gui/RelativisticCanvasComponent.cpp
+    Source/dsp/RelativisticTimeline.h
+    Source/dsp/RelativisticTimeline.cpp
+    Source/gui/TimelineEditorComponent.h
+    Source/gui/TimelineEditorComponent.cpp
+    Source/dsp/ProjectFileManager.h
+    Source/dsp/ProjectFileManager.cpp
+    Source/dsp/RelativisticSequencers.h
+    Source/dsp/RelativisticSequencers.cpp
+)
+
+target_include_directories(TimeDilationDAW_App PRIVATE
+    Source
+    Source/dsp
+    Source/gui
+)
+
+target_link_libraries(TimeDilationDAW_App PRIVATE
+    TimeDilationAssets
+    tracktion_engine
+    juce::juce_audio_basics
+    juce::juce_audio_devices
+    juce::juce_audio_formats
+    juce::juce_audio_processors
+    juce::juce_audio_utils
+    juce::juce_core
+    juce::juce_data_structures
+    juce::juce_dsp
+    juce::juce_events
+    juce::juce_graphics
+    juce::juce_gui_basics
+    juce::juce_gui_extra
+)
+
+if (MSVC)
+    target_compile_options(TimeDilationDAW_App PRIVATE /W4 /fp:fast)
+else()
+    target_compile_options(TimeDilationDAW_App PRIVATE -Wall -Wextra -ffast-math -O3)
+endif()
+
+juce_generate_juce_header(TimeDilationDAW_App)
+set_target_properties(TimeDilationDAW_App PROPERTIES MACOSX_BUNDLE TRUE)
+
+

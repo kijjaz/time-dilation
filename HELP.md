@@ -225,4 +225,30 @@ Every node features two full perspectives:
 
 11. WORKSTATION KEYBOARD SHORTCUTS
 -------------------------------------------------------------------------------
-  - Spacebar        
+  - Spacebar           : Toggle Global Audio Engine Power (ON / OFF).
+  - N / Double-Click   : Open Node Creation Search Palette.
+  - Cmd + S            : Save Project Bundle (.tdaw folder & project.xml).
+  - Cmd + O            : Open Project Bundle (.tdaw project folder).
+  - Cmd + A            : Select All Nodes.
+  - Cmd + C / Cmd + V  : Copy / Paste Selected Nodes.
+  - Cmd + D            : Duplicate Selected Nodes.
+  - Cmd + Z            : Undo Action.
+  - Cmd + Shift + Z    : Redo Action.
+  - Delete / Backspace : Delete Selected Nodes or Connections.
+  - Shift + Drag       : Marquee Rubberband Selection.
+
+
+12. PROJECT BUNDLE & ASSET MANAGEMENT (.tdaw)
+-------------------------------------------------------------------------------
+Time Dilation DAW uses a self-contained Project Directory Bundle structure:
+
+  MyProject.tdaw/
+  ├── project.xml       # Full graph topology, nodes, connections & parameters
+  ├── Assets/
+  │   ├── Audio/        # Recorded and imported WAV audio clips
+  │   └── MIDI/         # Recorded MIDI pattern streams
+  └── Cache/            # Transient waveform overviews & render cache
+
+===============================================================================
+                  END OF TIME DILATION DAW MANUAL (HELP.md)
+===============================================================================

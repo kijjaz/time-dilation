@@ -523,6 +523,21 @@ std::vector<ParameterInfo> SpectrometerAudioNode::getParameterDefs() const
 }
 
 
+static inline float polyBlepHelper (double t, double dt)
+{
+    if (t < dt)
+    {
+        t /= dt;
+        return static_cast<float>(t + t - t * t - 1.0);
+    }
+    else if (t > 1.0 - dt)
+    {
+        t = (t - 1.0) / dt;
+        return static_cast<float>(t * t + t + t + 1.0);
+    }
+    return 0.0f;
+}
+
 // 5. [osc~]
 OscNode::OscNode (int id)
     : RelativisticNode (id, "osc~", "osc~ 440 Hz")
@@ -531,6 +546,7 @@ OscNode::OscNode (int id)
     addInlet ("freq", NodePortType::Control);
     addOutlet ("out~", NodePortType::Audio);
 
+    setParameter ("waveform", 0.0f);   // 0: Sine, 1: Saw, 2: Square, 3: Triangle
     setParameter ("frequency", 440.0f);
     setParameter ("gain", 0.8f);
     setParameter ("interpMode", 1.0f); // 0:Linear, 1:Hermite 4-Pt, 2:Nearest
@@ -538,6 +554,18 @@ OscNode::OscNode (int id)
     setParameter ("polyphony", 1.0f);  // 1 to 16 Voices
 
     voices.push_back ({ 0.0, 69.0f, 440.0f, 0.8f, false });
+}
+
+void OscNode::setLabel (const std::string& l)
+{
+    RelativisticNode::setLabel (l);
+    std::string upper = l;
+    for (auto& c : upper) c = (char) std::toupper (c);
+
+    if (upper.find ("SAW") != std::string::npos) setParameter ("waveform", 1.0f);
+    else if (upper.find ("SQU") != std::string::npos || upper.find ("RECT") != std::string::npos) setParameter ("waveform", 2.0f);
+    else if (upper.find ("TRI") != std::string::npos) setParameter ("waveform", 3.0f);
+    else if (upper.find ("SIN") != std::string::npos) setParameter ("waveform", 0.0f);
 }
 
 float OscNode::interpolateSample (const float* tableData, int tableSize, double pos, int interpMode) const
@@ -595,6 +623,7 @@ void OscNode::process (int numSamples)
 
     int interpMode = static_cast<int>(getParameter ("interpMode", 1.0f));
     int loopMode = static_cast<int>(getParameter ("loopMode", 0.0f));
+    int waveform = static_cast<int>(getParameter ("waveform", 0.0f));
 
     std::shared_ptr<TableNode> tableObj = nullptr;
     if (parentGraph != nullptr && !tableName.empty())
@@ -652,12 +681,37 @@ void OscNode::process (int numSamples)
     }
     else
     {
-        // Pristine PolyBLEP Sine Oscillator
+        // Pristine Multi-Waveform PolyBLEP & High-Precision Table Lookup Oscillator
         double phaseInc = 2.0 * juce::MathConstants<double>::pi * effectiveFreq / currentSampleRate;
 
         for (int s = 0; s < numSamples; ++s)
         {
-            float val = std::sin (voices[0].phase) * gain;
+            float val = 0.0f;
+            double p = voices[0].phase;
+            double t = p / (2.0 * juce::MathConstants<double>::pi);
+            double dt = std::abs (phaseInc / (2.0 * juce::MathConstants<double>::pi));
+
+            if (waveform == 1) // Sawtooth (PolyBLEP Anti-Aliased)
+            {
+                val = static_cast<float>(2.0 * t - 1.0);
+                val -= polyBlepHelper (t, dt);
+            }
+            else if (waveform == 2) // Square Wave (PolyBLEP Anti-Aliased)
+            {
+                val = (t < 0.5) ? 1.0f : -1.0f;
+                val += polyBlepHelper (t, dt);
+                val -= polyBlepHelper (std::fmod (t + 0.5, 1.0), dt);
+            }
+            else if (waveform == 3) // Triangle Wave
+            {
+                val = static_cast<float>(2.0 * std::abs (2.0 * t - 1.0) - 1.0);
+            }
+            else // Sine Wave via 4096-Point SineLookupTable (-130 dBFS Accuracy)
+            {
+                val = SineLookupTable::getInstance().sin (p);
+            }
+
+            val *= gain;
             left[s] = val;
             right[s] = val;
 
@@ -670,12 +724,17 @@ void OscNode::process (int numSamples)
 
 std::string OscNode::getDefaultFormulaScript() const
 {
-    return "// PolyBLEP & Wavetable Oscillator [osc~]\n// Reads Pristine Sine or Custom Canvas [table] Data\n\nout = sin(phase * 2 * PI);";
+    int wf = static_cast<int>(getParameter ("waveform", 0.0f));
+    if (wf == 1)      return "// Bandlimited Sawtooth Oscillator [osc~]\nout = 2.0 * (phase / (2 * PI)) - 1.0;";
+    else if (wf == 2) return "// Bandlimited Square Wave Oscillator [osc~]\nout = (phase < PI) ? 1.0 : -1.0;";
+    else if (wf == 3) return "// Bandlimited Triangle Wave Oscillator [osc~]\nout = 2.0 * abs(2.0 * (phase / (2 * PI)) - 1.0) - 1.0;";
+    else              return "// High-Precision Sine Lookup Table [osc~] (-130 dBFS Accuracy)\nout = SineLookupTable::sin (phase * 2 * PI);";
 }
 
 std::vector<ParameterInfo> OscNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
+    defs.push_back ({ "waveform", "WAVEFORM (0:Sine, 1:Saw, 2:Square, 3:Tri)", getParameter ("waveform", 0.0f), 0.0f, 3.0f, getParamExpression ("waveform"), -1, true });
     defs.push_back ({ "frequency", "FREQUENCY (Hz)", getParameter ("frequency", 440.0f), 20.0f, 20000.0f, getParamExpression ("frequency"), 1 });
     defs.push_back ({ "gain", "OSCILLATOR GAIN", getParameter ("gain", 0.8f), 0.0f, 1.0f, getParamExpression ("gain"), -1 });
     defs.push_back ({ "interpMode", "INTERPOLATION (0:LIN, 1:HERMITE, 2:NEAREST)", getParameter ("interpMode", 1.0f), 0.0f, 2.0f, getParamExpression ("interpMode"), -1 });

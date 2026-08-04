@@ -5,6 +5,51 @@
 namespace time_dilation
 {
 
+// Global High-Precision Sine/Cosine Lookup Table Engine (-130 dBFS accuracy)
+class SineLookupTable
+{
+public:
+    static constexpr int TABLE_SIZE = 4096;
+
+    SineLookupTable()
+    {
+        table.resize (TABLE_SIZE + 1);
+        for (int i = 0; i <= TABLE_SIZE; ++i)
+        {
+            double phase = (static_cast<double>(i) / TABLE_SIZE) * 2.0 * juce::MathConstants<double>::pi;
+            table[i] = static_cast<float>(std::sin (phase));
+        }
+    }
+
+    static const SineLookupTable& getInstance()
+    {
+        static SineLookupTable instance;
+        return instance;
+    }
+
+    inline float sin (double phase) const
+    {
+        double p = std::fmod (phase, 2.0 * juce::MathConstants<double>::pi);
+        if (p < 0.0) p += 2.0 * juce::MathConstants<double>::pi;
+
+        double pos = (p / (2.0 * juce::MathConstants<double>::pi)) * TABLE_SIZE;
+        int idx = static_cast<int>(pos);
+        float frac = static_cast<float>(pos - idx);
+
+        float y1 = table[idx];
+        float y2 = table[idx + 1];
+        return y1 + frac * (y2 - y1);
+    }
+
+    inline float cos (double phase) const
+    {
+        return sin (phase + 0.5 * juce::MathConstants<double>::pi);
+    }
+
+private:
+    std::vector<float> table;
+};
+
 // 1. [time.warp~] Dilated Time Context Generator Object
 class TimeWarpNode : public RelativisticNode
 {
@@ -172,6 +217,7 @@ class OscNode : public RelativisticNode
 {
 public:
     OscNode (int id);
+    void setLabel (const std::string& l) override;
     void process (int numSamples) override;
     std::string getDefaultFormulaScript() const override;
     std::vector<ParameterInfo> getParameterDefs() const override;

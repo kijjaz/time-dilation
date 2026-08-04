@@ -15,6 +15,11 @@
 namespace time_dilation
 {
 
+static inline float getTextWidth (const juce::Font& font, const juce::String& text)
+{
+    return juce::GlyphArrangement::getStringWidth (font, text);
+}
+
 RelativisticLookAndFeel::RelativisticLookAndFeel()
 {
     juce::Typeface::Ptr sciFiTypeface = juce::Typeface::createSystemTypefaceFor (BinaryData::SmoochSans_ttf, BinaryData::SmoochSans_ttfSize);
@@ -1673,7 +1678,7 @@ void RelativisticCanvasComponent::updateDraftObjectBounds()
         float boxY = draftObjectCanvasPos.y + panY;
 
         juce::String currentText = draftObjectEditor->getText();
-        float textW = static_cast<float>(draftObjectEditor->getFont().getStringWidth (currentText)) + 36.0f;
+        float textW = getTextWidth (draftObjectEditor->getFont(), currentText) + 36.0f;
         float boxW = std::clamp (textW, 160.0f, 440.0f);
         float boxH = 34.0f;
 
@@ -2593,7 +2598,7 @@ void RelativisticCanvasComponent::timerCallback()
 
     juce::Font labelFont = FontManager::getInstance().getOxaniumFont (14.0f, true);
 
-    float textW = static_cast<float>(labelFont.getStringWidth (node.getLabel())) + 44.0f;
+    float textW = getTextWidth (labelFont, node.getLabel()) + 44.0f;
 
     float inletsTotalW = 0.0f;
     for (const auto& in : node.getInlets())
@@ -4382,7 +4387,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f, 1.0f);
 
         // Smart Port Name Label without Truncation
-        float lw = std::max (44.0f, static_cast<float>(portFont.getStringWidth (port.name)) + 6.0f);
+        float lw = std::max (44.0f, getTextWidth (portFont, port.name) + 6.0f);
         g.setColour (portCol.withAlpha (0.95f));
         g.drawText (port.name, p.x - lw * 0.5f, p.y + 3.0f, lw, 11.0f, juce::Justification::centred);
 
@@ -4425,7 +4430,7 @@ void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared
         g.drawEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f, 1.0f);
 
         // Smart Port Name Label without Truncation
-        float lw = std::max (44.0f, static_cast<float>(portFont.getStringWidth (port.name)) + 6.0f);
+        float lw = std::max (44.0f, getTextWidth (portFont, port.name) + 6.0f);
         g.setColour (portCol.withAlpha (0.95f));
         g.drawText (port.name, p.x - lw * 0.5f, p.y - 14.0f, lw, 11.0f, juce::Justification::centred);
     }

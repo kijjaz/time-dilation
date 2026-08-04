@@ -329,6 +329,7 @@ public:
     const RelativisticNodeGraph* getParentGraph() const { return parentGraph; }
 
     double getEffectiveGamma() const;
+    double getRelativisticGamma (double defaultTimeAmt = 1.0, int defaultTimeMode = 0) const;
     virtual double getRequestedFutureHorizonSec() const;
     double updateCoordinateTime (int numSamples);
     double getLocalCoordinateTime() const { return localCoordinateTime; }

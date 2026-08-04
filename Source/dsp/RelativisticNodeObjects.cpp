@@ -547,6 +547,8 @@ OscNode::OscNode (int id)
     addOutlet ("out~", NodePortType::Audio);
 
     setParameter ("waveform", 0.0f);   // 0: Sine, 1: Saw, 2: Square, 3: Triangle
+    setParameter ("timeMode", 0.0f);   // 0: Doppler (Speed+Pitch), 1: Time-Stretch (Speed Only), 2: Timbre Dilation (Envelopes Only)
+    setParameter ("timeAmt", 1.0f);    // Relativistic Time Depth (-1.0 to 2.0)
     setParameter ("frequency", 440.0f);
     setParameter ("gain", 0.8f);
     setParameter ("interpMode", 1.0f); // 0:Linear, 1:Hermite 4-Pt, 2:Nearest
@@ -611,7 +613,9 @@ float OscNode::interpolateSample (const float* tableData, int tableSize, double 
 
 void OscNode::process (int numSamples)
 {
-    double gamma = getEffectiveGamma();
+    double gamma = getRelativisticGamma (1.0, 0);
+    int timeMode = static_cast<int>(getParameter ("timeMode", 0.0f));
+
     float freqCtrl = inlets[1].controlValue;
     float baseFreq = getModulatedParamValue ("frequency", 440.0f);
     float gain = getModulatedParamValue ("gain", 0.8f);
@@ -637,7 +641,9 @@ void OscNode::process (int numSamples)
 
     if (voices.empty()) voices.push_back ({ 0.0, 69.0f, 440.0f, 0.8f, false });
 
-    double effectiveFreq = std::abs (freq * gamma);
+    // Mode 0: Doppler (Pitch + Speed), Mode 1: Time-Stretch (Speed Only / Fixed Pitch), Mode 2: Timbre (Fixed Pitch)
+    double effectiveFreq = (timeMode == 0) ? std::abs (freq * gamma) : static_cast<double>(freq);
+    double stepScale = (timeMode == 2) ? 1.0 : (gamma >= 0.0 ? gamma : -gamma);
 
     if (tableObj != nullptr && tableObj->getTableSize() > 0)
     {
@@ -645,7 +651,7 @@ void OscNode::process (int numSamples)
         const float* tablePtr = tableBuffer.data();
         int tableSize = tableObj->getTableSize();
 
-        double step = (effectiveFreq * tableSize) / currentSampleRate;
+        double step = (effectiveFreq * tableSize * stepScale) / currentSampleRate;
 
         for (int s = 0; s < numSamples; ++s)
         {
@@ -682,7 +688,7 @@ void OscNode::process (int numSamples)
     else
     {
         // Pristine Multi-Waveform PolyBLEP & High-Precision Table Lookup Oscillator
-        double phaseInc = 2.0 * juce::MathConstants<double>::pi * effectiveFreq / currentSampleRate;
+        double phaseInc = 2.0 * juce::MathConstants<double>::pi * effectiveFreq * stepScale / currentSampleRate;
 
         for (int s = 0; s < numSamples; ++s)
         {
@@ -734,7 +740,9 @@ std::string OscNode::getDefaultFormulaScript() const
 std::vector<ParameterInfo> OscNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
-    defs.push_back ({ "waveform", "WAVEFORM (0:Sine, 1:Saw, 2:Square, 3:Tri)", getParameter ("waveform", 0.0f), 0.0f, 3.0f, getParamExpression ("waveform"), -1, true });
+    defs.push_back ({ "timeMode", "TIME MODE (0:DOPPLER, 1:PITCH-LOCK, 2:TIMBRE)", getParameter ("timeMode", 0.0f), 0.0f, 2.0f, getParamExpression ("timeMode"), -1, true });
+    defs.push_back ({ "timeAmt", "TIME AMOUNT (0:IMMUNE .. 1:FULL .. 2:HYPER)", getParameter ("timeAmt", 1.0f), -1.0f, 2.0f, getParamExpression ("timeAmt"), -1 });
+    defs.push_back ({ "waveform", "WAVEFORM (0:Sine, 1:Saw, 2:Square, 3:Tri)", getParameter ("waveform", 0.0f), 0.0f, 3.0f, getParamExpression ("waveform"), -1 });
     defs.push_back ({ "frequency", "FREQUENCY (Hz)", getParameter ("frequency", 440.0f), 20.0f, 20000.0f, getParamExpression ("frequency"), 1 });
     defs.push_back ({ "gain", "OSCILLATOR GAIN", getParameter ("gain", 0.8f), 0.0f, 1.0f, getParamExpression ("gain"), -1 });
     defs.push_back ({ "interpMode", "INTERPOLATION (0:LIN, 1:HERMITE, 2:NEAREST)", getParameter ("interpMode", 1.0f), 0.0f, 2.0f, getParamExpression ("interpMode"), -1 });
@@ -916,6 +924,8 @@ SamplerNode::SamplerNode (int id)
     addInlet ("pitchIn", NodePortType::Control);
     addOutlet ("out~", NodePortType::Audio);
 
+    setParameter ("timeMode", 0.0f); // 0 = Doppler (Speed+Pitch), 1 = Time-Stretch (Speed Only), 2 = Timbre Dilation
+    setParameter ("timeAmt", 1.0f);
     setParameter ("playbackSpeed", 1.0f);
     setParameter ("pitch", 0.0f);
     setParameter ("gain", 0.8f);
@@ -1017,9 +1027,8 @@ void SamplerNode::process (int numSamples)
     const int totalSrcSamples = internalBuffer.getNumSamples();
     if (totalSrcSamples <= 0) return;
 
-    // Time Dilation Gamma
-    double gamma = inlets[0].timeGamma;
-    if (std::abs (gamma) < 0.001) gamma = getParameter ("playbackSpeed", 1.0f);
+    double gamma = getRelativisticGamma (getParameter ("playbackSpeed", 1.0f), 0);
+    int timeMode = static_cast<int>(getParameter ("timeMode", 0.0f));
 
     // Control Inlets: Position Scrub & Pitch Transposition
     float posScrub = inlets[1].controlValue;
@@ -1027,10 +1036,15 @@ void SamplerNode::process (int numSamples)
 
     float pitchMod = inlets[2].controlValue;
     float pitchSemi = getParameter ("pitch", 0.0f) + pitchMod;
+
+    // Mode 0 (Doppler): pitch is scaled by gamma
+    if (timeMode == 0) pitchSemi += static_cast<float>(12.0 * std::log2 (std::max (0.001, std::abs (gamma))));
+
     double pitchRatio = std::pow (2.0, pitchSemi / 12.0);
 
     // Effective Step
-    double step = gamma * pitchRatio;
+    double stepScale = (timeMode == 2) ? 1.0 : (gamma >= 0.0 ? gamma : -gamma);
+    double step = stepScale * pitchRatio;
 
     float gain = getParameter ("gain", 0.8f);
     int loopMode = static_cast<int>(getParameter ("loopMode", 0.0f));
@@ -1254,6 +1268,8 @@ std::vector<ParameterInfo> PhasorNode::getParameterDefs() const
 std::vector<ParameterInfo> SamplerNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
+    defs.push_back ({ "timeMode", "TIME MODE (0:DOPPLER, 1:PITCH-LOCK, 2:TIMBRE)", getParameter ("timeMode", 0.0f), 0.0f, 2.0f, getParamExpression ("timeMode"), -1, true });
+    defs.push_back ({ "timeAmt", "TIME AMOUNT (0:IMMUNE .. 1:FULL .. 2:HYPER)", getParameter ("timeAmt", 1.0f), -1.0f, 2.0f, getParamExpression ("timeAmt"), -1 });
     defs.push_back ({ "playbackSpeed", "PLAYBACK SPEED (x)", getParameter ("playbackSpeed", 1.0f), 0.01f, 8.0f, getParamExpression ("playbackSpeed"), -1 });
     defs.push_back ({ "pitch", "PITCH TRANSPOSE (SEMITONES)", getParameter ("pitch", 0.0f), -24.0f, 24.0f, getParamExpression ("pitch"), 2 });
     defs.push_back ({ "gain", "SAMPLER GAIN", getParameter ("gain", 0.8f), 0.0f, 2.0f, getParamExpression ("gain"), -1 });
@@ -2994,6 +3010,8 @@ FutureBassDrumNode::FutureBassDrumNode (int id)
     addOutlet ("snare~", NodePortType::Audio);    // Outlet 3: Dedicated Snare channel
     addOutlet ("hat~", NodePortType::Audio);      // Outlet 4: Dedicated Hi-Hat channel
 
+    setParameter ("timeMode", 0.0f); // 0 = Doppler (Speed+Pitch), 1 = Time-Stretch (Speed Only), 2 = Timbre Dilation
+    setParameter ("timeAmt", 1.0f);
     setParameter ("kickPitch", 45.0f);   // Sub Kick Base Frequency (Hz)
     setParameter ("snareSnap", 0.7f);   // Snare Noise Mix
     setParameter ("clapSpread", 7.0f);   // Multi-impulse clap delay (ms)
@@ -3059,8 +3077,8 @@ void FutureBassDrumNode::triggerNote (int midiNote, float velocity)
 
 void FutureBassDrumNode::process (int numSamples)
 {
-    double gamma = std::abs (inlets[0].timeGamma);
-    if (gamma < 0.001) gamma = 1.0;
+    double gamma = std::abs (getRelativisticGamma (1.0, 0));
+    int timeMode = static_cast<int>(getParameter ("timeMode", 0.0f));
 
     const auto* noteBuf = (inlets.size() > 1 && inlets[1].audioData.getNumSamples() >= numSamples) ? inlets[1].audioData.getReadPointer (0) : nullptr;
     const auto* trigBuf = (inlets.size() > 2 && inlets[2].audioData.getNumSamples() >= numSamples) ? inlets[2].audioData.getReadPointer (0) : nullptr;
@@ -3087,10 +3105,9 @@ void FutureBassDrumNode::process (int numSamples)
     float hatDecayParam = getParameter ("hatDecay", 45.0f);
     float drive = getParameter ("drive", 1.8f);
     float masterGain = getParameter ("masterGain", 1.0f);
-    float pitchDilation = getParameter ("pitchDilation", 0.0f);
 
-    double pitchGamma = 1.0 + (gamma - 1.0) * static_cast<double>(pitchDilation);
-    double envRateScale = gamma / currentSampleRate;
+    double pitchGamma = (timeMode == 0) ? gamma : 1.0;
+    double envRateScale = (timeMode == 2 ? gamma : (timeMode == 0 || timeMode == 1 ? gamma : 1.0)) / currentSampleRate;
 
     float targetKickPitch = baseKickPitch * static_cast<float>(pitchGamma);
     double targetSnarePitch = 110.0 * pitchGamma;
@@ -3224,13 +3241,14 @@ std::string FutureBassDrumNode::getDefaultFormulaScript() const
 std::vector<ParameterInfo> FutureBassDrumNode::getParameterDefs() const
 {
     std::vector<ParameterInfo> defs;
+    defs.push_back ({ "timeMode", "TIME MODE (0:DOPPLER, 1:PITCH-LOCK, 2:TIMBRE)", getParameter ("timeMode", 0.0f), 0.0f, 2.0f, getParamExpression ("timeMode"), -1, true });
+    defs.push_back ({ "timeAmt", "TIME AMOUNT (0:IMMUNE .. 1:FULL .. 2:HYPER)", getParameter ("timeAmt", 1.0f), -1.0f, 2.0f, getParamExpression ("timeAmt"), -1 });
     defs.push_back ({ "kickPitch", "SUB KICK BASE PITCH (Hz)", getParameter ("kickPitch", 45.0f), 30.0f, 100.0f, getParamExpression ("kickPitch"), -1 });
     defs.push_back ({ "snareSnap", "SNARE NOISE SNAP MIX", getParameter ("snareSnap", 0.7f), 0.0f, 1.0f, getParamExpression ("snareSnap"), -1 });
     defs.push_back ({ "clapSpread", "CLAP BURST SPREAD (ms)", getParameter ("clapSpread", 7.0f), 1.0f, 25.0f, getParamExpression ("clapSpread"), -1 });
     defs.push_back ({ "hatDecay", "HI-HAT DECAY LENGTH (ms)", getParameter ("hatDecay", 45.0f), 10.0f, 200.0f, getParamExpression ("hatDecay"), -1 });
     defs.push_back ({ "drive", "TUBE OVERDRIVE WARMTH", getParameter ("drive", 1.8f), 1.0f, 10.0f, getParamExpression ("drive"), -1 });
     defs.push_back ({ "masterGain", "MASTER DRUM GAIN", getParameter ("masterGain", 1.0f), 0.0f, 2.0f, getParamExpression ("masterGain"), -1 });
-    defs.push_back ({ "pitchDilation", "PITCH DILATION DOPPLER (0=Steady Pitch, 1=Full Pitch Shift)", getParameter ("pitchDilation", 0.0f), 0.0f, 1.0f, getParamExpression ("pitchDilation"), -1 });
     return defs;
 }
 

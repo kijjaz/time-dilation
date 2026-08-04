@@ -74,6 +74,13 @@ double RelativisticNode::getEffectiveGamma() const
     return smoothedGamma;
 }
 
+double RelativisticNode::getRelativisticGamma (double defaultTimeAmt, int /*defaultTimeMode*/) const
+{
+    double rawGamma = getEffectiveGamma();
+    float timeAmt = getParameter ("timeAmt", static_cast<float>(defaultTimeAmt));
+    return 1.0 + (rawGamma - 1.0) * timeAmt;
+}
+
 double RelativisticNode::getRequestedFutureHorizonSec() const
 {
     double effGamma = getEffectiveGamma();

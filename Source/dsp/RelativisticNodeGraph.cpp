@@ -318,8 +318,8 @@ std::vector<ParameterInfo> RelativisticNode::getParameterDefs() const
         p.key = kv.first;
         p.name = kv.first;
         p.value = kv.second;
-        p.minValue = 0.0f;
-        p.maxValue = 20000.0f;
+        p.minValue = -100.0f;
+        p.maxValue = 100.0f;
 
         auto exprIt = paramExpressions.find (kv.first);
         if (exprIt != paramExpressions.end()) p.expression = exprIt->second;
@@ -486,18 +486,18 @@ void RelativisticNode::parseLabelArguments (const std::string& label)
 bool RelativisticNodeGraph::isValidObjectType (const std::string& typeName)
 {
     static const std::set<std::string> validTypes = {
-        "time.warp~", "time.retro~", "time.quantize~", "time.metro~", "time.stasis~",
-        "time.singularity~", "time.transport", "time.scope", "time.display", "time.monitor",
+        "time.warp", "time.warp~", "time.retro", "time.retro~", "time.quantize", "time.quantize~", "time.metro", "time.metro~", "time.stasis", "time.stasis~",
+        "time.singularity", "time.singularity~", "time.transport", "time.scope", "time.display", "time.monitor",
         "time.xy", "xy", "xy~", "plot.xy", "spectrometer~", "spectrum~", "fft~",
-        "time.future~", "future~", "osc~", "phasor~", "sampler~", "filter~", "delay~",
+        "time.future", "time.future~", "future~", "osc~", "phasor~", "sampler~", "filter~", "delay~",
         "dac~", "expr", "expr~", "fexpr~", "gain~", "out~", "out", "env~", "tap", "tap~", "send", "s", "receive", "r",
         "v", "msg", "message", "z~", "snapshot~", "+", "*", "table", "tabwrite~", "tabread~", "tabosc4~",
         "svfilter~", "drive~", "reverb~", "crush~", "adsr~", "mtof", "ftom", "midi2freq",
         "number", "num", "nb", "display", "number.display", "bang", "b", "bang~", "b~", "counter", "cnt", "metro", "metronome", "note",
         "slider", "hslider", "vslider", "toggle", "tgl", "audio2time~", "a2t~", "time2audio~", "t2a~",
-        "time.math~", "time.combine~", "time.+", "time.-", "time.*", "time.scale~", "time.filter~",
-        "time.boost~", "time.lorenz~", "time.noise~", "time.rand~", "time.samplehold~", "time.sh~",
-        "time.invert~", "time.reciprocal~", "time.logic~", "time.gate~", "time.delay~",
+        "time.math", "time.math~", "time.combine", "time.combine~", "time.+", "time.-", "time.*", "time.scale", "time.scale~", "time.filter", "time.filter~",
+        "time.boost", "time.boost~", "time.lorenz", "time.lorenz~", "time.noise", "time.noise~", "time.rand", "time.rand~", "time.samplehold", "time.samplehold~", "time.sh", "time.sh~",
+        "time.invert", "time.invert~", "time.reciprocal", "time.reciprocal~", "time.logic", "time.logic~", "time.gate", "time.gate~", "time.delay", "time.delay~",
         "seq", "step", "euclid", "markov", "tidal", "tidal~", "fbdrum~", "drum~", "drums~",
         "drumseq", "drumstep", "timeline", "arrangement"
     };
@@ -602,12 +602,12 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     int id = nextNodeId++;
     std::shared_ptr<RelativisticNode> node = nullptr;
 
-    if (typeName == "time.warp~")        node = std::make_shared<TimeWarpNode> (id);
-    else if (typeName == "time.retro~")   node = std::make_shared<TimeRetroNode> (id);
-    else if (typeName == "time.quantize~")node = std::make_shared<TimeQuantizeNode> (id);
-    else if (typeName == "time.metro~")   node = std::make_shared<TimeMetroNode> (id);
-    else if (typeName == "time.stasis~")  node = std::make_shared<TimeStasisNode> (id);
-    else if (typeName == "time.singularity~") node = std::make_shared<TimeSingularityNode> (id);
+    if (typeName == "time.warp" || typeName == "time.warp~")        node = std::make_shared<TimeWarpNode> (id);
+    else if (typeName == "time.retro" || typeName == "time.retro~")   node = std::make_shared<TimeRetroNode> (id);
+    else if (typeName == "time.quantize" || typeName == "time.quantize~")node = std::make_shared<TimeQuantizeNode> (id);
+    else if (typeName == "time.metro" || typeName == "time.metro~")   node = std::make_shared<TimeMetroNode> (id);
+    else if (typeName == "time.stasis" || typeName == "time.stasis~")  node = std::make_shared<TimeStasisNode> (id);
+    else if (typeName == "time.singularity" || typeName == "time.singularity~") node = std::make_shared<TimeSingularityNode> (id);
     else if (typeName == "time.transport")node = std::make_shared<TimeTransportNode> (id);
     else if (typeName == "time.scope" || typeName == "time.display" || typeName == "time.monitor") node = std::make_shared<TimeScopeNode> (id);
     else if (typeName == "time.xy" || typeName == "xy" || typeName == "xy~" || typeName == "plot.xy") node = std::make_shared<TimeXYNode> (id);
@@ -676,19 +676,130 @@ int RelativisticNodeGraph::addNode (const std::string& typeName, float x, float 
     }
     else if (typeName == "slider" || typeName == "hslider" || typeName == "vslider") node = std::make_shared<SliderNode> (id);
     else if (typeName == "toggle" || typeName == "tgl") node = std::make_shared<ToggleNode> (id);
+    else if (typeName == "delay" || typeName == "del" || typeName.rfind ("delay ", 0) == 0 || typeName.rfind ("del ", 0) == 0)
+    {
+        float dMs = 250.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) dMs = tokens[1].getFloatValue();
+        node = std::make_shared<DelayControlNode> (id, dMs);
+    }
+    else if (typeName == "pipe" || typeName.rfind ("pipe ", 0) == 0)
+    {
+        float dMs = 250.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) dMs = tokens[1].getFloatValue();
+        node = std::make_shared<PipeControlNode> (id, dMs);
+    }
+    else if (typeName == "spigot" || typeName == "gate") node = std::make_shared<SpigotNode> (id);
+    else if (typeName == "select" || typeName == "sel" || typeName.rfind ("select ", 0) == 0 || typeName.rfind ("sel ", 0) == 0)
+    {
+        std::vector<float> targets = { 0.0f };
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1)
+        {
+            targets.clear();
+            for (int t = 1; t < tokens.size(); ++t) targets.push_back (tokens[t].getFloatValue());
+        }
+        node = std::make_shared<SelectNode> (id, targets);
+    }
+    else if (typeName == "radio" || typeName == "hradio" || typeName == "vradio" || typeName.rfind ("radio ", 0) == 0)
+    {
+        int opts = 4;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) opts = std::max (2, tokens[1].getIntValue());
+        node = std::make_shared<RadioNode> (id, opts);
+    }
+    else if (typeName == "==" || typeName == "==~" || typeName.rfind ("== ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<BoolMathNode> (id, BoolOpType::Equals, op);
+    }
+    else if (typeName == "!=" || typeName == "!=~" || typeName.rfind ("!= ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<BoolMathNode> (id, BoolOpType::NotEquals, op);
+    }
+    else if (typeName == ">" || typeName == ">~" || typeName.rfind ("> ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<BoolMathNode> (id, BoolOpType::GreaterThan, op);
+    }
+    else if (typeName == "<" || typeName == "<~" || typeName.rfind ("< ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<BoolMathNode> (id, BoolOpType::LessThan, op);
+    }
+    else if (typeName == ">=" || typeName == ">=~" || typeName.rfind (">= ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<BoolMathNode> (id, BoolOpType::GreaterEqual, op);
+    }
+    else if (typeName == "<=" || typeName == "<=~" || typeName.rfind ("<= ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<BoolMathNode> (id, BoolOpType::LessEqual, op);
+    }
+    else if (typeName == "&&" || typeName == "and") node = std::make_shared<BoolMathNode> (id, BoolOpType::And);
+    else if (typeName == "||" || typeName == "or") node = std::make_shared<BoolMathNode> (id, BoolOpType::Or);
+    else if (typeName == "!" || typeName == "not") node = std::make_shared<BoolMathNode> (id, BoolOpType::Not);
     else if (typeName == "audio2time~" || typeName == "a2t~") node = std::make_shared<AudioToTimeNode> (id);
     else if (typeName == "time2audio~" || typeName == "t2a~") node = std::make_shared<TimeToAudioNode> (id);
-    else if (typeName == "time.math~" || typeName == "time.combine~" || typeName == "time.+" || typeName == "time.-" || typeName == "time.*") node = std::make_shared<TimeMathNode> (id);
-    else if (typeName == "time.scale~") node = std::make_shared<TimeScaleNode> (id);
-    else if (typeName == "time.filter~") node = std::make_shared<TimeFilterNode> (id);
-    else if (typeName == "time.boost~" || typeName == "time.lorenz~") node = std::make_shared<TimeLorentzBoostNode> (id);
-    else if (typeName == "time.noise~" || typeName == "time.rand~") node = std::make_shared<TimeNoiseNode> (id);
-    else if (typeName == "time.samplehold~" || typeName == "time.sh~") node = std::make_shared<TimeSampleHoldNode> (id);
-    else if (typeName == "time.invert~" || typeName == "time.reciprocal~") node = std::make_shared<TimeInvertNode> (id);
-    else if (typeName == "time.logic~" || typeName == "time.gate~") node = std::make_shared<TimeLogicNode> (id);
-    else if (typeName == "time.delay~") node = std::make_shared<TimeDelayNode> (id);
+    else if (typeName == "time.+" || typeName.rfind ("time.+ ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<TimeAddNode> (id, op);
+    }
+    else if (typeName == "time.-" || typeName.rfind ("time.- ", 0) == 0)
+    {
+        float op = 0.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<TimeSubNode> (id, op);
+    }
+    else if (typeName == "time.*" || typeName.rfind ("time.* ", 0) == 0)
+    {
+        float op = 1.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<TimeMulNode> (id, op);
+    }
+    else if (typeName == "time./" || typeName.rfind ("time./ ", 0) == 0)
+    {
+        float op = 1.0f;
+        auto tokens = juce::StringArray::fromTokens (typeName, " ", "");
+        if (tokens.size() > 1) op = tokens[1].getFloatValue();
+        node = std::make_shared<TimeDivNode> (id, op);
+    }
+    else if (typeName == "time.expr" || typeName.rfind ("time.expr ", 0) == 0)
+    {
+        node = std::make_shared<TimeExprNode> (id);
+        if (typeName.length() > 10) node->setParamExpression ("formula", typeName.substr (10));
+    }
+    else if (typeName == "time.math" || typeName == "time.math~" || typeName == "time.combine" || typeName == "time.combine~") node = std::make_shared<TimeMathNode> (id);
+    else if (typeName == "time.scale" || typeName == "time.scale~") node = std::make_shared<TimeScaleNode> (id);
+    else if (typeName == "time.filter" || typeName == "time.filter~") node = std::make_shared<TimeFilterNode> (id);
+    else if (typeName == "time.boost" || typeName == "time.boost~" || typeName == "time.lorenz" || typeName == "time.lorenz~") node = std::make_shared<TimeLorentzBoostNode> (id);
+    else if (typeName == "time.noise" || typeName == "time.noise~" || typeName == "time.rand" || typeName == "time.rand~") node = std::make_shared<TimeNoiseNode> (id);
+    else if (typeName == "time.samplehold" || typeName == "time.samplehold~" || typeName == "time.sh" || typeName == "time.sh~") node = std::make_shared<TimeSampleHoldNode> (id);
+    else if (typeName == "time.invert" || typeName == "time.invert~" || typeName == "time.reciprocal" || typeName == "time.reciprocal~") node = std::make_shared<TimeInvertNode> (id);
+    else if (typeName == "time.logic" || typeName == "time.logic~" || typeName == "time.gate" || typeName == "time.gate~") node = std::make_shared<TimeLogicNode> (id);
+    else if (typeName == "time.delay" || typeName == "time.delay~") node = std::make_shared<TimeDelayNode> (id);
     else if (typeName == "note")           node = std::make_shared<NoteGenNode> (id);
-    else if (typeName == "time.future~" || typeName == "future~") node = std::make_shared<TimeFutureNode> (id);
+    else if (typeName == "time.future" || typeName == "time.future~" || typeName == "future" || typeName == "future~") node = std::make_shared<TimeFutureNode> (id);
     else if (typeName == "seq" || typeName == "step") node = std::make_shared<StepSequencerNode> (id);
     else if (typeName == "euclid") node = std::make_shared<EuclideanSequencerNode> (id);
     else if (typeName == "markov") node = std::make_shared<MarkovSequencerNode> (id);
@@ -1763,8 +1874,134 @@ void RelativisticNodeGraph::loadFromValueTree (const juce::ValueTree& tree, bool
     }
 }
 
+juce::String RelativisticNodeGraph::exportPatchToJson() const
+{
+    auto rootObj = std::make_unique<juce::DynamicObject>();
+    rootObj->setProperty ("version", "0.0.1");
+    rootObj->setProperty ("audioEngineEnabled", audioEngineEnabled);
+
+    juce::Array<juce::var> nodesArray;
+    for (const auto& node : nodes)
+    {
+        auto nodeObj = std::make_unique<juce::DynamicObject>();
+        nodeObj->setProperty ("id", node->getId());
+        nodeObj->setProperty ("type", juce::String (node->getTypeName()));
+        nodeObj->setProperty ("label", juce::String (node->getLabel()));
+        nodeObj->setProperty ("posX", node->getX());
+        nodeObj->setProperty ("posY", node->getY());
+        nodeObj->setProperty ("formula", juce::String (node->getFormulaScript()));
+
+        auto paramsObj = std::make_unique<juce::DynamicObject>();
+        for (const auto& pDef : node->getParameterDefs())
+        {
+            juce::Identifier pKey (pDef.key);
+            if (pDef.type == ParameterType::Symbol)
+                paramsObj->setProperty (pKey, juce::String (pDef.expression.empty() ? pDef.stringValue : pDef.expression));
+            else
+                paramsObj->setProperty (pKey, pDef.value);
+        }
+        nodeObj->setProperty ("parameters", paramsObj.release());
+        nodesArray.add (juce::var (nodeObj.release()));
+    }
+    rootObj->setProperty ("nodes", nodesArray);
+
+    juce::Array<juce::var> connsArray;
+    for (const auto& c : connections)
+    {
+        auto connObj = std::make_unique<juce::DynamicObject>();
+        connObj->setProperty ("id", c.id);
+        connObj->setProperty ("sourceNodeId", c.sourceNodeId);
+        connObj->setProperty ("sourceOutletIdx", c.sourceOutletIdx);
+        connObj->setProperty ("destNodeId", c.destNodeId);
+        connObj->setProperty ("destInletIdx", c.destInletIdx);
+        connsArray.add (juce::var (connObj.release()));
+    }
+    rootObj->setProperty ("connections", connsArray);
+
+    return juce::JSON::toString (juce::var (rootObj.release()), false);
+}
+
+bool RelativisticNodeGraph::importPatchFromJson (const juce::String& jsonString)
+{
+    juce::var parsed = juce::JSON::parse (jsonString);
+    if (!parsed.isObject()) return false;
+
+    clearGraph();
+    audioEngineEnabled = parsed.getProperty ("audioEngineEnabled", false);
+
+    int maxLoadedId = 0;
+    auto nodesVar = parsed.getProperty ("nodes", juce::var());
+    if (nodesVar.isArray())
+    {
+        for (int i = 0; i < nodesVar.size(); ++i)
+        {
+            auto nObj = nodesVar[i];
+            if (nObj.isObject())
+            {
+                std::string typeName = nObj.getProperty ("type", "").toString().toStdString();
+                float x = nObj.getProperty ("posX", 100.0f);
+                float y = nObj.getProperty ("posY", 100.0f);
+                std::string label = nObj.getProperty ("label", "").toString().toStdString();
+
+                int nodeId = addNode (typeName, x, y);
+                auto n = getNodeById (nodeId);
+                if (n)
+                {
+                    if (!label.empty()) n->setLabel (label);
+                    std::string formula = nObj.getProperty ("formula", "").toString().toStdString();
+                    if (!formula.empty()) n->setFormulaScript (formula);
+
+                    auto paramsVar = nObj.getProperty ("parameters", juce::var());
+                    if (paramsVar.isObject())
+                    {
+                        auto pObj = paramsVar.getDynamicObject();
+                        for (const auto& prop : pObj->getProperties())
+                        {
+                            std::string key = prop.name.toString().toStdString();
+                            if (prop.value.isString())
+                                n->setParamExpression (key, prop.value.toString().toStdString());
+                            else
+                                n->setParameter (key, static_cast<float>(prop.value));
+                        }
+                    }
+                    maxLoadedId = std::max (maxLoadedId, n->getId());
+                }
+            }
+        }
+    }
+
+    if (maxLoadedId >= nextNodeId)
+        nextNodeId = maxLoadedId + 1;
+
+    auto connsVar = parsed.getProperty ("connections", juce::var());
+    if (connsVar.isArray())
+    {
+        for (int i = 0; i < connsVar.size(); ++i)
+        {
+            auto cObj = connsVar[i];
+            if (cObj.isObject())
+            {
+                int srcId = cObj.getProperty ("sourceNodeId", 0);
+                int srcOutlet = cObj.getProperty ("sourceOutletIdx", 0);
+                int dstId = cObj.getProperty ("destNodeId", 0);
+                int dstInlet = cObj.getProperty ("destInletIdx", 0);
+                addConnection (srcId, srcOutlet, dstId, dstInlet);
+            }
+        }
+    }
+
+    detectFeedbackLoops();
+    return true;
+}
+
 bool RelativisticNodeGraph::saveProjectToFile (const juce::File& file)
 {
+    if (file.getFileExtension().equalsIgnoreCase (".patch") || file.getFileExtension().equalsIgnoreCase (".json"))
+    {
+        juce::String jsonStr = exportPatchToJson();
+        return file.replaceWithText (jsonStr);
+    }
+
     auto tree = saveToValueTree();
     std::unique_ptr<juce::XmlElement> xml (tree.createXml());
     if (xml != nullptr)
@@ -1777,6 +2014,14 @@ bool RelativisticNodeGraph::saveProjectToFile (const juce::File& file)
 bool RelativisticNodeGraph::loadProjectFromFile (const juce::File& file)
 {
     if (!file.existsAsFile()) return false;
+
+    juce::String content = file.loadFileAsString();
+    if (file.getFileExtension().equalsIgnoreCase (".patch") || file.getFileExtension().equalsIgnoreCase (".json") || content.trimStart().startsWith ("{"))
+    {
+        if (importPatchFromJson (content))
+            return true;
+    }
+
     std::unique_ptr<juce::XmlElement> xml (juce::XmlDocument::parse (file));
     if (xml != nullptr)
     {

@@ -57,16 +57,16 @@ juce::File ProjectFileManager::saveAudioClipToCache (const juce::AudioBuffer<flo
 
 bool ProjectFileManager::saveProjectBundle (const juce::File& targetProjectFileOrFolder, RelativisticNodeGraph& graph)
 {
-    juce::File xmlFile;
+    juce::File mainFile;
     if (targetProjectFileOrFolder.isDirectory())
     {
         currentProjectFolder = targetProjectFileOrFolder;
-        xmlFile = targetProjectFileOrFolder.getChildFile ("project.xml");
+        mainFile = targetProjectFileOrFolder.getChildFile ("patch.patch");
     }
     else
     {
         currentProjectFolder = targetProjectFileOrFolder.getParentDirectory();
-        xmlFile = targetProjectFileOrFolder;
+        mainFile = targetProjectFileOrFolder;
     }
 
     currentProjectFolder.createDirectory();
@@ -85,55 +85,36 @@ bool ProjectFileManager::saveProjectBundle (const juce::File& targetProjectFileO
         }
     }
 
-    // Save graph ValueTree XML
-    auto state = graph.saveToValueTree();
-    auto xml = state.createXml();
-    if (xml != nullptr)
-    {
-        return xml->writeTo (xmlFile);
-    }
-
-    return false;
+    return graph.saveProjectToFile (mainFile);
 }
 
 bool ProjectFileManager::loadProjectBundle (const juce::File& projectFolderOrFile, RelativisticNodeGraph& graph)
 {
-    juce::File xmlFile;
+    juce::File mainFile;
     juce::File targetFolder;
 
     if (projectFolderOrFile.isDirectory())
     {
         targetFolder = projectFolderOrFile;
-        xmlFile = projectFolderOrFile.getChildFile ("project.xml");
-        if (!xmlFile.existsAsFile()) xmlFile = projectFolderOrFile.getChildFile ("patch.xml");
-        if (!xmlFile.existsAsFile())
+        mainFile = projectFolderOrFile.getChildFile ("patch.patch");
+        if (!mainFile.existsAsFile()) mainFile = projectFolderOrFile.getChildFile ("project.xml");
+        if (!mainFile.existsAsFile()) mainFile = projectFolderOrFile.getChildFile ("patch.xml");
+        if (!mainFile.existsAsFile())
         {
-            auto xmlFiles = projectFolderOrFile.findChildFiles (juce::File::findFiles, false, "*.xml");
-            if (!xmlFiles.isEmpty()) xmlFile = xmlFiles[0];
+            auto files = projectFolderOrFile.findChildFiles (juce::File::findFiles, false, "*.patch;*.json;*.xml");
+            if (!files.isEmpty()) mainFile = files[0];
         }
     }
     else
     {
-        xmlFile = projectFolderOrFile;
+        mainFile = projectFolderOrFile;
         targetFolder = projectFolderOrFile.getParentDirectory();
     }
 
-    if (!xmlFile.existsAsFile()) return false;
+    if (!mainFile.existsAsFile()) return false;
 
     currentProjectFolder = targetFolder;
-
-    auto xml = juce::XmlDocument::parse (xmlFile);
-    if (xml != nullptr)
-    {
-        auto state = juce::ValueTree::fromXml (*xml);
-        if (state.isValid())
-        {
-            graph.loadFromValueTree (state);
-            return true;
-        }
-    }
-
-    return false;
+    return graph.loadProjectFromFile (mainFile);
 }
 
 } // namespace time_dilation

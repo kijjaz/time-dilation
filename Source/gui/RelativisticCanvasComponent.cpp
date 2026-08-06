@@ -15,11 +15,6 @@
 namespace time_dilation
 {
 
-static inline float getTextWidth (const juce::Font& font, const juce::String& text)
-{
-    return juce::GlyphArrangement::getStringWidth (font, text);
-}
-
 RelativisticLookAndFeel::RelativisticLookAndFeel()
 {
     juce::Typeface::Ptr sciFiTypeface = juce::Typeface::createSystemTypefaceFor (BinaryData::SmoochSans_ttf, BinaryData::SmoochSans_ttfSize);
@@ -527,9 +522,60 @@ RelativisticCanvasComponent::RelativisticCanvasComponent (RelativisticNodeGraph&
     oscServer->onExportPngRequested = [this] (const std::string& path) {
         exportCanvasPngToFile (juce::File (path));
     };
-    oscServer->startServer (9000);
+    oscServer->onLoadPatchRequested = [this] (const std::string& path) {
+        juce::File file (path);
+        if (ProjectFileManager::getInstance().loadProjectBundle (file, nodeGraph))
+        {
+            currentProjectFile = file;
+            clearUnsavedChanges();
+            selectedNodeIds.clear();
+            selectedConnectionId = 0;
+            rebuildInspector();
+            repaint();
+        }
+    };
+    oscServer->onSavePatchRequested = [this] (const std::string& path) {
+        juce::File file (path);
+        ProjectFileManager::getInstance().saveProjectBundle (file, nodeGraph);
+    };
+    oscServer->startServer (9001);
 
     startTimerHz (30);
+}
+
+bool RelativisticCanvasComponent::isInterestedInFileDrag (const juce::StringArray& files)
+{
+    for (const auto& f : files)
+    {
+        juce::File file (f);
+        juce::String ext = file.getFileExtension().toLowerCase();
+        if (ext == ".patch" || ext == ".json" || ext == ".tdaw" || ext == ".xml")
+            return true;
+    }
+    return false;
+}
+
+void RelativisticCanvasComponent::filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/)
+{
+    for (const auto& f : files)
+    {
+        juce::File file (f);
+        juce::String ext = file.getFileExtension().toLowerCase();
+        if (ext == ".patch" || ext == ".json" || ext == ".tdaw" || ext == ".xml")
+        {
+            if (ProjectFileManager::getInstance().loadProjectBundle (file, nodeGraph))
+            {
+                currentProjectFile = file;
+                clearUnsavedChanges();
+                selectedNodeIds.clear();
+                selectedConnectionId = 0;
+                rebuildInspector();
+                repaint();
+                showNotificationBanner ("Loaded Patch: " + file.getFileName().toStdString(), false);
+                break;
+            }
+        }
+    }
 }
 
 void RelativisticCanvasComponent::updateConsoleDrawer()
@@ -611,9 +657,9 @@ void RelativisticCanvasComponent::savePatchWithCallback (std::function<void(bool
 
 void RelativisticCanvasComponent::savePatchAsWithCallback (std::function<void(bool)> onComplete)
 {
-    auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Project Bundle As...",
+    auto fc = std::make_shared<juce::FileChooser> ("Save Time Dilation Relativistic Patch As...",
                                                    juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                   "*.tdaw;*.xml");
+                                                   "*.patch;*.json;*.tdaw;*.xml");
     fc->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectDirectories | juce::FileBrowserComponent::warnAboutOverwriting,
         [this, fc, onComplete] (const juce::FileChooser& chooser) {
             auto result = chooser.getResult();
@@ -622,7 +668,7 @@ void RelativisticCanvasComponent::savePatchAsWithCallback (std::function<void(bo
                 juce::File targetFile = result;
                 if (!targetFile.isDirectory() && targetFile.getFileExtension().isEmpty())
                 {
-                    targetFile = targetFile.withFileExtension ("tdaw");
+                    targetFile = targetFile.withFileExtension ("patch");
                 }
 
                 bool success = ProjectFileManager::getInstance().saveProjectBundle (targetFile, nodeGraph);
@@ -654,11 +700,35 @@ void RelativisticCanvasComponent::savePatch()
     savePatchWithCallback (nullptr);
 }
 
+void RelativisticCanvasComponent::loadPresetPatch (const juce::String& presetFileName)
+{
+    juce::File presetFile = juce::File::getCurrentWorkingDirectory().getChildFile ("Presets").getChildFile (presetFileName);
+    if (!presetFile.existsAsFile())
+    {
+        presetFile = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+                        .getParentDirectory().getChildFile ("Presets").getChildFile (presetFileName);
+    }
+
+    if (presetFile.existsAsFile())
+    {
+        if (ProjectFileManager::getInstance().loadProjectBundle (presetFile, nodeGraph))
+        {
+            currentProjectFile = presetFile;
+            clearUnsavedChanges();
+            selectedNodeIds.clear();
+            selectedConnectionId = 0;
+            rebuildInspector();
+            repaint();
+            showNotificationBanner ("Loaded Preset: " + presetFile.getFileNameWithoutExtension().toStdString(), false);
+        }
+    }
+}
+
 void RelativisticCanvasComponent::loadPatch()
 {
-    auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Project Bundle (.tdaw / .xml)...",
+    auto fc = std::make_shared<juce::FileChooser> ("Open Time Dilation Relativistic Patch (.patch / .json / .xml)...",
                                                    juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
-                                                   "*.tdaw;*.xml;project.xml;patch.xml");
+                                                   "*.patch;*.json;*.tdaw;*.xml");
     fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectDirectories,
         [this, fc] (const juce::FileChooser& chooser) {
             auto result = chooser.getResult();
@@ -1829,13 +1899,18 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
 {
     juce::PopupMenu m;
     m.addSectionHeader ("--- RELATIVISTIC TIME ENGINES ---");
-    m.addItem (1, "[time.warp~]\tDilated Coordinate Time Generator", true);
-    m.addItem (2, "[time.retro~]\tRetrograde Time Reverser", true);
-    m.addItem (3, "[time.quantize~]\tMetric Grid Time Quantizer", true);
-    m.addItem (4, "[time.metro~]\tDilated Metronome Pulse Generator", true);
-    m.addItem (24, "[time.stasis~]\tGravitational Time Stasis Freeze Engine", true);
-    m.addItem (25, "[time.singularity~]\tEvent Horizon Gravitational Redshift Warp", true);
-    m.addItem (40, "[time.future~]\tFuture Lookahead Causality Offset Engine", true);
+    m.addItem (1, "[time.warp]\tDilated Coordinate Time Generator", true);
+    m.addItem (2, "[time.retro]\tRetrograde Time Reverser", true);
+    m.addItem (3, "[time.quantize]\tMetric Grid Time Quantizer", true);
+    m.addItem (4, "[time.metro]\tDilated Metronome Pulse Generator", true);
+    m.addItem (44, "[time.+]\tTime Clock Adder ([time.+ 0.5])", true);
+    m.addItem (45, "[time.-]\tTime Clock Subtractor ([time.- 0.2])", true);
+    m.addItem (46, "[time.*]\tTime Clock Multiplier / Scaler ([time.* 2.0])", true);
+    m.addItem (47, "[time./]\tTime Clock Divider ([time./ 1.5])", true);
+    m.addItem (48, "[time.expr]\tCustom Time Math Expression (g * v1 + v2)", true);
+    m.addItem (24, "[time.stasis]\tGravitational Time Stasis Freeze Engine", true);
+    m.addItem (25, "[time.singularity]\tEvent Horizon Gravitational Redshift Warp", true);
+    m.addItem (40, "[time.future]\tFuture Lookahead Causality Offset Engine", true);
     m.addItem (41, "[time.transport]\tRelativistic Master Transport Hub", true);
     m.addItem (30, "[time.scope]\tRelativistic Time & Telemetry Visualizer Monitor", true);
 
@@ -1854,6 +1929,16 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (32, "[bang]\tControl Trigger Pulse Generator", true);
     m.addItem (33, "[bang~]\tAudio-Rate Impulse Spike Generator", true);
     m.addItem (34, "[counter]\tSmart Value Counter (Low, High, Step, Carry Out)", true);
+    m.addItem (49, "[toggle]\t0/1 Switch (Click or Bang to Toggle)", true);
+    m.addItem (50, "[slider]\tControl Value Slider Bar", true);
+    m.addItem (51, "[radio]\tMulti-Step Radio Selector Strip", true);
+    m.addItem (52, "[spigot]\tControl Message Gate (Pass/Block)", true);
+    m.addItem (53, "[select]\tValue Selector ([sel 0 60 127])", true);
+    m.addItem (54, "[metro]\tMetronome Tick Pulse ([metro 500])", true);
+    m.addItem (66, "[delay]\tControl Bang Delay ([delay 250])", true);
+    m.addItem (67, "[pipe]\tDilated Control Value FIFO Queue ([pipe 250])", true);
+    m.addItem (55, "[send]\tWireless Bus Broadcaster ([s bus1])", true);
+    m.addItem (56, "[receive]\tWireless Bus Receiver ([r bus1])", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- AUDIO & DSP PROCESSORS ---");
@@ -1871,7 +1956,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (42, "[fbdrum~]\tFuture Bass Drum Synthesizer Engine", true);
 
     m.addSeparator();
-    m.addSectionHeader ("--- MATH SIGNAL EXPRESSIONS & CONTROL NODES ---");
+    m.addSectionHeader ("--- MATH & BOOLEAN LOGIC COMPARATORS ---");
     m.addItem (11, "[expr]\tControl Expression ($v1, tap('node.prop'))", true);
     m.addItem (12, "[expr~]\tAudio Expression ($v1, tap('node.prop'))", true);
     m.addItem (13, "[fexpr~]\tFilter Recurrent Expression ($y1[-1])", true);
@@ -1880,6 +1965,15 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.addItem (21, "[snapshot~]\tAudio-to-Control Snapshot Node", true);
     m.addItem (22, "[+]\tSignal & Control Adder", true);
     m.addItem (23, "[*]\tSignal & Control Multiplier", true);
+    m.addItem (57, "[==]\tEquality Comparator (a == b)", true);
+    m.addItem (58, "[!=]\tInequality Comparator (a != b)", true);
+    m.addItem (59, "[>]\tGreater Than Comparator (a > b)", true);
+    m.addItem (60, "[<]\tLess Than Comparator (a < b)", true);
+    m.addItem (61, "[>=]\tGreater Or Equal (a >= b)", true);
+    m.addItem (62, "[<=]\tLess Or Equal (a <= b)", true);
+    m.addItem (63, "[&&]\tLogical AND Gate", true);
+    m.addItem (64, "[||]\tLogical OR Gate", true);
+    m.addItem (65, "[!]\tLogical NOT Inverter", true);
 
     m.addSeparator();
     m.addSectionHeader ("--- TABLES & ARRAY DATA NODES ---");
@@ -1891,10 +1985,10 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (juce::Rectangle<int> (static_cast<int>(spawnPos.x), static_cast<int>(spawnPos.y), 1, 1)),
         [this, spawnPos] (int result) {
             std::string typeName;
-            if (result == 1) typeName = "time.warp~";
-            else if (result == 2) typeName = "time.retro~";
-            else if (result == 3) typeName = "time.quantize~";
-            else if (result == 4) typeName = "time.metro~";
+            if (result == 1) typeName = "time.warp";
+            else if (result == 2) typeName = "time.retro";
+            else if (result == 3) typeName = "time.quantize";
+            else if (result == 4) typeName = "time.metro";
             else if (result == 5) typeName = "osc~";
             else if (result == 6) typeName = "phasor~";
             else if (result == 7) typeName = "sampler~";
@@ -1914,8 +2008,8 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
             else if (result == 21) typeName = "snapshot~";
             else if (result == 22) typeName = "+";
             else if (result == 23) typeName = "*";
-            else if (result == 24) typeName = "time.stasis~";
-            else if (result == 25) typeName = "time.singularity~";
+            else if (result == 24) typeName = "time.stasis";
+            else if (result == 25) typeName = "time.singularity";
             else if (result == 26) typeName = "table";
             else if (result == 27) typeName = "tabread~";
             else if (result == 28) typeName = "tabwrite~";
@@ -1930,10 +2024,34 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
             else if (result == 37) typeName = "markov";
             else if (result == 38) typeName = "tidal";
             else if (result == 39) typeName = "timeline";
-            else if (result == 40) typeName = "time.future~";
+            else if (result == 40) typeName = "time.future";
             else if (result == 41) typeName = "time.transport";
             else if (result == 42) typeName = "fbdrum~";
             else if (result == 43) typeName = "drumseq";
+            else if (result == 44) typeName = "time.+";
+            else if (result == 45) typeName = "time.-";
+            else if (result == 46) typeName = "time.*";
+            else if (result == 47) typeName = "time./";
+            else if (result == 48) typeName = "time.expr";
+            else if (result == 49) typeName = "toggle";
+            else if (result == 50) typeName = "slider";
+            else if (result == 51) typeName = "radio";
+            else if (result == 52) typeName = "spigot";
+            else if (result == 53) typeName = "select";
+            else if (result == 54) typeName = "metro";
+            else if (result == 55) typeName = "send";
+            else if (result == 56) typeName = "receive";
+            else if (result == 57) typeName = "==";
+            else if (result == 58) typeName = "!=";
+            else if (result == 59) typeName = ">";
+            else if (result == 60) typeName = "<";
+            else if (result == 61) typeName = ">=";
+            else if (result == 62) typeName = "<=";
+            else if (result == 63) typeName = "&&";
+            else if (result == 64) typeName = "||";
+            else if (result == 65) typeName = "!";
+            else if (result == 66) typeName = "delay";
+            else if (result == 67) typeName = "pipe";
 
             if (!typeName.empty())
             {
@@ -1947,352 +2065,7 @@ void RelativisticCanvasComponent::showObjectSearchMenu (juce::Point<float> spawn
         });
 }
 
-void RelativisticCanvasComponent::rebuildInspector()
-{
-    propertyRows.clear();
-    methodButtons.clear();
 
-    int primaryId = !selectedNodeIds.empty() ? *selectedNodeIds.begin() : 0;
-    auto node = nodeGraph.getNodeById (primaryId);
-    if (!node)
-    {
-        inspectorTitleLabel.setText ("INSPECTOR: NO NODE SELECTED", juce::dontSendNotification);
-        formulaEditor.setText ("// Select a node on the canvas to view or edit its C++ / DSP math formula.");
-        resized();
-        return;
-    }
-
-    inspectorTitleLabel.setText ("INSPECTOR: [" + node->getLabel() + "]", juce::dontSendNotification);
-    formulaEditor.setText (node->getFormulaScript());
-
-    std::string typeName = node->getTypeName();
-    std::string label = node->getLabel();
-    std::string formula = label;
-    if (typeName == "expr" && label.rfind ("expr ", 0) == 0)             formula = label.substr (5);
-    else if (typeName == "expr~" && label.rfind ("expr~ ", 0) == 0)       formula = label.substr (6);
-    else if (typeName == "fexpr~" && label.rfind ("fexpr~ ", 0) == 0)     formula = label.substr (7);
-
-    exprFormulaLabel.setText ("MATH EXPRESSION (" + typeName + "):", juce::dontSendNotification);
-    exprFormulaEditor.setText (formula);
-
-    auto defs = node->getParameterDefs();
-    for (const auto& def : defs)
-    {
-        InspectorPropertyRow row;
-        row.key = def.key;
-        std::string paramKey = def.key;
-
-        row.label = std::make_unique<juce::Label>();
-        row.label->setText (def.name + ":", juce::dontSendNotification);
-        row.label->setFont (juce::FontOptions (12.0f, juce::Font::bold));
-        inspectorContainer.addAndMakeVisible (*row.label);
-
-        if (def.type == ParameterType::Toggle || (def.minValue == 0.0f && def.maxValue == 1.0f && def.isInteger))
-        {
-            bool isOn = (def.value > 0.5f);
-            row.btnToggle = std::make_unique<juce::TextButton> (isOn ? "ON (1)" : "OFF (0)");
-            row.btnToggle->setColour (juce::TextButton::buttonColourId, isOn ? juce::Colour (0xff15803d) : juce::Colour (0xff374151));
-            row.btnToggle->onClick = [this, primaryId, paramKey] {
-                auto n = nodeGraph.getNodeById (primaryId);
-                if (n)
-                {
-                    float current = n->getParameter (paramKey, 0.0f);
-                    n->setParameter (paramKey, (current > 0.5f) ? 0.0f : 1.0f);
-                    rebuildInspector();
-                    repaint();
-                }
-            };
-            inspectorContainer.addAndMakeVisible (*row.btnToggle);
-        }
-        else if (def.type == ParameterType::Symbol)
-        {
-            row.symbolEditor = std::make_unique<juce::TextEditor>();
-            row.symbolEditor->setText (def.stringValue.empty() ? def.expression : def.stringValue);
-            row.symbolEditor->onReturnKey = [this, primaryId, paramKey, ed = row.symbolEditor.get()] {
-                auto n = nodeGraph.getNodeById (primaryId);
-                if (n) n->setParamExpression (paramKey, ed->getText().toStdString());
-                repaint();
-            };
-            inspectorContainer.addAndMakeVisible (*row.symbolEditor);
-        }
-        else
-        {
-            row.slider = std::make_unique<juce::Slider>();
-            row.slider->setSliderStyle (juce::Slider::LinearHorizontal);
-            row.slider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 120, 20);
-            row.slider->setTextBoxIsEditable (true);
-
-            row.slider->valueFromTextFunction = [] (const juce::String& text) -> double {
-                return RelativisticExpressionParser::evaluateExpression (text.toStdString(), {});
-            };
-
-            float minR = def.minValue;
-            float maxR = def.maxValue;
-            if (minR >= maxR) { minR = 0.0f; maxR = 1.0f; }
-
-            if (def.type == ParameterType::Integer || def.isInteger)
-            {
-                row.slider->setRange (minR, maxR, 1.0);
-                row.slider->setNumDecimalPlacesToDisplay (0);
-            }
-            else
-            {
-                row.slider->setRange (minR, maxR, 0.001);
-                row.slider->setNumDecimalPlacesToDisplay (3);
-                if (paramKey == "frequency" || paramKey == "cutoff" || paramKey == "lfoSpeed" || paramKey == "centerFreq")
-                {
-                    row.slider->setSkewFactorFromMidPoint (std::sqrt (std::max (1.0f, minR) * maxR));
-                }
-            }
-
-            row.slider->setValue (def.value, juce::dontSendNotification);
-            row.slider->onValueChange = [this, primaryId, paramKey, sl = row.slider.get()] {
-                auto n = nodeGraph.getNodeById (primaryId);
-                if (n)
-                {
-                    n->setParameter (paramKey, static_cast<float>(sl->getValue()));
-                    repaint();
-                }
-            };
-            inspectorContainer.addAndMakeVisible (*row.slider);
-        }
-
-        row.exprEditor = std::make_unique<juce::TextEditor>();
-        row.exprEditor->setText (def.expression.empty() ? "expr: " + def.name : def.expression);
-        row.exprEditor->setFont (juce::FontOptions (11.0f));
-        row.exprEditor->onReturnKey = [this, primaryId, paramKey, ed = row.exprEditor.get()] {
-            nodeGraph.pushUndoState();
-            auto n = nodeGraph.getNodeById (primaryId);
-            if (n) n->setParamExpression (paramKey, ed->getText().toStdString());
-        };
-        inspectorContainer.addAndMakeVisible (*row.exprEditor);
-
-        bool hasMod = node->hasModulationInlet (paramKey);
-        row.btnModInlet = std::make_unique<juce::TextButton> (hasMod ? "[- REMOVE MOD]" : "+ MOD INLET");
-        row.btnModInlet->setColour (juce::TextButton::buttonColourId, hasMod ? juce::Colour (0xff991b1b) : juce::Colour (0xff0e7490));
-        row.btnModInlet->onClick = [this, primaryId, paramKey, hasMod] {
-            if (hasMod)
-            {
-                nodeGraph.removeModulationInlet (primaryId, paramKey);
-            }
-            else
-            {
-                auto n = nodeGraph.getNodeById (primaryId);
-                if (n) n->addModulationInlet (paramKey);
-            }
-            rebuildInspector();
-            repaint();
-        };
-        inspectorContainer.addAndMakeVisible (*row.btnModInlet);
-
-        row.btnTapValue = std::make_unique<juce::TextButton> ("[TAP]");
-        row.btnTapValue->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff0f766e));
-        row.btnTapValue->onClick = [this, primaryId, paramKey] {
-            auto n = nodeGraph.getNodeById (primaryId);
-            if (n)
-            {
-                std::string snippet = "tap('" + n->getLabel() + "." + paramKey + "')";
-                juce::SystemClipboard::copyTextToClipboard (snippet);
-                formulaEditor.insertTextAtCaret (" + " + snippet);
-            }
-        };
-        inspectorContainer.addAndMakeVisible (*row.btnTapValue);
-
-        propertyRows.push_back (std::move (row));
-    }
-
-    auto methods = node->getExposedMethods();
-    for (const auto& mName : methods)
-    {
-        auto btn = std::make_unique<juce::TextButton> ("[EXEC] " + mName);
-        std::string m = mName;
-        btn->onClick = [this, primaryId, m] {
-            auto n = nodeGraph.getNodeById (primaryId);
-            if (n)
-            {
-                if (m == "Load Audio File..." || m == "Load Sample File...")
-                {
-                    auto fc = std::make_shared<juce::FileChooser> ("Select Audio Sample File...",
-                                                                   juce::File::getSpecialLocation (juce::File::userHomeDirectory),
-                                                                   "*.wav;*.aif;*.aiff;*.mp3;*.flac");
-                    fc->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-                        [this, primaryId, fc] (const juce::FileChooser& chooser) {
-                            auto result = chooser.getResult();
-                            if (result.existsAsFile())
-                            {
-                                auto n = nodeGraph.getNodeById (primaryId);
-                                auto sampler = std::dynamic_pointer_cast<SamplerNode> (n);
-                                if (sampler) sampler->loadAudioFile (result);
-                                juce::MessageManager::callAsync ([this] {
-                                    rebuildInspector();
-                                    repaint();
-                                });
-                            }
-                        });
-                }
-                else
-                {
-                    n->invokeMethod (m);
-                    juce::MessageManager::callAsync ([this] {
-                        rebuildInspector();
-                        repaint();
-                    });
-                }
-            }
-        };
-        btn->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff8b5cf6));
-        btn->setColour (juce::TextButton::textColourOffId, juce::Colours::white);
-        inspectorContainer.addAndMakeVisible (*btn);
-        methodButtons.push_back (std::move (btn));
-    }
-
-    // Toggle 128px Delayline Dot Visualizer Button
-    bool hasDL = node->isShowDelaylineEnabled();
-    auto btnDL = std::make_unique<juce::TextButton> (hasDL ? "[TOGGLE DELAYLINE (128px)]: ON" : "[TOGGLE DELAYLINE (128px)]: OFF");
-    btnDL->setColour (juce::TextButton::buttonColourId, hasDL ? juce::Colour (0xff0e7490) : juce::Colour (0xff374151));
-    btnDL->onClick = [this, primaryId, hasDL] {
-        auto n = nodeGraph.getNodeById (primaryId);
-        if (n) {
-            n->setShowDelaylineEnabled (!hasDL);
-            juce::MessageManager::callAsync ([this] {
-                rebuildInspector();
-                repaint();
-            });
-        }
-    };
-    inspectorContainer.addAndMakeVisible (*btnDL);
-    methodButtons.push_back (std::move (btnDL));
-
-    // Toggle 128px Control Pipe Dot Visualizer Button
-    bool hasPipe = node->isShowPipeEnabled();
-    auto btnPipe = std::make_unique<juce::TextButton> (hasPipe ? "[TOGGLE PIPE (128px)]: ON" : "[TOGGLE PIPE (128px)]: OFF");
-    btnPipe->setColour (juce::TextButton::buttonColourId, hasPipe ? juce::Colour (0xff7c3aed) : juce::Colour (0xff374151));
-    btnPipe->onClick = [this, primaryId, hasPipe] {
-        auto n = nodeGraph.getNodeById (primaryId);
-        if (n) {
-            n->setShowPipeEnabled (!hasPipe);
-            juce::MessageManager::callAsync ([this] {
-                rebuildInspector();
-                repaint();
-            });
-        }
-    };
-    inspectorContainer.addAndMakeVisible (*btnPipe);
-    methodButtons.push_back (std::move (btnPipe));
-
-    // Populate INCOMING and OUTGOING connection sections
-    connectionRows.clear();
-
-    incomingSectionHeader = std::make_unique<juce::Label>();
-    incomingSectionHeader->setText ("INCOMING CONNECTIONS (FROM):", juce::dontSendNotification);
-    incomingSectionHeader->setFont (juce::FontOptions (12.0f, juce::Font::bold));
-    incomingSectionHeader->setColour (juce::Label::textColourId, juce::Colour (0xff06b6d4));
-    inspectorContainer.addAndMakeVisible (*incomingSectionHeader);
-
-    outgoingSectionHeader = std::make_unique<juce::Label>();
-    outgoingSectionHeader->setText ("OUTGOING CONNECTIONS (TO):", juce::dontSendNotification);
-    outgoingSectionHeader->setFont (juce::FontOptions (12.0f, juce::Font::bold));
-    outgoingSectionHeader->setColour (juce::Label::textColourId, juce::Colour (0xff8b5cf6));
-    inspectorContainer.addAndMakeVisible (*outgoingSectionHeader);
-
-    int incCount = 0;
-    for (const auto& conn : nodeGraph.getConnections())
-    {
-        if (conn.destNodeId == primaryId)
-        {
-            incCount++;
-            InspectorConnectionRow r;
-            r.connectionId = conn.id;
-            r.isIncoming = true;
-
-            auto srcNode = nodeGraph.getNodeById (conn.sourceNodeId);
-            std::string srcName = srcNode ? srcNode->getLabel() : "node";
-            std::string inPortName = (conn.destInletIdx >= 0 && conn.destInletIdx < static_cast<int>(node->getInlets().size())) ? node->getInlets()[conn.destInletIdx].name : std::to_string(conn.destInletIdx);
-
-            r.label = std::make_unique<juce::Label>();
-            r.label->setText ("FROM [" + srcName + "] out" + std::to_string(conn.sourceOutletIdx) + " -> in" + std::to_string(conn.destInletIdx) + " (" + inPortName + ")", juce::dontSendNotification);
-            r.label->setFont (juce::FontOptions (11.0f));
-            inspectorContainer.addAndMakeVisible (*r.label);
-
-            int cid = conn.id;
-            r.btnRemoveWire = std::make_unique<juce::TextButton> ("[REMOVE]");
-            r.btnRemoveWire->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff991b1b));
-            r.btnRemoveWire->onClick = [this, cid] {
-                nodeGraph.pushUndoState();
-                nodeGraph.removeConnection (cid);
-                juce::MessageManager::callAsync ([this] {
-                    rebuildInspector();
-                    repaint();
-                });
-            };
-            inspectorContainer.addAndMakeVisible (*r.btnRemoveWire);
-
-            connectionRows.push_back (std::move (r));
-        }
-    }
-
-    if (incCount == 0)
-    {
-        InspectorConnectionRow r;
-        r.label = std::make_unique<juce::Label>();
-        r.label->setText (" (No incoming connections)", juce::dontSendNotification);
-        r.label->setFont (juce::FontOptions (10.5f, juce::Font::italic));
-        r.label->setColour (juce::Label::textColourId, juce::Colours::grey);
-        inspectorContainer.addAndMakeVisible (*r.label);
-        r.isIncoming = true;
-        connectionRows.push_back (std::move (r));
-    }
-
-    int outCount = 0;
-    for (const auto& conn : nodeGraph.getConnections())
-    {
-        if (conn.sourceNodeId == primaryId)
-        {
-            outCount++;
-            InspectorConnectionRow r;
-            r.connectionId = conn.id;
-            r.isIncoming = false;
-
-            auto destNode = nodeGraph.getNodeById (conn.destNodeId);
-            std::string destName = destNode ? destNode->getLabel() : "node";
-            std::string outPortName = (conn.sourceOutletIdx >= 0 && conn.sourceOutletIdx < static_cast<int>(node->getOutlets().size())) ? node->getOutlets()[conn.sourceOutletIdx].name : std::to_string(conn.sourceOutletIdx);
-
-            r.label = std::make_unique<juce::Label>();
-            r.label->setText ("TO [" + destName + "] out" + std::to_string(conn.sourceOutletIdx) + " (" + outPortName + ") -> in" + std::to_string(conn.destInletIdx), juce::dontSendNotification);
-            r.label->setFont (juce::FontOptions (11.0f));
-            inspectorContainer.addAndMakeVisible (*r.label);
-
-            int cid = conn.id;
-            r.btnRemoveWire = std::make_unique<juce::TextButton> ("[REMOVE]");
-            r.btnRemoveWire->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff991b1b));
-            r.btnRemoveWire->onClick = [this, cid] {
-                nodeGraph.pushUndoState();
-                nodeGraph.removeConnection (cid);
-                juce::MessageManager::callAsync ([this] {
-                    rebuildInspector();
-                    repaint();
-                });
-            };
-            inspectorContainer.addAndMakeVisible (*r.btnRemoveWire);
-
-            connectionRows.push_back (std::move (r));
-        }
-    }
-
-    if (outCount == 0)
-    {
-        InspectorConnectionRow r;
-        r.label = std::make_unique<juce::Label>();
-        r.label->setText (" (No outgoing connections)", juce::dontSendNotification);
-        r.label->setFont (juce::FontOptions (10.5f, juce::Font::italic));
-        r.label->setColour (juce::Label::textColourId, juce::Colours::grey);
-        inspectorContainer.addAndMakeVisible (*r.label);
-        r.isIncoming = false;
-        connectionRows.push_back (std::move (r));
-    }
-
-    resized();
-}
 
 bool RelativisticCanvasComponent::keyPressed (const juce::KeyPress& key)
 {
@@ -3162,1277 +2935,6 @@ void RelativisticCanvasComponent::mouseWheelMove (const juce::MouseEvent& e, con
         panX += wheel.deltaX * 120.0f;
         panY += wheel.deltaY * 120.0f;
         repaint();
-    }
-}
-
-void RelativisticCanvasComponent::mouseDown (const juce::MouseEvent& e)
-{
-    grabKeyboardFocus();
-    juce::Point<float> mousePos = e.position;
-    bool isShift = e.mods.isShiftDown();
-
-    // 0a. Check Minimap Radar Click Panning
-    auto miniBounds = getMinimapBounds();
-    if (showMinimap && miniBounds.contains (mousePos))
-    {
-        isDraggingMinimap = true;
-        const auto& nodes = nodeGraph.getNodes();
-        if (!nodes.empty())
-        {
-            float minX = 99999.0f, minY = 99999.0f, maxX = -99999.0f, maxY = -99999.0f;
-            for (const auto& n : nodes)
-            {
-                minX = std::min (minX, n->getX());
-                minY = std::min (minY, n->getY());
-                maxX = std::max (maxX, n->getX() + getNodeWidth (*n));
-                maxY = std::max (maxY, n->getY() + getNodeHeight (*n));
-            }
-            float worldW = std::max (600.0f, maxX - minX + 200.0f);
-            float worldH = std::max (400.0f, maxY - minY + 200.0f);
-            float innerX = miniBounds.getX() + 6.0f;
-            float innerY = miniBounds.getY() + 18.0f;
-            float innerW = miniBounds.getWidth() - 12.0f;
-            float innerH = miniBounds.getHeight() - 24.0f;
-
-            float clickFracX = std::clamp ((mousePos.x - innerX) / innerW, 0.0f, 1.0f);
-            float clickFracY = std::clamp ((mousePos.y - innerY) / innerH, 0.0f, 1.0f);
-
-            float targetWorldX = minX - 100.0f + clickFracX * worldW;
-            float targetWorldY = minY - 100.0f + clickFracY * worldH;
-
-            float canvasW = std::max (100.0f, static_cast<float>(getWidth()) - 340.0f);
-            float canvasH = std::max (100.0f, static_cast<float>(getHeight()) - 100.0f);
-
-            panX = canvasW * 0.5f - targetWorldX * zoomLevel;
-            panY = 45.0f + canvasH * 0.5f - targetWorldY * zoomLevel;
-            repaint();
-        }
-        return;
-    }
-
-    // 0b. Check Right-Click Popup Context Menu
-    if (e.mods.isPopupMenu())
-    {
-        std::shared_ptr<RelativisticNode> clickedNode = nullptr;
-        for (auto it = nodeGraph.getNodes().rbegin(); it != nodeGraph.getNodes().rend(); ++it)
-        {
-            const auto& node = *it;
-            float nx = node->getX() + panX;
-            float ny = node->getY() + panY;
-            if (mousePos.x >= nx && mousePos.x <= nx + getNodeWidth (*node) &&
-                mousePos.y >= ny && mousePos.y <= ny + getNodeHeight (*node))
-            {
-                clickedNode = node;
-                if (selectedNodeIds.count (node->getId()) == 0)
-                {
-                    selectedNodeIds.clear();
-                    selectedNodeIds.insert (node->getId());
-                }
-                break;
-            }
-        }
-        showNodeContextMenu (clickedNode, e.getScreenPosition().toFloat());
-        return;
-    }
-
-    // Autocomplete Popup Item Mouse Click Selection
-    if (isEditingDraftObject && draftObjectEditor)
-    {
-        float popupX = draftObjectEditor->getX();
-        float popupY = draftObjectEditor->getY() + draftObjectEditor->getHeight() + 4.0f;
-        float popupW = std::max (220.0f, static_cast<float>(draftObjectEditor->getWidth()));
-        int maxShow = std::min (6, static_cast<int>(filteredAutocompleteItems.size()));
-        float popupH = static_cast<float>(maxShow) * 22.0f + 6.0f;
-
-        if (mousePos.x >= popupX && mousePos.x <= popupX + popupW &&
-            mousePos.y >= popupY && mousePos.y <= popupY + popupH)
-        {
-            int clickedIdx = static_cast<int>((mousePos.y - popupY - 3.0f) / 22.0f);
-            if (clickedIdx >= 0 && clickedIdx < maxShow)
-            {
-                selectedAutocompleteIdx = clickedIdx;
-                draftObjectEditor->setText (filteredAutocompleteItems[clickedIdx].typeName + " ");
-                commitDraftObject();
-                return;
-            }
-        }
-    }
-
-    // Perform Mode Interactive Node Click Handler
-    for (const auto& node : nodeGraph.getNodes())
-    {
-        float nx = node->getX() + panX;
-        float ny = node->getY() + panY;
-        float nw = getNodeWidth (*node);
-        float nh = getNodeHeight (*node);
-
-        if (mousePos.x >= nx && mousePos.x <= nx + nw &&
-            mousePos.y >= ny && mousePos.y <= ny + nh)
-        {
-            if (auto tableNode = std::dynamic_pointer_cast<TableNode> (node))
-            {
-                float graphX = nx + 8.0f;
-                float graphY = ny + 22.0f;
-                float graphW = nw - 16.0f;
-                float graphH = nh - 26.0f;
-                if (mousePos.x >= graphX && mousePos.x <= graphX + graphW &&
-                    mousePos.y >= graphY && mousePos.y <= graphY + graphH)
-                {
-                    float normX = std::clamp ((mousePos.x - graphX) / graphW, 0.0f, 1.0f);
-                    float normY = 1.0f - 2.0f * std::clamp ((mousePos.y - graphY) / graphH, 0.0f, 1.0f);
-                    tableNode->writeSampleNormalized (normX, normY);
-                    selectedNodeIds.clear();
-                    selectedNodeIds.insert (tableNode->getId());
-                    rebuildInspector();
-                    repaint();
-                    return;
-                }
-            }
-            else if (auto bangNode = std::dynamic_pointer_cast<BangNode> (node))
-            {
-                bangNode->triggerBang();
-                repaint();
-                if (!isEditMode) return;
-            }
-            else if (auto bangAudioNode = std::dynamic_pointer_cast<BangAudioNode> (node))
-            {
-                bangAudioNode->triggerBang();
-                repaint();
-                if (!isEditMode) return;
-            }
-            else if (auto toggleNode = std::dynamic_pointer_cast<ToggleNode> (node))
-            {
-                if (!isEditMode)
-                {
-                    float currentState = toggleNode->getParameter ("state", 0.0f);
-                    toggleNode->setParameter ("state", currentState > 0.5f ? 0.0f : 1.0f);
-                    repaint();
-                    return;
-                }
-            }
-            else if (node->getTypeName() == "msg" || node->getTypeName() == "message" || node->getTypeName() == "v")
-            {
-                if (!isEditMode)
-                {
-                    nodeGraph.sendPortMessage (node->getId(), 0, node->getLabel());
-                    repaint();
-                    return;
-                }
-            }
-            else if (auto numNode = std::dynamic_pointer_cast<NumberNode> (node))
-            {
-                if (!isEditMode)
-                {
-                    valueDragNodeId = node->getId();
-                    valueDragStartVal = numNode->getParameter ("value", 0.0f);
-                    valueDragStartMouseY = mousePos.y;
-                    return;
-                }
-            }
-            else if (auto sliderNode = std::dynamic_pointer_cast<SliderNode> (node))
-            {
-                if (!isEditMode)
-                {
-                    valueDragNodeId = node->getId();
-                    valueDragStartVal = sliderNode->getParameter ("value", 0.0f);
-                    valueDragStartMouseY = mousePos.y;
-                    return;
-                }
-            }
-        }
-    }
-
-    if (isEditMode)
-    {
-        // 1. Check Outlet Click (Cable Creation)
-        static auto getDistanceToBezier = [] (juce::Point<float> p1, juce::Point<float> p2, juce::Point<float> mousePos) -> float
-        {
-            float dy = std::max (30.0f, std::abs (p2.y - p1.y) * 0.5f);
-            juce::Point<float> cp1 = { p1.x, p1.y + dy };
-            juce::Point<float> cp2 = { p2.x, p2.y - dy };
-
-            float minDist = 99999.0f;
-            const int numSamples = 24;
-            for (int i = 0; i <= numSamples; ++i)
-            {
-                float t = static_cast<float>(i) / static_cast<float>(numSamples);
-                float u = 1.0f - t;
-                float x = u*u*u*p1.x + 3.0f*u*u*t*cp1.x + 3.0f*u*t*t*cp2.x + t*t*t*p2.x;
-                float y = u*u*u*p1.y + 3.0f*u*u*t*cp1.y + 3.0f*u*t*t*cp2.y + t*t*t*p2.y;
-
-                float dist = mousePos.getDistanceFrom ({ x, y });
-                if (dist < minDist) minDist = dist;
-            }
-            return minDist;
-        };
-
-        for (const auto& node : nodeGraph.getNodes())
-        {
-            for (size_t i = 0; i < node->getOutlets().size(); ++i)
-            {
-                auto p = getOutletPos (*node, static_cast<int>(i));
-                if (p.getDistanceFrom (mousePos) < 12.0f)
-                {
-                    isDraggingCable = true;
-                    cableSrcNodeId = node->getId();
-                    cableSrcOutletIdx = static_cast<int>(i);
-                    cableDragPos = mousePos;
-                    selectedConnectionId = 0;
-                    return;
-                }
-            }
-        }
-
-        // 2. Check Cable Click (Re-plug or Select)
-        for (const auto& conn : nodeGraph.getConnections())
-        {
-            auto srcNode = nodeGraph.getNodeById (conn.sourceNodeId);
-            auto destNode = nodeGraph.getNodeById (conn.destNodeId);
-            if (srcNode && destNode)
-            {
-                auto p1 = getOutletPos (*srcNode, conn.sourceOutletIdx);
-                auto p2 = getInletPos (*destNode, conn.destInletIdx);
-
-                if (p2.getDistanceFrom (mousePos) < 14.0f)
-                {
-                    cableSrcNodeId = conn.sourceNodeId;
-                    cableSrcOutletIdx = conn.sourceOutletIdx;
-                    isDraggingCable = true;
-                    cableDragPos = mousePos;
-
-                    nodeGraph.pushUndoState();
-                    nodeGraph.removeConnection (conn.id);
-                    selectedConnectionId = 0;
-                    repaint();
-                    return;
-                }
-
-                float distToCurve = getDistanceToBezier (p1, p2, mousePos);
-                if (distToCurve < 14.0f)
-                {
-                    selectedConnectionId = conn.id;
-                    selectedNodeIds.clear();
-                    rebuildInspector();
-                    repaint();
-                    return;
-                }
-            }
-        }
-    }
-
-    // 3. Check Node Box Click
-    for (auto it = nodeGraph.getNodes().rbegin(); it != nodeGraph.getNodes().rend(); ++it)
-    {
-        const auto& node = *it;
-        float nx = node->getX() + panX;
-        float ny = node->getY() + panY;
-        float nw = getNodeWidth (*node);
-        float nh = getNodeHeight (*node);
-
-        if (mousePos.x >= nx && mousePos.x <= nx + nw &&
-            mousePos.y >= ny && mousePos.y <= ny + nh)
-        {
-            if (isShift)
-            {
-                if (selectedNodeIds.count (node->getId()) > 0)
-                    selectedNodeIds.erase (node->getId());
-                else
-                    selectedNodeIds.insert (node->getId());
-            }
-            else
-            {
-                if (selectedNodeIds.count (node->getId()) == 0)
-                {
-                    selectedNodeIds.clear();
-                    selectedNodeIds.insert (node->getId());
-                }
-            }
-
-            selectedConnectionId = 0;
-            if (isEditMode)
-            {
-                draggingNodeId = node->getId();
-                dragOffset = { mousePos.x - nx, mousePos.y - ny };
-
-                initialNodePositions.clear();
-                for (int id : selectedNodeIds)
-                {
-                    auto n = nodeGraph.getNodeById (id);
-                    if (n) initialNodePositions[id] = { n->getX(), n->getY() };
-                }
-            }
-
-            rebuildInspector();
-            repaint();
-            return;
-        }
-    }
-
-    // 4. Empty Canvas Click -> Panel Panning OR Rubberband Selection
-    if (e.mods.isMiddleButtonDown() || e.mods.isRightButtonDown() || (e.mods.isLeftButtonDown() && juce::KeyPress::isKeyCurrentlyDown (juce::KeyPress::spaceKey)))
-    {
-        isCanvasPanning = true;
-        panStartPos = e.position;
-        initialPanOffset = { panX, panY };
-        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
-        return;
-    }
-
-    if (isShift)
-    {
-        selectedConnectionId = 0;
-        isMarqueeDragging = true;
-        marqueeRect = { mousePos.x, mousePos.y, 0.0f, 0.0f };
-    }
-    else
-    {
-        selectedNodeIds.clear();
-        selectedConnectionId = 0;
-        isCanvasPanning = true;
-        panStartPos = e.position;
-        initialPanOffset = { panX, panY };
-        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
-        rebuildInspector();
-    }
-    repaint();
-}
-
-void RelativisticCanvasComponent::mouseDoubleClick (const juce::MouseEvent& e)
-{
-    juce::Point<float> mousePos = e.position;
-
-    for (const auto& node : nodeGraph.getNodes())
-    {
-        float nx = node->getX() + panX;
-        float ny = node->getY() + panY;
-        float nw = getNodeWidth (*node);
-        float nh = getNodeHeight (*node);
-
-        if (mousePos.x >= nx && mousePos.x <= nx + nw &&
-            mousePos.y >= ny && mousePos.y <= ny + nh)
-        {
-            if (auto numNode = std::dynamic_pointer_cast<NumberNode> (node))
-            {
-                auto alert = std::make_unique<juce::AlertWindow> ("SET NUMBER VALUE", "Enter new floating-point value for [number]:", juce::AlertWindow::QuestionIcon);
-                alert->addTextEditor ("numVal", juce::String (numNode->getParameter ("value", 0.0f)), "Value:");
-                alert->addButton ("OK", 1);
-                alert->addButton ("Cancel", 0);
-                alert->enterModalState (true, juce::ModalCallbackFunction::create ([this, numNode, a = alert.get()] (int res) {
-                    if (res == 1)
-                    {
-                        std::string exprText = a->getTextEditorContents ("numVal").toStdString();
-                        float val = static_cast<float>(RelativisticExpressionParser::evaluateExpression (exprText, {}));
-                        numNode->setParameter ("value", val);
-                        rebuildInspector();
-                        repaint();
-                    }
-                }), true);
-                return;
-            }
-            if (auto drumNode = std::dynamic_pointer_cast<DrumSequencerNode> (node))
-            {
-                auto* dialog = new juce::DialogWindow::LaunchOptions();
-                dialog->dialogTitle = "SLATE SCI-FI 16-STEP DRUM MATRIX (" + juce::String (drumNode->getLabel()) + ")";
-                dialog->content.setOwned (new StepSequencerGridComponent (drumNode));
-                dialog->dialogBackgroundColour = juce::Colour (0xff070a12);
-                dialog->escapeKeyTriggersCloseButton = true;
-                dialog->useNativeTitleBar = true;
-                dialog->resizable = true;
-                dialog->launchAsync();
-                return;
-            }
-            if (auto seqNode = std::dynamic_pointer_cast<StepSequencerNode> (node))
-            {
-                auto* dialog = new juce::DialogWindow::LaunchOptions();
-                dialog->dialogTitle = "SLATE SCI-FI STEP & VALUE AUTOMATION MATRIX (" + juce::String (seqNode->getLabel()) + ")";
-                dialog->content.setOwned (new StepSequencerGridComponent (seqNode));
-                dialog->dialogBackgroundColour = juce::Colour (0xff070a12);
-                dialog->escapeKeyTriggersCloseButton = true;
-                dialog->useNativeTitleBar = true;
-                dialog->resizable = true;
-                dialog->launchAsync();
-                return;
-            }
-
-
-            editingNodeId = node->getId();
-            selectedNodeIds.clear();
-            selectedNodeIds.insert (node->getId());
-            inlineLabelEditor.setBounds (static_cast<int>(nx + 4), static_cast<int>(ny + 4), static_cast<int>(nw - 8), static_cast<int>(nh - 8));
-            inlineLabelEditor.setText (node->getLabel(), false);
-            inlineLabelEditor.setVisible (true);
-            inlineLabelEditor.grabKeyboardFocus();
-            inlineLabelEditor.selectAll();
-            return;
-        }
-    }
-
-    // Double-click empty canvas -> Open Pure Data-Style Object Search Menu!
-    showObjectSearchMenu (mousePos);
-}
-
-void RelativisticCanvasComponent::mouseDrag (const juce::MouseEvent& e)
-{
-    juce::Point<float> mousePos = e.position;
-
-    // 0. Perform Mode Value Dragging (number / slider up/down scroll)
-    if (!isEditMode && valueDragNodeId > 0)
-    {
-        auto node = nodeGraph.getNodeById (valueDragNodeId);
-        if (node)
-        {
-            float deltaY = (e.position.y - valueDragStartMouseY);
-            float step = (e.mods.isShiftDown()) ? 0.1f : 1.0f;
-            float newVal = valueDragStartVal - deltaY * step;
-            node->setParameter ("value", newVal);
-            repaint();
-            return;
-        }
-    }
-
-    // 1. Node Dragging Positioning (Primary Priority)
-    if (draggingNodeId > 0)
-    {
-        auto initAnchorIt = initialNodePositions.find (draggingNodeId);
-        if (initAnchorIt != initialNodePositions.end())
-        {
-            float targetX = (mousePos.x - dragOffset.x - panX);
-            float targetY = (mousePos.y - dragOffset.y - panY);
-
-            if (snapToGrid)
-            {
-                targetX = std::round (targetX / gridSize) * gridSize;
-                targetY = std::round (targetY / gridSize) * gridSize;
-            }
-
-            float deltaX = targetX - initAnchorIt->second.x;
-            float deltaY = targetY - initAnchorIt->second.y;
-
-            for (int id : selectedNodeIds)
-            {
-                auto n = nodeGraph.getNodeById (id);
-                if (n)
-                {
-                    auto initIt = initialNodePositions.find (id);
-                    if (initIt != initialNodePositions.end())
-                    {
-                        n->setPosition (initIt->second.x + deltaX, initIt->second.y + deltaY);
-                    }
-                    else
-                    {
-                        n->setPosition (n->getX() + deltaX, n->getY() + deltaY);
-                    }
-                }
-            }
-            markUnsavedChanges();
-            repaint();
-            return;
-        }
-    }
-
-    // 2. Canvas Panning
-    if (isCanvasPanning)
-    {
-        panX = initialPanOffset.x + (e.position.x - panStartPos.x);
-        panY = initialPanOffset.y + (e.position.y - panStartPos.y);
-        updateDraftObjectBounds();
-        repaint();
-        return;
-    }
-
-    // 3. Dragging Cable (with 24px Magnetic Port Snapping!)
-    if (isDraggingCable)
-    {
-        cableDragPos = e.position;
-        snappedInletNodeId = 0;
-        snappedInletIdx = -1;
-
-        float minDist = 24.0f;
-        for (const auto& node : nodeGraph.getNodes())
-        {
-            if (node->getId() == cableSrcNodeId) continue;
-            for (size_t i = 0; i < node->getInlets().size(); ++i)
-            {
-                auto p = getInletPos (*node, static_cast<int>(i));
-                float dist = p.getDistanceFrom (e.position);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    snappedInletNodeId = node->getId();
-                    snappedInletIdx = static_cast<int>(i);
-                    snappedInletPos = p;
-                    cableDragPos = p; // Snap cable endpoint precisely to inlet center!
-                }
-            }
-        }
-        repaint();
-        return;
-    }
-
-    // 4. Marquee Selection Rubberband
-    if (isMarqueeDragging)
-    {
-        float x1 = std::min (e.mouseDownPosition.x, e.position.x);
-        float y1 = std::min (e.mouseDownPosition.y, e.position.y);
-        float w = std::abs (e.position.x - e.mouseDownPosition.x);
-        float h = std::abs (e.position.y - e.mouseDownPosition.y);
-        marqueeRect = { x1, y1, w, h };
-
-        for (const auto& node : nodeGraph.getNodes())
-        {
-            juce::Rectangle<float> nodeRect (node->getX() + panX, node->getY() + panY, getNodeWidth (*node), getNodeHeight (*node));
-            if (marqueeRect.intersects (nodeRect))
-            {
-                selectedNodeIds.insert (node->getId());
-            }
-        }
-        repaint();
-        return;
-    }
-
-    // 5. Special Widget Dragging (Table Drawing & Number Value Scrubbing when Alt/Option key is held)
-    if (selectedNodeIds.size() == 1 && e.mods.isAltDown())
-    {
-        auto n = nodeGraph.getNodeById (*selectedNodeIds.begin());
-        if (auto tableNode = std::dynamic_pointer_cast<TableNode> (n))
-        {
-            float graphX = tableNode->getX() + panX + 8.0f;
-            float graphY = tableNode->getY() + panY + 22.0f;
-            float graphW = getNodeWidth (*tableNode) - 16.0f;
-            float graphH = getNodeHeight (*tableNode) - 26.0f;
-
-            if (e.mouseDownPosition.x >= graphX && e.mouseDownPosition.x <= graphX + graphW &&
-                e.mouseDownPosition.y >= graphY && e.mouseDownPosition.y <= graphY + graphH)
-            {
-                float normX = std::clamp ((mousePos.x - graphX) / graphW, 0.0f, 1.0f);
-                float normY = 1.0f - 2.0f * std::clamp ((mousePos.y - graphY) / graphH, 0.0f, 1.0f);
-                tableNode->writeSampleNormalized (normX, normY);
-                repaint();
-                return;
-            }
-        }
-        else if (auto numNode = std::dynamic_pointer_cast<NumberNode> (n))
-        {
-            float currVal = numNode->getParameter ("value", 0.0f);
-            float step = e.mods.isShiftDown() ? 0.1f : 1.0f;
-            float newVal = currVal - (static_cast<float>(e.getDistanceFromDragStartY()) * 0.1f * step);
-            numNode->setParameter ("value", newVal);
-            repaint();
-            return;
-        }
-    }
-}
-
-void RelativisticCanvasComponent::mouseUp (const juce::MouseEvent& e)
-{
-    valueDragNodeId = 0;
-    if (isCanvasPanning)
-    {
-        isCanvasPanning = false;
-        setMouseCursor (juce::MouseCursor::NormalCursor);
-    }
-    if (isDraggingCable)
-    {
-        juce::Point<float> mousePos = e.position;
-
-        for (const auto& node : nodeGraph.getNodes())
-        {
-            for (size_t i = 0; i < node->getInlets().size(); ++i)
-            {
-                auto p = getInletPos (*node, static_cast<int>(i));
-                if ((snappedInletNodeId == node->getId() && snappedInletIdx == static_cast<int>(i)) || p.getDistanceFrom (mousePos) < 24.0f)
-                {
-                    auto srcNode = nodeGraph.getNodeById (cableSrcNodeId);
-                    if (srcNode && cableSrcOutletIdx < static_cast<int>(srcNode->getOutlets().size()))
-                    {
-                        NodePortType srcType = srcNode->getOutlets()[cableSrcOutletIdx].type;
-                        NodePortType destType = node->getInlets()[i].type;
-
-                        bool isCompatible = (srcType == destType) ||
-                                           (srcType == NodePortType::Time && destType == NodePortType::Control) ||
-                                           (srcType == NodePortType::Control && destType == NodePortType::Time);
-
-                        if (!isCompatible)
-                        {
-                            std::string srcName = (srcType == NodePortType::Audio) ? "Audio~" : (srcType == NodePortType::Time ? "Time" : "Control");
-                            std::string destName = (destType == NodePortType::Audio) ? "Audio~" : (destType == NodePortType::Time ? "Time" : "Control");
-
-                            std::string tip = "";
-                            if (srcType == NodePortType::Audio && destType == NodePortType::Time)
-                                tip = "Use [audio2time~] or [a2t~] to convert Audio~ into Time gamma!";
-                            else if (srcType == NodePortType::Time && destType == NodePortType::Audio)
-                                tip = "Use [time2audio~] or [t2a~] to convert Time gamma into Audio~!";
-                            else if (srcType == NodePortType::Audio && destType == NodePortType::Control)
-                                tip = "Use [env~] or [snapshot~] to convert Audio~ into Control!";
-                            else
-                                tip = "Use converter node!";
-
-                            showNotificationBanner ("Incompatible Port Types (" + srcName + " -> " + destName + "). " + tip, true);
-                        }
-                        else
-                        {
-                            nodeGraph.pushUndoState();
-                            nodeGraph.addConnection (cableSrcNodeId, cableSrcOutletIdx, node->getId(), static_cast<int>(i));
-                            showNotificationBanner ("Connected " + srcNode->getTypeName() + " -> " + node->getTypeName(), false);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        isDraggingCable = false;
-        cableSrcNodeId = 0;
-        snappedInletNodeId = 0;
-        snappedInletIdx = -1;
-        repaint();
-    }
-    else if (isMarqueeDragging)
-    {
-        isMarqueeDragging = false;
-        repaint();
-    }
-
-    draggingNodeId = 0;
-}
-
-void RelativisticCanvasComponent::mouseMove (const juce::MouseEvent& e)
-{
-    juce::Point<float> mousePos = e.position;
-    HoveredPortInfo newHover;
-
-    for (const auto& node : nodeGraph.getNodes())
-    {
-        for (size_t i = 0; i < node->getInlets().size(); ++i)
-        {
-            auto p = getInletPos (*node, static_cast<int>(i));
-            if (p.getDistanceFrom (mousePos) < 12.0f)
-            {
-                newHover.nodeId = node->getId();
-                newHover.portIdx = static_cast<int>(i);
-                newHover.isInlet = true;
-                newHover.pos = p;
-
-                const auto& port = node->getInlets()[i];
-                newHover.portName = port.name;
-
-                if (port.audioData.getNumSamples() > 0 && port.audioData.getMagnitude (0, port.audioData.getNumSamples()) > 0.0001f)
-                {
-                    newHover.signalTypeName = "AUDIO RATE (CYAN)";
-                    float mag = port.audioData.getMagnitude (0, port.audioData.getNumSamples());
-                    newHover.routedValueText = "Audio Peak: " + juce::String (mag, 3).toStdString();
-                }
-                else if (port.type == NodePortType::Time)
-                {
-                    newHover.signalTypeName = "TIME DILATION (PURPLE)";
-                    newHover.routedValueText = "Gamma: " + juce::String (port.timeGamma, 2).toStdString() + "x";
-                }
-                else
-                {
-                    newHover.signalTypeName = "CONTROL RATE (AMBER)";
-                    newHover.routedValueText = "Val: " + juce::String (port.controlValue, 3).toStdString();
-                }
-                break;
-            }
-        }
-
-        if (newHover.nodeId != 0) break;
-
-        for (size_t i = 0; i < node->getOutlets().size(); ++i)
-        {
-            auto p = getOutletPos (*node, static_cast<int>(i));
-            if (p.getDistanceFrom (mousePos) < 12.0f)
-            {
-                newHover.nodeId = node->getId();
-                newHover.portIdx = static_cast<int>(i);
-                newHover.isInlet = false;
-                newHover.pos = p;
-
-                const auto& port = node->getOutlets()[i];
-                newHover.portName = port.name;
-
-                if (port.type == NodePortType::Audio)
-                {
-                    newHover.signalTypeName = "AUDIO RATE (CYAN)";
-                    float mag = port.audioData.getMagnitude (0, port.audioData.getNumSamples());
-                    newHover.routedValueText = "Audio Peak: " + juce::String (mag, 3).toStdString();
-                }
-                else if (port.type == NodePortType::Time)
-                {
-                    newHover.signalTypeName = "TIME DILATION (PURPLE)";
-                    newHover.routedValueText = "Gamma: " + juce::String (port.timeGamma, 2).toStdString() + "x";
-                }
-                else
-                {
-                    newHover.signalTypeName = "CONTROL RATE (AMBER)";
-                    newHover.routedValueText = "Val: " + juce::String (port.controlValue, 3).toStdString();
-                }
-                break;
-            }
-        }
-    }
-
-    if (newHover.nodeId != hoveredPort.nodeId || newHover.portIdx != hoveredPort.portIdx || newHover.isInlet != hoveredPort.isInlet)
-    {
-        hoveredPort = newHover;
-        repaint();
-    }
-}
-
-void RelativisticCanvasComponent::drawCable (juce::Graphics& g, juce::Point<float> p1, juce::Point<float> p2, NodePortType type, bool isFeedbackLoop)
-{
-    juce::Colour cableColour = juce::Colour (0xff06b6d4); // Audio = Cyan
-    if (type == NodePortType::Time)    cableColour = juce::Colour (0xffa855f7); // Time = Purple
-    if (type == NodePortType::Control) cableColour = juce::Colour (0xfff59e0b); // Control = Amber
-    if (type == NodePortType::Message) cableColour = juce::Colour (0xff10b981); // Message = Emerald Green
-    if (isFeedbackLoop)                cableColour = juce::Colour (0xffef4444); // Feedback Warning = Neon Red
-
-    if (cableStyle == CableStyle::Straight)
-    {
-        // Drop Shadow
-        g.setColour (juce::Colour (0x66000000));
-        g.drawLine (p1.x + 2.0f, p1.y + 3.0f, p2.x + 2.0f, p2.y + 3.0f, 4.0f);
-
-        // Core Cable
-        g.setColour (cableColour);
-        g.drawLine (p1.x, p1.y, p2.x, p2.y, isFeedbackLoop ? 3.5f : 2.5f);
-        return;
-    }
-
-    float dx = p2.x - p1.x;
-    float dy = p2.y - p1.y;
-
-    juce::Path path;
-    path.startNewSubPath (p1);
-
-    if (cableStyle == CableStyle::Organic)
-    {
-        // Natural Gravity Sag Control Points
-        float sagFactor = std::max (50.0f, std::abs (dy) * 0.65f);
-        float bowFactor = (dy < 0.0f) ? (dx >= 0.0f ? 90.0f : -90.0f) : (dx * 0.15f);
-
-        juce::Point<float> c1 { p1.x + bowFactor, p1.y + sagFactor };
-        juce::Point<float> c2 { p2.x - bowFactor, p2.y - sagFactor };
-
-        path.cubicTo (c1, c2, p2);
-    }
-    else // SmoothS
-    {
-        float deltaY = std::abs (dy) * 0.5f + 30.0f;
-        path.cubicTo (p1.x, p1.y + deltaY, p2.x, p2.y - deltaY, p2.x, p2.y);
-    }
-
-    // 1. Render Drop Shadow
-    juce::Path shadowPath = path;
-    shadowPath.applyTransform (juce::AffineTransform::translation (2.0f, 3.0f));
-    g.setColour (juce::Colour (0x55000000));
-    g.strokePath (shadowPath, juce::PathStrokeType (4.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    // 2. Render Anti-Aliased Core Cable
-    g.setColour (cableColour);
-    g.strokePath (path, juce::PathStrokeType (isFeedbackLoop ? 3.5f : 2.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    // 3. Render Feedback Warning Badge on Cable Midpoint (only on return cable to prevent duplicate overlapping badges)
-    if (isFeedbackLoop && (p1.x > p2.x || p1.y > p2.y))
-    {
-        juce::Point<float> mid = path.getPointAlongPath (path.getLength() * 0.5f);
-        g.setColour (juce::Colour (0xff7f1d1d));
-        g.fillRoundedRectangle (mid.x - 70.0f, mid.y - 10.0f, 140.0f, 20.0f, 4.0f);
-        g.setColour (juce::Colour (0xffef4444));
-        g.drawRoundedRectangle (mid.x - 70.0f, mid.y - 10.0f, 140.0f, 20.0f, 4.0f, 1.0f);
-        g.setColour (juce::Colour (0xfff8fafc));
-        g.setFont (FontManager::getInstance().getOxaniumFont (11.0f, true));
-        g.drawText ("[FEEDBACK: 1-SMP DELAY]", mid.x - 70.0f, mid.y - 10.0f, 140.0f, 20.0f, juce::Justification::centred);
-    }
-}
-
-void RelativisticCanvasComponent::drawNode (juce::Graphics& g, const std::shared_ptr<RelativisticNode>& node)
-{
-    const float x = node->getX() + panX;
-    const float y = node->getY() + panY;
-    const float w = getNodeWidth (*node);
-    const float h = getNodeHeight (*node);
-
-    bool isTimeObj = node->getTypeName().rfind ("time.", 0) == 0;
-    bool isAudioObj = node->getTypeName().find ("~") != std::string::npos || node->getTypeName() == "dac~" || node->getTypeName() == "gain~" || node->getTypeName() == "out~";
-
-    juce::Colour typeBadgeCol = isTimeObj ? juce::Colour (0xff8b5cf6) : (isAudioObj ? juce::Colour (0xff06b6d4) : juce::Colour (0xfff59e0b));
-
-    // PlugData Slim Rounded Card Body & Clip Path
-    juce::Path cardPath;
-    cardPath.addRoundedRectangle (x, y, w, h, 6.0f);
-
-    g.setColour (juce::Colour (0xff181825));
-    g.fillPath (cardPath);
-
-    // Left Type Indicator Strip (Clipped inside rounded corners)
-    {
-        juce::Graphics::ScopedSaveState state (g);
-        g.reduceClipRegion (cardPath);
-        g.setColour (typeBadgeCol);
-        g.fillRect (x, y, 4.0f, h);
-    }
-
-    // Selection Halo & Border
-    if (selectedNodeIds.count (node->getId()) > 0)
-    {
-        g.setColour (juce::Colour (0xff38bdf8)); // Glowing Cyan Outline
-        g.drawRoundedRectangle (x - 1.5f, y - 1.5f, w + 3.0f, h + 3.0f, 7.0f, 2.0f);
-    }
-    else
-    {
-        g.setColour (juce::Colour (0xff2e2e42)); // Hairline Dark Slate Border
-        g.drawRoundedRectangle (x, y, w, h, 6.0f, 1.0f);
-    }
-
-    // Render [bang] Control Trigger LED Button
-    if (node->getTypeName() == "bang" || node->getTypeName() == "b")
-    {
-        float cx = x + w - 24.0f;
-        float cy = y + h * 0.5f;
-        g.setColour (juce::Colour (0xff0f172a));
-        g.fillEllipse (cx - 10.0f, cy - 10.0f, 20.0f, 20.0f);
-        g.setColour (juce::Colour (0xfff59e0b));
-        g.drawEllipse (cx - 10.0f, cy - 10.0f, 20.0f, 20.0f, 1.5f);
-        g.setColour (juce::Colour (0xfff59e0b).withAlpha (0.9f));
-        g.fillEllipse (cx - 6.0f, cy - 6.0f, 12.0f, 12.0f);
-    }
-
-    // Render [bang~] Audio Impulse Spike LED Ring
-    if (node->getTypeName() == "bang~" || node->getTypeName() == "b~")
-    {
-        float cx = x + w - 24.0f;
-        float cy = y + h * 0.5f;
-        g.setColour (juce::Colour (0xff0f172a));
-        g.fillEllipse (cx - 10.0f, cy - 10.0f, 20.0f, 20.0f);
-        g.setColour (juce::Colour (0xff06b6d4));
-        g.drawEllipse (cx - 10.0f, cy - 10.0f, 20.0f, 20.0f, 1.5f);
-        g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.9f));
-        g.fillEllipse (cx - 6.0f, cy - 6.0f, 12.0f, 12.0f);
-    }
-
-    // Special Canvas Visualization for [number] / [num] Control Number Box Object
-    bool isNumObj = (node->getTypeName() == "number" || node->getTypeName() == "num" || node->getTypeName() == "nb");
-    if (isNumObj)
-    {
-        float val = node->getParameter ("value", 0.0f);
-        juce::String valStr = (std::abs (val - std::round (val)) < 0.001f) ? juce::String (static_cast<int> (std::round (val))) : juce::String (val, 2);
-
-        float numBoxW = 75.0f;
-        float numBoxX = x + w - numBoxW - 8.0f;
-        float numBoxY = y + (h * 0.5f - 11.0f);
-        float numBoxH = 22.0f;
-
-        g.setColour (juce::Colour (0xff070a12));
-        g.fillRoundedRectangle (numBoxX, numBoxY, numBoxW, numBoxH, 4.0f);
-        g.setColour (juce::Colour (0xfff59e0b).withAlpha (0.7f));
-        g.drawRoundedRectangle (numBoxX, numBoxY, numBoxW, numBoxH, 4.0f, 1.0f);
-
-        g.setFont (FontManager::getInstance().getOxaniumFont (12.0f, true));
-        g.setColour (juce::Colour (0xfff59e0b)); // Gold Digital Value Readout
-        g.drawText (valStr, numBoxX + 4.0f, numBoxY, numBoxW - 8.0f, numBoxH, juce::Justification::centredRight);
-    }
-
-    // Special Canvas Visualization for [time.transport] Realtime Beat & Status Display + Beat Flash LED
-    auto transportNode = std::dynamic_pointer_cast<TimeTransportNode> (node);
-    if (transportNode)
-    {
-        double beats = transportNode->getCurrentBeatPosition();
-        int bar = static_cast<int>(std::floor (beats / 4.0)) + 1;
-        double beatInBar = std::fmod (beats, 4.0) + 1.0;
-        bool playing = transportNode->getIsPlaying();
-        bool flashing = transportNode->getIsBeatFlashing();
-
-        float ledX = x + w - 20.0f;
-        float ledY = y + h * 0.5f;
-        g.setColour (juce::Colour (0xff070a12));
-        g.fillEllipse (ledX - 8.0f, ledY - 8.0f, 16.0f, 16.0f);
-        
-        juce::Colour ledCol = flashing ? juce::Colour (0xfff59e0b) : (playing ? juce::Colour (0xff059669) : juce::Colour (0xff334155));
-        g.setColour (ledCol);
-        g.fillEllipse (ledX - 5.0f, ledY - 5.0f, 10.0f, 10.0f);
-        if (flashing)
-        {
-            g.setColour (juce::Colours::white);
-            g.drawEllipse (ledX - 8.0f, ledY - 8.0f, 16.0f, 16.0f, 2.0f);
-        }
-
-        g.setFont (FontManager::getInstance().getOxaniumFont (10.5f, true));
-        g.setColour (playing ? juce::Colour (0xff38bdf8) : juce::Colour (0xff94a3b8));
-        juce::String posStr = juce::String::formatted ("Bar %d : Beat %.1f", bar, beatInBar);
-        g.drawText (posStr, x + 10.0f, y + 37.0f, w - 36.0f, 16.0f, juce::Justification::centredLeft);
-    }
-
-    // Special Canvas Visualization for [time.scope] CRT Oscilloscope Display
-    auto timeScope = std::dynamic_pointer_cast<TimeScopeNode> (node);
-    if (timeScope)
-    {
-        float gamma = timeScope->getMonitoredGamma();
-        double tSec = timeScope->getMonitoredTimeSec();
-        float speed = timeScope->getParameter ("speed", 1.0f);
-        float timeWin = timeScope->getParameter ("timeWindow", 1.0f);
-
-        float screenX = x + 8.0f;
-        float screenY = y + 20.0f;
-        float screenW = w - 16.0f;
-        float screenH = h - 26.0f;
-
-        // Dark CRT Scope Background
-        g.setColour (juce::Colour (0xff050811));
-        g.fillRoundedRectangle (screenX, screenY, screenW, screenH, 4.0f);
-        g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.4f));
-        g.drawRoundedRectangle (screenX, screenY, screenW, screenH, 4.0f, 1.0f);
-
-        // 1. Time Axis & Division Grid Reticle
-        g.setColour (juce::Colour (0x1f06b6d4));
-        float midY = screenY + screenH * 0.5f;
-        g.drawHorizontalLine (static_cast<int>(midY), screenX + 2.0f, screenX + screenW - 2.0f);
-        g.drawHorizontalLine (static_cast<int>(screenY + screenH * 0.25f), screenX + 2.0f, screenX + screenW - 2.0f);
-        g.drawHorizontalLine (static_cast<int>(screenY + screenH * 0.75f), screenX + 2.0f, screenX + screenW - 2.0f);
-
-        // Vertical Time Grid Division Lines & Labels
-        int numTimeDivs = 4;
-        g.setFont (FontManager::getInstance().getOxaniumFont (8.5f, false));
-        for (int div = 0; div <= numTimeDivs; ++div)
-        {
-            float divX = screenX + (static_cast<float>(div) / static_cast<float>(numTimeDivs)) * screenW;
-            g.setColour (juce::Colour (0x1a94a3b8));
-            g.drawVerticalLine (static_cast<int>(divX), screenY + 12.0f, screenY + screenH - 12.0f);
-
-            double divTime = (div / static_cast<double>(numTimeDivs)) * timeWin;
-            g.setColour (juce::Colour (0xff64748b));
-            g.drawText (juce::String (divTime, 2) + "s", divX - 15.0f, screenY + screenH - 11.0f, 30.0f, 10.0f, juce::Justification::centred);
-        }
-
-        // 2. Waveform Trace
-        const auto& hist = timeScope->getSignalHistory();
-        size_t writePos = timeScope->getHistoryWritePos();
-        float scaleMax = std::max (0.01f, timeScope->getAutoScaleMax());
-
-        if (!hist.empty())
-        {
-            juce::Path wavePath;
-            size_t total = hist.size();
-            float sweepHeadX = screenX;
-            float sweepHeadY = midY;
-
-            for (size_t i = 0; i < total; ++i)
-            {
-                size_t readIdx = (writePos + i) % total;
-                float val = std::clamp (hist[readIdx] / scaleMax, -1.0f, 1.0f);
-                float px = screenX + (static_cast<float>(i) / static_cast<float>(total - 1)) * screenW;
-                float py = midY - val * (screenH * 0.38f);
-
-                if (i == 0) wavePath.startNewSubPath (px, py);
-                else        wavePath.lineTo (px, py);
-
-                if (i == total - 1) { sweepHeadX = px; sweepHeadY = py; }
-            }
-
-            // Glowing Cyan Scope Line
-            g.setColour (juce::Colour (0xff06b6d4));
-            g.strokePath (wavePath, juce::PathStrokeType (1.5f));
-
-            // Sweep Beam LED Head
-            g.setColour (juce::Colour (0xfff59e0b));
-        }
-    }
-
-    // Special Canvas Visualization for [table] Interactive Waveform / Step Sequencer Canvas
-
-    auto tableNode = std::dynamic_pointer_cast<TableNode> (node);
-    if (tableNode)
-    {
-        float graphX = x + 8.0f;
-        float graphY = y + 22.0f;
-        float graphW = w - 16.0f;
-        float graphH = h - 26.0f;
-
-        g.setColour (juce::Colour (0xff070a12));
-        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
-        g.setColour (juce::Colour (0xff1e293b));
-        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
-
-        const auto& data = tableNode->getTableData();
-        int dataSize = static_cast<int>(data.size());
-        if (dataSize > 0)
-        {
-            juce::Path wavePath;
-            float midY = graphY + graphH * 0.5f;
-
-            if (dataSize <= 16) // Step Bar Mode
-            {
-                float stepW = graphW / static_cast<float>(dataSize);
-                for (int i = 0; i < dataSize; ++i)
-                {
-                    float val = data[i];
-                    float normVal = (val > 1.5f) ? (val / 127.0f) : val;
-                    float barH = (normVal * 0.5f) * graphH;
-                    float bx = graphX + i * stepW;
-
-                    g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.85f));
-                    if (normVal < 0.0f)
-                        g.fillRect (bx + 1.0f, midY, stepW - 2.0f, -barH);
-                    else
-                        g.fillRect (bx + 1.0f, midY - barH, stepW - 2.0f, barH);
-                }
-            }
-            else // Continuous Waveform Mode
-            {
-                int sampleStep = std::max (1, dataSize / 64);
-                for (int i = 0; i < 64; ++i)
-                {
-                    int sampleIdx = std::min (dataSize - 1, i * sampleStep);
-                    float val = std::clamp (data[sampleIdx], -1.0f, 1.0f);
-                    float px = graphX + (static_cast<float>(i) / 63.0f) * graphW;
-                    float py = midY - val * (graphH * 0.45f);
-
-                    if (i == 0) wavePath.startNewSubPath (px, py);
-                    else        wavePath.lineTo (px, py);
-                }
-
-                g.setColour (juce::Colour (0xff06b6d4)); // Cyber Cyan
-                g.strokePath (wavePath, juce::PathStrokeType (1.5f));
-            }
-        }
-    }
-
-    // Special Canvas Visualization for [time.xy] Dual-Time X-Y Lissajous Scope
-    auto xyNode = std::dynamic_pointer_cast<TimeXYNode> (node);
-    if (xyNode)
-    {
-        float graphX = x + 8.0f;
-        float graphY = y + 22.0f;
-        float graphW = w - 16.0f;
-        float graphH = h - 26.0f;
-
-        g.setColour (juce::Colour (0xff050811));
-        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
-        g.setColour (juce::Colour (0xff38bdf8).withAlpha (0.4f));
-        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
-
-        const auto& pts = xyNode->getPointHistory();
-        float autoR = std::max (0.01f, xyNode->getAutoScaleRadius());
-
-        if (!pts.empty())
-        {
-            juce::Path xyPath;
-            float centerX = graphX + graphW * 0.5f;
-            float centerY = graphY + graphH * 0.5f;
-
-            for (size_t i = 0; i < pts.size(); ++i)
-            {
-                float normX = pts[i].x / autoR;
-                float normY = pts[i].y / autoR;
-                float px = centerX + normX * (graphW * 0.42f);
-                float py = centerY - normY * (graphH * 0.42f);
-
-                if (i == 0) xyPath.startNewSubPath (px, py);
-                else        xyPath.lineTo (px, py);
-            }
-
-            g.setColour (juce::Colour (0xff38bdf8)); // Glowing Cyan Phase Orbit
-            g.strokePath (xyPath, juce::PathStrokeType (1.5f));
-
-            g.setColour (juce::Colour (0xff7dd3fc));
-            g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
-            g.drawText ("RADIUS: ±" + juce::String (autoR, 2), graphX + 4, graphY + 2, graphW - 8, 12, juce::Justification::topRight);
-        }
-    }
-
-    // Special Canvas Visualization for [out~] Live VU RMS Meters & Oscilloscope Screen
-    auto outNode = std::dynamic_pointer_cast<OutNode> (node);
-    if (outNode)
-    {
-        float graphX = x + 8.0f;
-        float graphY = y + 22.0f;
-        float graphW = w - 46.0f;
-        float graphH = h - 26.0f;
-
-        // Dark Scope Screen
-        g.setColour (juce::Colour (0xff050811));
-        g.fillRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f);
-        g.setColour (juce::Colour (0xff1e293b));
-        g.drawRoundedRectangle (graphX, graphY, graphW, graphH, 3.0f, 1.0f);
-
-        // Center reticle crosshair
-        g.setColour (juce::Colour (0xff1e293b));
-        g.drawHorizontalLine (static_cast<int>(graphY + graphH * 0.5f), graphX, graphX + graphW);
-        g.drawVerticalLine (static_cast<int>(graphX + graphW * 0.5f), graphY, graphY + graphH);
-
-        const auto& scopeL = outNode->getScopeL();
-        const auto& scopeR = outNode->getScopeR();
-        int writeIdx = outNode->getScopeWriteIndex();
-
-        float displayMode = outNode->getParameter ("displayMode", 0.0f);
-
-        if (!scopeL.empty() && !scopeR.empty())
-        {
-            if (displayMode < 0.5f)
-            {
-                // Mode 0: Dual Trace Time Domain Scope (Left Cyan, Right Gold)
-                juce::Path pathL, pathR;
-                int total = static_cast<int>(scopeL.size());
-                float midY = graphY + graphH * 0.5f;
-
-                for (int i = 0; i < 64; ++i)
-                {
-                    int idx = (writeIdx + i * (total / 64)) % total;
-                    float sampleL = std::clamp (scopeL[idx], -1.2f, 1.2f);
-                    float sampleR = std::clamp (scopeR[idx], -1.2f, 1.2f);
-
-                    float px = graphX + (static_cast<float>(i) / 63.0f) * graphW;
-                    float pyL = midY - sampleL * (graphH * 0.42f);
-                    float pyR = midY - sampleR * (graphH * 0.42f);
-
-                    if (i == 0) { pathL.startNewSubPath (px, pyL); pathR.startNewSubPath (px, pyR); }
-                    else        { pathL.lineTo (px, pyL);           pathR.lineTo (px, pyR); }
-                }
-
-                g.setColour (juce::Colour (0xff06b6d4)); // Cyber Cyan Left Channel
-                g.strokePath (pathL, juce::PathStrokeType (1.5f));
-
-                g.setColour (juce::Colour (0xfff59e0b)); // Relativistic Gold Right Channel
-                g.strokePath (pathR, juce::PathStrokeType (1.2f));
-            }
-            else
-            {
-                // Mode 1: X-Y Lissajous Phase Plot Scope (Royal Violet)
-                juce::Path pathXY;
-                int total = static_cast<int>(scopeL.size());
-                float centerX = graphX + graphW * 0.5f;
-                float centerY = graphY + graphH * 0.5f;
-                float scaleX = graphW * 0.42f;
-                float scaleY = graphH * 0.42f;
-
-                for (int i = 0; i < 64; ++i)
-                {
-                    int idx = (writeIdx + i * (total / 64)) % total;
-                    float sampleL = std::clamp (scopeL[idx], -1.2f, 1.2f);
-                    float sampleR = std::clamp (scopeR[idx], -1.2f, 1.2f);
-
-                    float px = centerX + sampleL * scaleX;
-                    float py = centerY - sampleR * scaleY;
-
-                    if (i == 0) pathXY.startNewSubPath (px, py);
-                    else        pathXY.lineTo (px, py);
-                }
-
-                g.setColour (juce::Colour (0xffa855f7)); // Royal Violet Lissajous Scope
-                g.strokePath (pathXY, juce::PathStrokeType (1.5f));
-            }
-        }
-
-        // Live VU RMS Meters on the right edge
-        float meterX = x + w - 32.0f;
-        float meterY = y + 22.0f;
-        float meterW = 10.0f;
-        float meterH = graphH;
-
-        g.setColour (juce::Colour (0xff0b0f19));
-        g.fillRoundedRectangle (meterX, meterY, meterW * 2.2f, meterH, 2.0f);
-
-        float rmsL = std::clamp (outNode->getRmsL(), 0.0f, 1.2f);
-        float rmsR = std::clamp (outNode->getRmsR(), 0.0f, 1.2f);
-
-        auto drawBar = [&] (float bx, float level) {
-            float barH = level * meterH;
-            juce::Colour barColor = juce::Colour (0xff22c55e);
-            if (level > 0.85f) barColor = juce::Colour (0xffeab308);
-            if (level >= 1.0f) barColor = juce::Colour (0xffef4444);
-
-            g.setColour (barColor);
-            g.fillRect (bx, meterY + (meterH - barH), meterW - 1.0f, barH);
-        };
-
-        drawBar (meterX, rmsL);
-        drawBar (meterX + meterW, rmsR);
-
-        if (outNode->isRecordingActive())
-        {
-            g.setColour (juce::Colours::red.withAlpha (0.9f));
-            g.fillEllipse (graphX + 6.0f, graphY + 6.0f, 8.0f, 8.0f);
-            g.setFont (FontManager::getInstance().getOxaniumFont (9.0f, true));
-            g.drawText ("REC (/tmp)", graphX + 16.0f, graphY + 4.0f, 60.0f, 12.0f, juce::Justification::centredLeft);
-        }
-    }
-
-    // Title Text in Sci-Fi Oxanium Font (No Truncation)
-    g.setColour (juce::Colour (0xfff8fafc));
-    g.setFont (FontManager::getInstance().getOxaniumFont (14.0f, true));
-    float labelTextW = outNode ? w - 40.0f : (isNumObj ? w - 95.0f : w - 12.0f);
-    float labelY = transportNode ? (y + 17.0f) : (y + (h * 0.5f - 10.0f));
-    float labelH = transportNode ? 18.0f : 20.0f;
-    g.drawText (node->getLabel(), x + 10, labelY, labelTextW, labelH, juce::Justification::centredLeft);
-
-    // Inlets (Top Edge Dots with Smart Spaced Labels)
-    juce::Font portFont = FontManager::getInstance().getOxaniumFont (9.5f, false);
-    g.setFont (portFont);
-
-    for (size_t i = 0; i < node->getInlets().size(); ++i)
-    {
-        auto p = getInletPos (*node, static_cast<int>(i));
-        const auto& port = node->getInlets()[i];
-        NodePortType type = port.type;
-
-        bool hasAudioInput = (port.audioData.getNumSamples() > 0 && port.audioData.getMagnitude (0, port.audioData.getNumSamples()) > 0.0001f);
-
-        juce::Colour portCol = (hasAudioInput || type == NodePortType::Audio) ? juce::Colour (0xff06b6d4) : (type == NodePortType::Time ? juce::Colour (0xff8b5cf6) : (type == NodePortType::Message ? juce::Colour (0xff10b981) : juce::Colour (0xfff59e0b)));
-
-        g.setColour (juce::Colour (0xff181825));
-        g.fillEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f);
-        g.setColour (portCol);
-        g.fillEllipse (p.x - 2.5f, p.y - 2.5f, 5.0f, 5.0f);
-        g.setColour (juce::Colours::white);
-        g.drawEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f, 1.0f);
-
-        // Smart Port Name Label without Truncation
-        float lw = std::max (44.0f, getTextWidth (portFont, port.name) + 6.0f);
-        g.setColour (portCol.withAlpha (0.95f));
-        g.drawText (port.name, p.x - lw * 0.5f, p.y + 3.0f, lw, 11.0f, juce::Justification::centred);
-
-        if (isDraggingCable && snappedInletNodeId == node->getId() && static_cast<int>(i) == snappedInletIdx)
-        {
-            g.setColour (juce::Colour (0xff06b6d4).withAlpha (0.35f));
-            g.fillEllipse (p.x - 12.0f, p.y - 12.0f, 24.0f, 24.0f);
-            g.setColour (juce::Colour (0xff38bdf8));
-            g.drawEllipse (p.x - 12.0f, p.y - 12.0f, 24.0f, 24.0f, 2.0f);
-        }
-    }
-
-    // Draw 128px Dot Visualizers if enabled
-    float curVisY = y + h - (node->isShowDelaylineEnabled() ? 128.0f : 0.0f) - (node->isShowPipeEnabled() ? 128.0f : 0.0f) - 6.0f;
-    if (node->isShowDelaylineEnabled())
-    {
-        drawDelaylineDots (g, *node, x + 6.0f, curVisY, w - 12.0f, 122.0f);
-        curVisY += 128.0f;
-    }
-    if (node->isShowPipeEnabled())
-    {
-        drawControlPipeDots (g, *node, x + 6.0f, curVisY, w - 12.0f, 122.0f);
-        curVisY += 128.0f;
-    }
-
-    // Outlets (Bottom Edge Dots with Smart Spaced Labels)
-    for (size_t i = 0; i < node->getOutlets().size(); ++i)
-    {
-        auto p = getOutletPos (*node, static_cast<int>(i));
-        const auto& port = node->getOutlets()[i];
-        NodePortType type = port.type;
-
-        juce::Colour portCol = (type == NodePortType::Audio) ? juce::Colour (0xff06b6d4) : (type == NodePortType::Time ? juce::Colour (0xff8b5cf6) : (type == NodePortType::Message ? juce::Colour (0xff10b981) : juce::Colour (0xfff59e0b)));
-
-        g.setColour (juce::Colour (0xff181825));
-        g.fillEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f);
-        g.setColour (portCol);
-        g.fillEllipse (p.x - 2.5f, p.y - 2.5f, 5.0f, 5.0f);
-        g.setColour (juce::Colours::white);
-        g.drawEllipse (p.x - 4.0f, p.y - 4.0f, 8.0f, 8.0f, 1.0f);
-
-        // Smart Port Name Label without Truncation
-        float lw = std::max (44.0f, getTextWidth (portFont, port.name) + 6.0f);
-        g.setColour (portCol.withAlpha (0.95f));
-        g.drawText (port.name, p.x - lw * 0.5f, p.y - 14.0f, lw, 11.0f, juce::Justification::centred);
     }
 }
 

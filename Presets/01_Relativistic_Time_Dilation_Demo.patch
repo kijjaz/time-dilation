@@ -1,0 +1,93 @@
+{
+  "version": "0.0.1",
+  "audioEngineEnabled": false,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "time.warp",
+      "label": "time.warp 2.0x",
+      "posX": 80.0,
+      "posY": 120.0,
+      "formula": "// Relativistic Time Warp Engine [time.warp]\n// Generates coordinate time clock context gamma\n\ngamma = $v1;",
+      "parameters": {
+        "dilationGamma": 2.0,
+        "lfoAmount": 0.0,
+        "lfoSpeed": 0.5,
+        "timeFilterHz": 10.0,
+        "bypassTimeFilter": 0.0
+      }
+    },
+    {
+      "id": 2,
+      "type": "time.*",
+      "label": "time.* 0.5",
+      "posX": 280.0,
+      "posY": 120.0,
+      "formula": "// Relativistic Time Multiplier / Scaler [time.*]\nout = g1 * g2;",
+      "parameters": {
+        "value": 0.5
+      }
+    },
+    {
+      "id": 3,
+      "type": "time.scope",
+      "label": "time.scope",
+      "posX": 480.0,
+      "posY": 120.0,
+      "formula": "// Relativistic Time Scope Node [time.scope]\n// Plots signal over dilated time axis (t_local) with adjustable time sweep speed\n\nout = $t;\ngammaOut = gamma;",
+      "parameters": {
+        "speed": 1.0,
+        "timeWindow": 1.0
+      }
+    },
+    {
+      "id": 4,
+      "type": "osc~",
+      "label": "osc~ 440Hz",
+      "posX": 280.0,
+      "posY": 280.0,
+      "formula": "// Anti-Aliased PolyBLEP Sine / Saw / Square Oscillator [osc~]\nout~ = osc(frequency, waveform);",
+      "parameters": {
+        "frequency": 440.0,
+        "waveform": 0.0,
+        "pulseWidth": 0.5,
+        "gain": 0.8
+      }
+    },
+    {
+      "id": 5,
+      "type": "out~",
+      "label": "out~ Master Output",
+      "posX": 480.0,
+      "posY": 280.0,
+      "formula": "// Master Output Fader & Live Peak Meters [out~]\n// Connect audio cables here to stream to hardware sound card",
+      "parameters": {
+        "volume": 0.8,
+        "mute": 0.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": 1,
+      "sourceNodeId": 1,
+      "sourceOutletIdx": 0,
+      "destNodeId": 2,
+      "destInletIdx": 0
+    },
+    {
+      "id": 2,
+      "sourceNodeId": 2,
+      "sourceOutletIdx": 0,
+      "destNodeId": 3,
+      "destInletIdx": 0
+    },
+    {
+      "id": 3,
+      "sourceNodeId": 4,
+      "sourceOutletIdx": 0,
+      "destNodeId": 5,
+      "destInletIdx": 0
+    }
+  ]
+}

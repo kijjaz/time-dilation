@@ -240,6 +240,41 @@ void RelativisticOscServer::oscMessageReceived (const juce::OSCMessage& message)
             });
         }
     }
+    // 10. /patch/load <filePath>
+    else if (address == "/patch/load")
+    {
+        if (message.size() >= 1 && message[0].isString())
+        {
+            std::string path = message[0].getString().toStdString();
+            juce::MessageManager::callAsync ([this, path] {
+                if (onLoadPatchRequested)
+                    onLoadPatchRequested (path);
+                if (onOscLogMessage)
+                    onOscLogMessage ("OSC: Load Patch -> " + path, false);
+            });
+        }
+    }
+    // 11. /patch/save <filePath>
+    else if (address == "/patch/save")
+    {
+        if (message.size() >= 1 && message[0].isString())
+        {
+            std::string path = message[0].getString().toStdString();
+            juce::MessageManager::callAsync ([this, path] {
+                if (onSavePatchRequested)
+                    onSavePatchRequested (path);
+                if (onOscLogMessage)
+                    onOscLogMessage ("OSC: Save Patch -> " + path, false);
+            });
+        }
+    }
+    // 12. /app/quit or /app/exit or /quit
+    else if (address == "/app/quit" || address == "/app/exit" || address == "/quit" || address == "/exit")
+    {
+        juce::MessageManager::callAsync ([] {
+            juce::JUCEApplicationBase::quit();
+        });
+    }
 }
 
 } // namespace time_dilation

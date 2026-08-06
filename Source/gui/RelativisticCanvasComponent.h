@@ -9,6 +9,11 @@
 namespace time_dilation
 {
 
+static inline float getTextWidth (const juce::Font& font, const juce::String& text)
+{
+    return juce::GlyphArrangement::getStringWidth (font, text);
+}
+
 enum class CableStyle
 {
     Organic, // Natural Physics Gravity Sag
@@ -28,11 +33,15 @@ public:
 };
 
 class RelativisticCanvasComponent : public juce::Component,
-                                     public juce::Timer
+                                     public juce::Timer,
+                                     public juce::FileDragAndDropTarget
 {
 public:
     explicit RelativisticCanvasComponent (RelativisticNodeGraph& graph);
     ~RelativisticCanvasComponent() override;
+
+    bool isInterestedInFileDrag (const juce::StringArray& files) override;
+    void filesDropped (const juce::StringArray& files, int x, int y) override;
 
     void paint (juce::Graphics& g) override;
     void resized() override;
@@ -249,6 +258,7 @@ private:
     void savePatchAs();
     void savePatch();
     void loadPatch();
+    void loadPresetPatch (const juce::String& presetFileName);
     void exportAudioWav();
     void exportAudioWavToFile (const juce::File& file, float durationSec = 10.0f);
     void exportCanvasPngToFile (const juce::File& file);

@@ -1,0 +1,57 @@
+{
+  "version": "0.0.1",
+  "audioEngineEnabled": false,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "osc~",
+      "label": "osc~ Sine X",
+      "posX": 100.0,
+      "posY": 120.0,
+      "formula": "// Sine Wave X Axis Generator\nout~ = sin(2 * pi * frequency * t);",
+      "parameters": {
+        "frequency": 2.0,
+        "waveform": 0.0,
+        "gain": 1.0
+      }
+    },
+    {
+      "id": 2,
+      "type": "osc~",
+      "label": "osc~ Sine Y",
+      "posX": 100.0,
+      "posY": 280.0,
+      "formula": "// Sine Wave Y Axis Generator (Phase Shifted)\nout~ = cos(2 * pi * frequency * t);",
+      "parameters": {
+        "frequency": 3.0,
+        "waveform": 0.0,
+        "gain": 1.0
+      }
+    },
+    {
+      "id": 3,
+      "type": "time.xy",
+      "label": "time.xy Lissajous Orbit",
+      "posX": 380.0,
+      "posY": 180.0,
+      "formula": "// 2D Phase Orbit Scope [time.xy]\noutX = $v1; outY = $v2;",
+      "parameters": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": 1,
+      "sourceNodeId": 1,
+      "sourceOutletIdx": 0,
+      "destNodeId": 3,
+      "destInletIdx": 0
+    },
+    {
+      "id": 2,
+      "sourceNodeId": 2,
+      "sourceOutletIdx": 0,
+      "destNodeId": 3,
+      "destInletIdx": 1
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "version": "0.0.1",
+  "audioEngineEnabled": false,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "time.warp",
+      "label": "time.warp 1.8x",
+      "posX": 80.0,
+      "posY": 100.0,
+      "formula": "// Relativistic Time Warp Engine [time.warp]\ngamma = $v1;",
+      "parameters": {
+        "dilationGamma": 1.8,
+        "lfoAmount": 0.0,
+        "lfoSpeed": 0.5,
+        "timeFilterHz": 10.0,
+        "bypassTimeFilter": 0.0
+      }
+    },
+    {
+      "id": 2,
+      "type": "time.warp",
+      "label": "time.warp 0.8x",
+      "posX": 80.0,
+      "posY": 260.0,
+      "formula": "// Relativistic Time Warp Engine [time.warp]\ngamma = $v1;",
+      "parameters": {
+        "dilationGamma": 0.8,
+        "lfoAmount": 0.0,
+        "lfoSpeed": 0.5,
+        "timeFilterHz": 10.0,
+        "bypassTimeFilter": 0.0
+      }
+    },
+    {
+      "id": 3,
+      "type": "time.math",
+      "label": "time.math Lorentz",
+      "posX": 300.0,
+      "posY": 180.0,
+      "formula": "// Lorentz Velocity Addition Composition [time.math]\nu' = (v1 + v2) / (1 + v1*v2 / c^2)",
+      "parameters": {
+        "mode": 4.0,
+        "value": 1.0
+      }
+    },
+    {
+      "id": 4,
+      "type": "time.scope",
+      "label": "time.scope",
+      "posX": 520.0,
+      "posY": 180.0,
+      "formula": "// Relativistic Scope\nout = $t; gammaOut = gamma;",
+      "parameters": {
+        "speed": 1.0,
+        "timeWindow": 1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": 1,
+      "sourceNodeId": 1,
+      "sourceOutletIdx": 0,
+      "destNodeId": 3,
+      "destInletIdx": 0
+    },
+    {
+      "id": 2,
+      "sourceNodeId": 2,
+      "sourceOutletIdx": 0,
+      "destNodeId": 3,
+      "destInletIdx": 1
+    },
+    {
+      "id": 3,
+      "sourceNodeId": 3,
+      "sourceOutletIdx": 0,
+      "destNodeId": 4,
+      "destInletIdx": 0
+    }
+  ]
+}

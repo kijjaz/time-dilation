@@ -31,6 +31,8 @@ public:
     std::function<void(const std::string&, bool isWarning)> onOscLogMessage;
     std::function<void(const std::string& filePath, float durationSec)> onExportWavRequested;
     std::function<void(const std::string& filePath)> onExportPngRequested;
+    std::function<void(const std::string& filePath)> onLoadPatchRequested;
+    std::function<void(const std::string& filePath)> onSavePatchRequested;
 
 private:
     RelativisticNodeGraph& nodeGraph;
